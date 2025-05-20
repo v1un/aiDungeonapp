@@ -21,6 +21,7 @@ const availableModels = [
   { id: 'googleai/gemini-1.5-pro-latest', name: 'Gemini 1.5 Pro' },
   { id: 'googleai/gemini-pro', name: 'Gemini Pro' },
   { id: 'googleai/gemini-2.5-flash-preview-04-17', name: 'Gemini 2.5 Flash Preview (04-17)' },
+  { id: 'googleai/gemini-2.5-flash-preview-05-20', name: 'Gemini 2.5 Flash Preview (05-20)' },
 ];
 
 export default function SettingsPage() {
