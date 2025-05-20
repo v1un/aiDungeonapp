@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates details for a fictional series.
@@ -20,7 +21,15 @@ const GenerateSeriesDetailsOutputSchema = z.object({
   mainCharacter: z.object({
     name: z.string().describe("The name of the main character."),
     description: z.string().describe("A brief description of the main character, their role, and key traits."),
-  }).describe("Details about the main protagonist of the series."),
+    stats: z.object({
+      strength: z.string().describe("A descriptive or numerical value for the character's physical strength (e.g., 'Average', 'Immense', '10/20'). Be creative and thematic to the series."),
+      dexterity: z.string().describe("A descriptive or numerical value for the character's agility and reflexes."),
+      intelligence: z.string().describe("A descriptive or numerical value for the character's intellect and knowledge."),
+      magicPower: z.string().optional().describe("A descriptive or numerical value for the character's magical aptitude or power level, if applicable to the series. Use 'N/A' if not applicable."),
+      luck: z.string().optional().describe("A descriptive or numerical value for the character's fortune or luck."),
+      specialAbility: z.string().optional().describe("A brief description of a notable special ability or unique trait, if any (e.g., 'Return by Death', 'The Force Sensitivity').")
+    }).describe("Key thematic stats or attributes of the main character. These should be fitting for the series and character. Use descriptive terms, thematic ratings, or 'N/A' where appropriate, rather than just plain numbers if it doesn't fit the series' style.")
+  }).describe("Details about the main protagonist of the series, including thematic stats."),
   lorebook: z.string().describe("A summary of the series' lore, including key world-building elements, major plot points, and unique concepts. Should be 2-3 paragraphs."),
   otherCharacters: z.array(
     z.object({
@@ -47,6 +56,7 @@ Based on the series name "{{seriesName}}", please generate the following:
 2.  **Main Character**:
     *   Name: The full name of the primary protagonist.
     *   Description: A concise summary of who they are, their main role in the story, key personality traits, and any iconic abilities or characteristics.
+    *   Stats: Provide thematic stats for this character. Examples include Strength, Dexterity, Intelligence, Magic Power (if applicable, otherwise "N/A"), Luck, and a Special Ability. Use descriptive terms (e.g., 'Above Average', 'Cunning', 'Boundless') or thematic ratings rather than just numbers if it better fits the series. Ensure these stats are consistent with the character's portrayal in the series.
 3.  **Lorebook**: A rich summary (aim for 2-3 substantial paragraphs) of the series' lore. This should cover:
     *   The primary setting (world, universe).
     *   Key concepts, factions, or magical systems if applicable.
