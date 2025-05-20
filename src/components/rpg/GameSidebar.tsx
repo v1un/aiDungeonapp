@@ -6,14 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import type { SeriesDetails, Quest } from '@/types';
-import { Shield, Swords, Brain, Zap, Clover, Star, MapPin, Package, ScrollText, Target, User } from 'lucide-react';
+import { Shield, Swords, Brain, Zap, Clover, Star, MapPin, Package, ScrollText, Target, User, Info } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { SidebarTrigger } from '@/components/ui/sidebar'; // Import SidebarTrigger
+import { SidebarTrigger } from '@/components/ui/sidebar'; 
 import { Button } from '@/components/ui/button';
 
 
@@ -28,24 +28,38 @@ interface GameSidebarProps {
 export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQuests, userDisplayName }: GameSidebarProps) {
   const mc = seriesDetails?.mainCharacter;
   const stats = mc?.stats;
-  const characterNameToDisplay = userDisplayName || mc?.name || "Character";
 
   return (
     <div className="flex flex-col h-full bg-card text-card-foreground rounded-lg shadow-lg">
       <div className="p-2 border-b border-border/60 flex items-center justify-between">
-        <h2 className="text-md font-semibold group-data-[state=collapsed]:hidden">
-          Game Info
+        <h2 className="text-md font-semibold group-data-[state=collapsed]:hidden flex items-center">
+          <Info size={18} className="mr-2 text-primary" /> Game Info
         </h2>
         <SidebarTrigger />
       </div>
-      <ScrollArea className="flex-grow p-4">
+      <ScrollArea className="flex-grow p-4 group-data-[state=collapsed]:p-2">
         <div className="space-y-6">
+
+          {/* Player Alias Information */}
+          {(userDisplayName || mc?.name) && (
+            <div className="text-sm text-muted-foreground group-data-[state=collapsed]:hidden">
+              {userDisplayName ? (
+                <p><span className="font-semibold text-foreground">Player Alias:</span> {userDisplayName}</p>
+              ) : (
+                mc?.name && <p>Playing as: <span className="font-semibold text-foreground">{mc.name}</span></p>
+              )}
+            </div>
+          )}
+          { (userDisplayName || mc?.name) && <Separator className="group-data-[state=collapsed]:hidden" />}
+
+
+          {/* Character Stats Card */}
           {seriesDetails && mc && ( 
             <Card className="bg-background/50 border-border">
-              <CardHeader>
+              <CardHeader className="group-data-[state=collapsed]:p-2 group-data-[state=collapsed]:py-3">
                 <CardTitle className="text-lg flex items-center group-data-[state=collapsed]:justify-center">
                   <User className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" /> 
-                  <span className="group-data-[state=collapsed]:hidden">{characterNameToDisplay} - Stats</span>
+                  <span className="group-data-[state=collapsed]:hidden">{mc.name}'s Stats</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm group-data-[state=collapsed]:hidden">
@@ -91,9 +105,10 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
 
           <Separator className="group-data-[state=collapsed]:hidden" />
 
+          {/* Current Location Section */}
           <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
-            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center">
-              <MapPin className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" /> 
+            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:text-xs">
+              <MapPin className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0 group-data-[state=collapsed]:mb-1 group-data-[state=collapsed]:h-6 group-data-[state=collapsed]:w-6" /> 
               <span className="group-data-[state=collapsed]:hidden">Current Location</span>
             </h3>
             <p className="text-sm text-muted-foreground p-2 bg-background/50 rounded-md group-data-[state=collapsed]:hidden">{currentLocation || 'Unknown'}</p>
@@ -101,9 +116,10 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
 
           <Separator className="group-data-[state=collapsed]:hidden"/>
 
+          {/* Inventory Section */}
           <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
-            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center">
-              <Package className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" />
+            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:text-xs">
+              <Package className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0 group-data-[state=collapsed]:mb-1 group-data-[state=collapsed]:h-6 group-data-[state=collapsed]:w-6" />
                <span className="group-data-[state=collapsed]:hidden">Inventory</span>
             </h3>
             {inventory.length > 0 ? (
@@ -113,15 +129,16 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground italic group-data-[state=collapsed]:hidden">Your inventory is empty.</p>
+              <p className="text-sm text-muted-foreground italic group-data-[state=collapsed]:hidden">Inventory is empty.</p>
             )}
           </div>
 
           <Separator className="group-data-[state=collapsed]:hidden"/>
           
+          {/* Active Quests Section */}
           <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
-            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center">
-              <ScrollText className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" /> 
+            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:text-xs">
+              <ScrollText className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0 group-data-[state=collapsed]:mb-1 group-data-[state=collapsed]:h-6 group-data-[state=collapsed]:w-6" /> 
               <span className="group-data-[state=collapsed]:hidden">Active Quests</span>
             </h3>
             {activeQuests.length > 0 ? (
@@ -160,3 +177,4 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
     </div>
   );
 }
+
