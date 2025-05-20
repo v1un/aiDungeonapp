@@ -1,83 +1,100 @@
 
-// src/lib/game-actions.ts
 'use server';
 
-import type { Message } from '@/types';
-import { generateSeriesDetails, type GenerateSeriesDetailsOutput } from '@/ai/flows/generate-series-details';
+import type { Message, SeriesDetails, ProcessedPlayerInput, ClientGameStateUpdate } from '@/types';
+import { generateSeriesDetails } from '@/ai/flows/generate-series-details';
 import { summarizeAdventure } from '@/ai/flows/summarize-adventure';
-// Note: A more suitable flow like 'continueStory' would be ideal for general interactions.
-// Using summarizeAdventure is a temporary placeholder for generating some AI text.
 
-interface GameState {
+interface ServerGameState {
   seriesSetupComplete: boolean;
-  seriesDetails?: GenerateSeriesDetailsOutput; // Store details for potential future use
+  seriesDetails?: SeriesDetails;
+  inventory: string[];
+  currentLocation: string;
 }
 
-// This state is per-server-instance and will reset on server restart or with multiple instances.
-// A proper database or persistent store is needed for a real game.
-let currentGameState: GameState = {
+let currentGameState: ServerGameState = {
   seriesSetupComplete: false,
+  inventory: [],
+  currentLocation: 'Not yet determined',
 };
 
-export async function processPlayerInput(playerInput: string, chatHistory: Message[]): Promise<string> {
+export async function processPlayerInput(playerInput: string, chatHistory: Message[]): Promise<ProcessedPlayerInput> {
+  const gameStateUpdate: ClientGameStateUpdate = {};
+
   if (!currentGameState.seriesSetupComplete) {
     if (!playerInput.trim()) {
-        return "Please provide the name of a fictional series to begin.";
+      return { responseText: "Please provide the name of a fictional series to begin." };
     }
     try {
       const seriesDetails = await generateSeriesDetails({ seriesName: playerInput });
       currentGameState.seriesSetupComplete = true;
-      currentGameState.seriesDetails = seriesDetails; // Save for context
+      currentGameState.seriesDetails = seriesDetails;
+      currentGameState.inventory = seriesDetails.initialInventory || ['Your Pockets (empty)'];
+      currentGameState.currentLocation = seriesDetails.startingLocation || 'An Unknown Place';
+      
+      gameStateUpdate.seriesDetails = seriesDetails;
+      gameStateUpdate.inventory = currentGameState.inventory;
+      gameStateUpdate.currentLocation = currentGameState.currentLocation;
 
       let responseText = `## Series: ${seriesDetails.seriesTitle} ##\n\n`;
+      responseText += `You are at: **${currentGameState.currentLocation}**\n\n`;
       responseText += `**Main Character: ${seriesDetails.mainCharacter.name}**\n${seriesDetails.mainCharacter.description}\n`;
       
-      // Add stats display
       responseText += `**Stats:**\n`;
-      responseText += `  - Strength: ${seriesDetails.mainCharacter.stats.strength}\n`;
-      responseText += `  - Dexterity: ${seriesDetails.mainCharacter.stats.dexterity}\n`;
-      responseText += `  - Intelligence: ${seriesDetails.mainCharacter.stats.intelligence}\n`;
-      if (seriesDetails.mainCharacter.stats.magicPower) {
-        responseText += `  - Magic Power: ${seriesDetails.mainCharacter.stats.magicPower}\n`;
-      }
-      if (seriesDetails.mainCharacter.stats.luck) {
-        responseText += `  - Luck: ${seriesDetails.mainCharacter.stats.luck}\n`;
-      }
-      if (seriesDetails.mainCharacter.stats.specialAbility) {
-        responseText += `  - Special Ability: ${seriesDetails.mainCharacter.stats.specialAbility}\n`;
-      }
-      responseText += `\n`; // Extra newline for spacing
+      const stats = seriesDetails.mainCharacter.stats;
+      responseText += `  - Strength: ${stats.strength}\n`;
+      responseText += `  - Dexterity: ${stats.dexterity}\n`;
+      responseText += `  - Intelligence: ${stats.intelligence}\n`;
+      if (stats.magicPower) responseText += `  - Magic Power: ${stats.magicPower}\n`;
+      if (stats.luck) responseText += `  - Luck: ${stats.luck}\n`;
+      if (stats.specialAbility) responseText += `  - Special Ability: ${stats.specialAbility}\n`;
+      responseText += `\n`;
 
       responseText += `**Lorebook:**\n${seriesDetails.lorebook}\n\n`;
       responseText += `**Other Notable Characters:**\n`;
       seriesDetails.otherCharacters.forEach(char => {
         responseText += `- **${char.name}**: ${char.description}\n`;
       });
+      responseText += `\n**Initial Inventory:**\n${currentGameState.inventory.map(item => `- ${item}`).join('\n')}\n`;
       responseText += `\n${seriesDetails.initialPromptForPlayer}`;
       
-      return responseText;
+      return { responseText, gameStateUpdate };
     } catch (error) {
       console.error('Error generating series details:', error);
-      // Reset state if series setup fails
-      currentGameState.seriesSetupComplete = false;
-      currentGameState.seriesDetails = undefined;
-      return 'I encountered an issue setting up that series. Please try a different series name or try again.';
+      currentGameState = { // Reset state
+        seriesSetupComplete: false,
+        inventory: [],
+        currentLocation: 'Not yet determined',
+      };
+      return { responseText: 'I encountered an issue setting up that series. Please try a different series name or try again.' };
     }
   } else {
     // Placeholder for general story continuation.
+    // Future: AI might respond with location changes, inventory updates, etc.
+    // For now, we just pass the narrative text.
     try {
       const recentHistory = chatHistory.slice(-5).map(m => `${m.sender === 'player' ? 'Player' : 'Narrator'}: ${m.text}`).join('\n');
-      const historyToSummarize = recentHistory || "The adventure continues after series setup.";
+      const historyToSummarize = `Current Location: ${currentGameState.currentLocation}\nInventory: ${currentGameState.inventory.join(', ')}\n\n${recentHistory || "The adventure continues after series setup."}`;
       
-      const combinedInputForAI = `Player action: "${playerInput}"\nRecent events: ${historyToSummarize}\nSeries context: ${currentGameState.seriesDetails?.seriesTitle || 'Unknown Series'}`;
+      const combinedInputForAI = `Player action: "${playerInput}"\n\nContext:\n${currentGameState.seriesDetails?.seriesTitle ? `Series: ${currentGameState.seriesDetails.seriesTitle}\n` : ''}${currentGameState.seriesDetails?.mainCharacter.name ? `Playing as: ${currentGameState.seriesDetails.mainCharacter.name}\n` : ''}${historyToSummarize}`;
       
       const response = await summarizeAdventure({ adventureHistory: combinedInputForAI });
-      // This will be a summary, not a direct narrative continuation.
-      // A more fitting AI flow is needed for true dynamic storytelling.
-      return `Following your action: "${playerInput}"\n\n${response.summary}`;
+      // This flow doesn't currently update game state like inventory or location.
+      // A more advanced flow would be needed.
+      // For demonstration, if AI mentions "you pick up a shiny key", we could parse that.
+      // Or have structured output from the AI.
+      
+      // Example: if AI says "You find a Rusty Sword and move to the Dark Cave"
+      // We would parse this and update:
+      // currentGameState.inventory.push("Rusty Sword");
+      // currentGameState.currentLocation = "Dark Cave";
+      // gameStateUpdate.inventory = currentGameState.inventory;
+      // gameStateUpdate.currentLocation = currentGameState.currentLocation;
+
+      return { responseText: `Following your action: "${playerInput}"\n\n${response.summary}`, gameStateUpdate };
     } catch (error) {
       console.error('Error in AI response:', error);
-      return `The threads of fate tangle... (AI response error). You said: "${playerInput}". Try rephrasing your action.`;
+      return { responseText: `The threads of fate tangle... (AI response error). You said: "${playerInput}". Try rephrasing your action.` };
     }
   }
 }
