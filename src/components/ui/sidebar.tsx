@@ -271,16 +271,17 @@ const SidebarTrigger = React.forwardRef<
     <Button
       ref={ref}
       data-sidebar="trigger"
-      variant="outline" // Changed from "ghost" to "outline"
-      size="icon"
-      className={cn("h-7 w-7", className)}
+      variant="default" // Changed for diagnostics
+      size="default"   // Changed for diagnostics
+      className={cn("p-2 bg-red-500 text-white font-bold", className)} // Changed for diagnostics
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}
     >
-      <PanelLeft />
+      TOGGLE {/* Explicit text for diagnostics */}
+      {/* <PanelLeft /> */} {/* Icon temporarily commented out */}
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
@@ -764,5 +765,7 @@ export {
   useSidebar,
 }
 
+
+    
 
     
