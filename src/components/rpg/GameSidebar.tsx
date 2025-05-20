@@ -5,16 +5,23 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import type { SeriesDetails } from '@/types';
-import { Shield, Swords, Brain, Zap, Clover, Star, MapPin, Package } from 'lucide-react';
+import type { SeriesDetails, Quest } from '@/types';
+import { Shield, Swords, Brain, Zap, Clover, Star, MapPin, Package, ScrollText, Target } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 interface GameSidebarProps {
   seriesDetails?: SeriesDetails;
   inventory: string[];
   currentLocation: string;
+  activeQuests: Quest[];
 }
 
-export function GameSidebar({ seriesDetails, inventory, currentLocation }: GameSidebarProps) {
+export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQuests }: GameSidebarProps) {
   const mc = seriesDetails?.mainCharacter;
   const stats = mc?.stats;
 
@@ -47,7 +54,7 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation }: GameS
                   <span>{stats.intelligence}</span>
                 </div>
               )}
-              {stats?.magicPower && (
+              {stats?.magicPower && stats.magicPower !== 'N/A' && (
                 <div className="flex items-center justify-between">
                   <span className="flex items-center"><Zap className="mr-2 h-4 w-4 text-muted-foreground" /> Magic Power</span>
                   <span>{stats.magicPower}</span>
@@ -94,6 +101,45 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation }: GameS
             <p className="text-sm text-muted-foreground italic">Your inventory is empty.</p>
           )}
         </div>
+
+        <Separator />
+        
+        <div>
+          <h3 className="text-md font-semibold mb-2 flex items-center">
+            <ScrollText className="mr-2 h-5 w-5 text-primary" /> Active Quests
+          </h3>
+          {activeQuests.length > 0 ? (
+            <Accordion type="single" collapsible className="w-full">
+              {activeQuests.map((quest) => (
+                <AccordionItem value={quest.id} key={quest.id} className="border-border/50">
+                  <AccordionTrigger className="text-sm hover:no-underline py-2">
+                    {quest.title}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-xs space-y-1 text-muted-foreground">
+                    <p>{quest.description}</p>
+                    <h4 className="font-medium text-foreground/80 pt-1">Objectives:</h4>
+                    <ul className="list-disc list-inside pl-2">
+                      {quest.objectives.map((obj, idx) => (
+                        <li key={idx} className="flex items-center">
+                          <Target size={12} className="mr-2 text-primary/70" /> {obj}
+                        </li>
+                      ))}
+                    </ul>
+                     <h4 className="font-medium text-foreground/80 pt-1">Rewards:</h4>
+                    <ul className="list-disc list-inside pl-2">
+                      {quest.rewards.map((rew, idx) => (
+                        <li key={idx}>{rew}</li>
+                      ))}
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">No active quests.</p>
+          )}
+        </div>
+
       </div>
     </ScrollArea>
   );

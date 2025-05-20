@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview Generates details for a fictional series.
+ * @fileOverview Generates details for a fictional series, including an initial quest.
  *
  * - generateSeriesDetails - A function that generates details about a series.
  * - GenerateSeriesDetailsInput - The input type for the generateSeriesDetails function.
@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { QuestSchema } from '@/types'; // Import the Quest schema from types
 
 const GenerateSeriesDetailsInputSchema = z.object({
   seriesName: z.string().describe('The name of the fictional series (e.g., "Re:Zero", "Star Wars", "Harry Potter").'),
@@ -39,19 +40,33 @@ const GenerateSeriesDetailsOutputSchema = z.object({
   ).min(3).max(5).describe("A list of 3 to 5 other notable characters from the series (e.g., companions, antagonists, key figures)."),
   initialInventory: z.array(z.string()).optional().describe("A list of 2-3 thematic starting items for the main character. e.g., ['Old Sword', 'Healing Potion', 'Map Fragment']."),
   startingLocation: z.string().optional().describe("The initial named location where the story or player interaction begins within this series. e.g., 'Lugnica Capital Market', 'Hogwarts Great Hall', 'Tatooine Desert Unknown Quarter'.").default("An Unknown Location"),
-  initialPromptForPlayer: z.string().describe("A compelling question or scenario to present to the player to start their interaction within this series, now that they have the context. e.g., 'You find yourself standing before [Main Character's Name]. What do you say or do?' or 'The [Key Location from Lorebook] unfolds before you. How do you proceed?'")
+  initialQuest: QuestSchema.omit({ id: true, status: true }).optional().describe("An initial main quest for the player, fitting the series' beginning and the main character's perspective. This quest should guide the player's first actions."),
+  initialPromptForPlayer: z.string().describe("A compelling question or scenario to present to the player to start their interaction within this series, now that they have the context. This should naturally lead into or relate to the initialQuest. e.g., 'You find yourself standing before [Main Character's Name]. What do you say or do?' or 'The [Key Location from Lorebook] unfolds before you. How do you proceed?'")
 });
 export type GenerateSeriesDetailsOutput = z.infer<typeof GenerateSeriesDetailsOutputSchema>;
 
 export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): Promise<GenerateSeriesDetailsOutput> {
-  return generateSeriesDetailsFlow(input);
+  const output = await generateSeriesDetailsFlow(input);
+   // Manually add a unique ID and default status to the quest if it exists
+  if (output.initialQuest) {
+    return {
+      ...output,
+      initialQuest: {
+        // Spread the AI-generated quest content first
+        ...(output.initialQuest as Omit<import('@/types').Quest, 'id' | 'status'>), 
+        id: `quest-init-${Date.now()}`, // Then add/override system-managed fields
+        status: 'active',
+      },
+    };
+  }
+  return output;
 }
 
 const prompt = ai.definePrompt({
   name: 'generateSeriesDetailsPrompt',
   input: {schema: GenerateSeriesDetailsInputSchema},
   output: {schema: GenerateSeriesDetailsOutputSchema},
-  prompt: `You are an expert on fictional series and universes. Your task is to provide a comprehensive overview of a given series.
+  prompt: `You are an expert on fictional series and universes. Your task is to provide a comprehensive overview of a given series, including an initial main quest that aligns with the series' beginning from the main character's perspective.
 Based on the series name "{{seriesName}}", please generate the following:
 
 1.  **Series Title**: The official title of the series.
@@ -68,10 +83,17 @@ Based on the series name "{{seriesName}}", please generate the following:
     *   Name: Their full name.
     *   Description: A brief description of their role, relationship to the main character or plot, and key traits.
 5.  **Initial Inventory**: A list of 2-3 thematic starting items for the main character. If none are obviously fitting, provide a generic useful item like 'Traveler's Rations' or 'A Worn Pouch with a Few Coins'.
-6.  **Starting Location**: The specific, named location where the player's interaction within this series will begin. This should be a recognizable place if the series is well-known. If not obvious, a descriptive generic like 'A Dusty Crossroads' or 'The Edge of an Unfamiliar Forest' is fine. Default to 'An Unknown Location' if really unsure.
-7.  **Initial Prompt for Player**: A compelling question or scenario to present to the player to kickstart their interaction with this series. This should integrate the starting location. For example: "You find yourself in [Starting Location], standing before [Main Character's Name]. What do you say or do?" or "The [Starting Location] unfolds before you. How do you proceed?"
+6.  **Starting Location**: The specific, named location where the player's interaction within this series will begin. This should be a recognizable place if the series is well-known, from the main character's point of view at the story's start. Default to 'An Unknown Location' if really unsure.
+7.  **Initial Quest**: Generate an engaging starting quest for the main character. This quest should:
+    *   Have a clear **title**.
+    *   Include a **description** that sets the scene from the main character's perspective at the very beginning of the series.
+    *   List 2-3 actionable **objectives**.
+    *   Suggest thematic **rewards**.
+    This quest should be the player's first major goal.
+8.  **Initial Prompt for Player**: A compelling question or scenario to present to the player to kickstart their interaction. This prompt should naturally tie into the 'Starting Location' and the 'Initial Quest'. For example: "You awaken in [Starting Location]. [Briefly reiterate quest's core problem from description]. What is your first move?"
 
 Please ensure the information is accurate and captures the essence of the series. Adhere strictly to the requested JSON output schema.
+Ensure the Initial Quest is compelling and provides clear direction for the player as the main character.
 `,
 });
 
@@ -79,9 +101,9 @@ const generateSeriesDetailsFlow = ai.defineFlow(
   {
     name: 'generateSeriesDetailsFlow',
     inputSchema: GenerateSeriesDetailsInputSchema,
-    outputSchema: GenerateSeriesDetailsOutputSchema,
+    outputSchema: GenerateSeriesDetailsOutputSchema, // The AI generates content matching this schema
   },
-  async input => {
+  async (input) => {
     const {output} = await prompt(input);
     if (!output) {
         throw new Error("AI failed to generate series details.");

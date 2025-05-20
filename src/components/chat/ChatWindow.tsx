@@ -2,11 +2,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import type { Message, ClientGameState, ProcessedPlayerInput, SeriesDetails } from '@/types';
+import type { Message, ClientGameState, ProcessedPlayerInput, SeriesDetails, Quest } from '@/types';
 import { ChatLayout } from './ChatLayout';
 import { processPlayerInput } from '@/lib/game-actions';
 import { useToast } from '@/hooks/use-toast';
-import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent as UISidebarContent, SidebarInset } from '@/components/ui/sidebar'; // Note: SidebarContent is aliased
+import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent as UISidebarContent, SidebarInset } from '@/components/ui/sidebar';
 import { GameSidebar } from '@/components/rpg/GameSidebar';
 import { PanelLeftOpen } from 'lucide-react';
 
@@ -20,6 +20,7 @@ const initialAiMessage: Message = {
 const initialGameState: ClientGameState = {
   inventory: [],
   currentLocation: "Not yet initialized",
+  activeQuests: [],
 };
 
 export function ChatWindow() {
@@ -66,6 +67,7 @@ export function ChatWindow() {
           seriesDetails: result.gameStateUpdate?.seriesDetails || prev.seriesDetails,
           inventory: result.gameStateUpdate?.inventory || prev.inventory,
           currentLocation: result.gameStateUpdate?.currentLocation || prev.currentLocation,
+          activeQuests: result.gameStateUpdate?.activeQuests || prev.activeQuests,
         }));
       }
 
@@ -92,19 +94,21 @@ export function ChatWindow() {
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-background">
         <Sidebar side="left" className="w-80 border-r border-border">
-          <UISidebarContent> {/* Using aliased SidebarContent from ui/sidebar */}
+          <UISidebarContent>
              <GameSidebar 
                 seriesDetails={gameState.seriesDetails}
                 inventory={gameState.inventory}
                 currentLocation={gameState.currentLocation}
+                activeQuests={gameState.activeQuests}
               />
           </UISidebarContent>
         </Sidebar>
         <SidebarInset className="flex-1 flex flex-col">
-          <div className="p-2 border-b border-border">
-             <SidebarTrigger className="md:hidden"> {/* Only show trigger on mobile to open/close */}
+          <div className="p-2 border-b border-border flex items-center">
+             <SidebarTrigger className="md:hidden">
                 <PanelLeftOpen size={20}/>
              </SidebarTrigger>
+             <h1 className="text-lg font-semibold ml-2 md:ml-0">Mystic Chatways</h1>
           </div>
           <ChatLayout
             messages={messages}
