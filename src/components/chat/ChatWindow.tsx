@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 const initialAiMessage: Message = {
   id: 'ai-start-' + Date.now(),
   sender: 'ai',
-  text: 'Welcome to Mystic Chatways! Describe your character concept to begin your adventure.',
+  text: "Welcome to Mystic Chatways! Enter the name of a fictional series (e.g., TV show, book, movie, game) you'd like to explore.",
   timestamp: Date.now(),
 };
 

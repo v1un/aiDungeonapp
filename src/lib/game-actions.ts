@@ -2,13 +2,13 @@
 'use server';
 
 import type { Message } from '@/types';
-import { generateCharacter } from '@/ai/flows/generate-character';
+import { generateSeriesDetails } from '@/ai/flows/generate-series-details';
 import { summarizeAdventure } from '@/ai/flows/summarize-adventure';
 // Note: A more suitable flow like 'continueStory' would be ideal for general interactions.
 // Using summarizeAdventure is a temporary placeholder for generating some AI text.
 
 interface GameState {
-  characterGenerated: boolean;
+  seriesSetupComplete: boolean;
   // In a more complex system, this would hold character sheets, world state, etc.
   // For now, this is a simplified in-memory state for the server action's context.
 }
@@ -16,27 +16,31 @@ interface GameState {
 // This state is per-server-instance and will reset on server restart or with multiple instances.
 // A proper database or persistent store is needed for a real game.
 let currentGameState: GameState = {
-  characterGenerated: false,
+  seriesSetupComplete: false,
 };
 
 export async function processPlayerInput(playerInput: string, chatHistory: Message[]): Promise<string> {
-  if (!currentGameState.characterGenerated) {
+  if (!currentGameState.seriesSetupComplete) {
     if (!playerInput.trim()) {
-        return "Please provide a concept for your character to begin."
+        return "Please provide the name of a fictional series to begin.";
     }
     try {
-      const character = await generateCharacter({ characterConcept: playerInput });
-      currentGameState.characterGenerated = true; 
-      return `Character Created:
-Name: ${character.name}
-Backstory: ${character.backstory}
-Strength: ${character.stats.strength}, Dexterity: ${character.stats.dexterity}, Constitution: ${character.stats.constitution}, Intelligence: ${character.stats.intelligence}, Wisdom: ${character.stats.wisdom}, Charisma: ${character.stats.charisma}
-Skills: ${character.skills.join(', ')}
+      const seriesDetails = await generateSeriesDetails({ seriesName: playerInput });
+      currentGameState.seriesSetupComplete = true;
 
-The mists of Aethelgard part before you. What is your first action in this new world?`;
+      let responseText = `## Series: ${seriesDetails.seriesTitle} ##\n\n`;
+      responseText += `**Main Character: ${seriesDetails.mainCharacter.name}**\n${seriesDetails.mainCharacter.description}\n\n`;
+      responseText += `**Lorebook:**\n${seriesDetails.lorebook}\n\n`;
+      responseText += `**Other Notable Characters:**\n`;
+      seriesDetails.otherCharacters.forEach(char => {
+        responseText += `- **${char.name}**: ${char.description}\n`;
+      });
+      responseText += `\n${seriesDetails.initialPromptForPlayer}`;
+      
+      return responseText;
     } catch (error) {
-      console.error('Error generating character:', error);
-      return 'I encountered an issue creating your character. Please try describing your concept again.';
+      console.error('Error generating series details:', error);
+      return 'I encountered an issue setting up that series. Please try a different series name or try again.';
     }
   } else {
     // Placeholder for general story continuation.
@@ -44,7 +48,7 @@ The mists of Aethelgard part before you. What is your first action in this new w
     // This is not its intended use and ideally would be replaced by a dedicated story flow.
     try {
       const recentHistory = chatHistory.slice(-5).map(m => `${m.sender === 'player' ? 'Player' : 'Narrator'}: ${m.text}`).join('\n');
-      const historyToSummarize = recentHistory || "The adventure continues after character creation.";
+      const historyToSummarize = recentHistory || "The adventure continues after series setup.";
       
       // summarizeAdventure expects adventureHistory.
       // We'll use the player's input and a snippet of history.
