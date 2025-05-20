@@ -2,13 +2,15 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import type { Message, ClientGameState, ProcessedPlayerInput, SeriesDetails, Quest } from '@/types';
+import type { Message, ClientGameState, ProcessedPlayerInput } from '@/types';
 import { ChatLayout } from './ChatLayout';
 import { processPlayerInput } from '@/lib/game-actions';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent as UISidebarContent, SidebarInset } from '@/components/ui/sidebar';
 import { GameSidebar } from '@/components/rpg/GameSidebar';
-import { PanelLeftOpen } from 'lucide-react';
+import { PanelLeftOpen, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 const initialAiMessage: Message = {
   id: 'ai-start-' + Date.now(),
@@ -21,6 +23,7 @@ const initialGameState: ClientGameState = {
   inventory: [],
   currentLocation: "Not yet initialized",
   activeQuests: [],
+  userDisplayName: undefined,
 };
 
 export function ChatWindow() {
@@ -29,6 +32,17 @@ export function ChatWindow() {
   const [isLoading, setIsLoading] = useState(false);
   const [gameState, setGameState] = useState<ClientGameState>(initialGameState);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Load settings from localStorage on mount
+    const storedName = localStorage.getItem('mysticChatways_userDisplayName');
+    if (storedName) {
+      setGameState(prev => ({ ...prev, userDisplayName: storedName }));
+    }
+    // Note: AI Model and API Key are also stored in localStorage by the settings page,
+    // but are not used to dynamically configure Genkit in this version.
+  }, []);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -100,15 +114,23 @@ export function ChatWindow() {
                 inventory={gameState.inventory}
                 currentLocation={gameState.currentLocation}
                 activeQuests={gameState.activeQuests}
+                userDisplayName={gameState.userDisplayName}
               />
           </UISidebarContent>
         </Sidebar>
         <SidebarInset className="flex-1 flex flex-col">
-          <div className="p-2 border-b border-border flex items-center">
-             <SidebarTrigger className="md:hidden">
-                <PanelLeftOpen size={20}/>
-             </SidebarTrigger>
-             <h1 className="text-lg font-semibold ml-2 md:ml-0">Mystic Chatways</h1>
+          <div className="p-2 border-b border-border flex items-center justify-between">
+            <div className="flex items-center">
+              <SidebarTrigger> {/* Removed md:hidden to make it always visible */}
+                  <PanelLeftOpen size={20}/>
+              </SidebarTrigger>
+              <h1 className="text-lg font-semibold ml-2">Mystic Chatways</h1>
+            </div>
+            <Link href="/settings" passHref>
+              <Button variant="ghost" size="icon" aria-label="Settings">
+                <Settings size={20} />
+              </Button>
+            </Link>
           </div>
           <ChatLayout
             messages={messages}

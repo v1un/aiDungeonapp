@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import type { SeriesDetails, Quest } from '@/types';
-import { Shield, Swords, Brain, Zap, Clover, Star, MapPin, Package, ScrollText, Target } from 'lucide-react';
+import { Shield, Swords, Brain, Zap, Clover, Star, MapPin, Package, ScrollText, Target, User } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -19,20 +19,22 @@ interface GameSidebarProps {
   inventory: string[];
   currentLocation: string;
   activeQuests: Quest[];
+  userDisplayName?: string;
 }
 
-export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQuests }: GameSidebarProps) {
+export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQuests, userDisplayName }: GameSidebarProps) {
   const mc = seriesDetails?.mainCharacter;
   const stats = mc?.stats;
+  const characterNameToDisplay = userDisplayName || mc?.name || "Character";
 
   return (
     <ScrollArea className="h-full p-4 bg-card text-card-foreground rounded-lg shadow-lg">
       <div className="space-y-6">
-        {mc && (
+        {seriesDetails && mc && ( // Ensure seriesDetails and mc exist
           <Card className="bg-background/50 border-border">
             <CardHeader>
               <CardTitle className="text-lg flex items-center">
-                <Star className="mr-2 h-5 w-5 text-primary" /> {mc.name} - Stats
+                <User className="mr-2 h-5 w-5 text-primary" /> {characterNameToDisplay} - Stats
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">

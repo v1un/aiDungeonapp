@@ -72,6 +72,7 @@ export interface ClientGameState {
   inventory: string[];
   currentLocation: string;
   activeQuests: Quest[]; // Uses the Quest interface
+  userDisplayName?: string; // Added for user-set display name
 }
 
 // For updates from server to client
@@ -86,3 +87,4 @@ export interface ProcessedPlayerInput {
   responseText: string;
   gameStateUpdate?: ClientGameStateUpdate;
 }
+
