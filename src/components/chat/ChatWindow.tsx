@@ -8,7 +8,7 @@ import { processPlayerInput } from '@/lib/game-actions';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent as UISidebarContent, SidebarInset } from '@/components/ui/sidebar';
 import { GameSidebar } from '@/components/rpg/GameSidebar';
-import { PanelLeftOpen, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react'; // PanelLeftOpen is no longer needed here
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -121,9 +121,8 @@ export function ChatWindow() {
         <SidebarInset className="flex-1 flex flex-col">
           <div className="p-2 border-b border-border flex items-center justify-between">
             <div className="flex items-center">
-              <SidebarTrigger> {/* Removed md:hidden to make it always visible */}
-                  <PanelLeftOpen size={20}/>
-              </SidebarTrigger>
+              {/* Use SidebarTrigger without children, it provides its own icon */}
+              <SidebarTrigger /> 
               <h1 className="text-lg font-semibold ml-2">Mystic Chatways</h1>
             </div>
             <Link href="/settings" passHref>
