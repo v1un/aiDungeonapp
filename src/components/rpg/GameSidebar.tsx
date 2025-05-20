@@ -13,6 +13,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { SidebarTrigger } from '@/components/ui/sidebar'; // Import SidebarTrigger
+import { Button } from '@/components/ui/button';
+
 
 interface GameSidebarProps {
   seriesDetails?: SeriesDetails;
@@ -28,121 +31,132 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
   const characterNameToDisplay = userDisplayName || mc?.name || "Character";
 
   return (
-    <ScrollArea className="h-full p-4 bg-card text-card-foreground rounded-lg shadow-lg">
-      <div className="space-y-6">
-        {seriesDetails && mc && ( // Ensure seriesDetails and mc exist
-          <Card className="bg-background/50 border-border">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center">
-                <User className="mr-2 h-5 w-5 text-primary" /> {characterNameToDisplay} - Stats
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {stats?.strength && (
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center"><Shield className="mr-2 h-4 w-4 text-muted-foreground" /> Strength</span>
-                  <span>{stats.strength}</span>
-                </div>
-              )}
-              {stats?.dexterity && (
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center"><Swords className="mr-2 h-4 w-4 text-muted-foreground" /> Dexterity</span>
-                  <span>{stats.dexterity}</span>
-                </div>
-              )}
-              {stats?.intelligence && (
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center"><Brain className="mr-2 h-4 w-4 text-muted-foreground" /> Intelligence</span>
-                  <span>{stats.intelligence}</span>
-                </div>
-              )}
-              {stats?.magicPower && stats.magicPower !== 'N/A' && (
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center"><Zap className="mr-2 h-4 w-4 text-muted-foreground" /> Magic Power</span>
-                  <span>{stats.magicPower}</span>
-                </div>
-              )}
-              {stats?.luck && (
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center"><Clover className="mr-2 h-4 w-4 text-muted-foreground" /> Luck</span>
-                  <span>{stats.luck}</span>
-                </div>
-              )}
-              {stats?.specialAbility && (
-                <div className="mt-1 pt-1 border-t border-border/50">
-                  <span className="flex items-center font-semibold"><Star className="mr-2 h-4 w-4 text-yellow-400" /> Special</span>
-                  <p className="text-xs text-muted-foreground pl-6">{stats.specialAbility}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        <Separator />
-
-        <div>
-          <h3 className="text-md font-semibold mb-2 flex items-center">
-            <MapPin className="mr-2 h-5 w-5 text-primary" /> Current Location
-          </h3>
-          <p className="text-sm text-muted-foreground p-2 bg-background/50 rounded-md">{currentLocation || 'Unknown'}</p>
-        </div>
-
-        <Separator />
-
-        <div>
-          <h3 className="text-md font-semibold mb-2 flex items-center">
-            <Package className="mr-2 h-5 w-5 text-primary" /> Inventory
-          </h3>
-          {inventory.length > 0 ? (
-            <ul className="space-y-1 text-sm list-disc list-inside pl-2">
-              {inventory.map((item, index) => (
-                <li key={index} className="text-muted-foreground">{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">Your inventory is empty.</p>
-          )}
-        </div>
-
-        <Separator />
-        
-        <div>
-          <h3 className="text-md font-semibold mb-2 flex items-center">
-            <ScrollText className="mr-2 h-5 w-5 text-primary" /> Active Quests
-          </h3>
-          {activeQuests.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full">
-              {activeQuests.map((quest) => (
-                <AccordionItem value={quest.id} key={quest.id} className="border-border/50">
-                  <AccordionTrigger className="text-sm hover:no-underline py-2">
-                    {quest.title}
-                  </AccordionTrigger>
-                  <AccordionContent className="text-xs space-y-1 text-muted-foreground">
-                    <p>{quest.description}</p>
-                    <h4 className="font-medium text-foreground/80 pt-1">Objectives:</h4>
-                    <ul className="list-disc list-inside pl-2">
-                      {quest.objectives.map((obj, idx) => (
-                        <li key={idx} className="flex items-center">
-                          <Target size={12} className="mr-2 text-primary/70" /> {obj}
-                        </li>
-                      ))}
-                    </ul>
-                     <h4 className="font-medium text-foreground/80 pt-1">Rewards:</h4>
-                    <ul className="list-disc list-inside pl-2">
-                      {quest.rewards.map((rew, idx) => (
-                        <li key={idx}>{rew}</li>
-                      ))}
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">No active quests.</p>
-          )}
-        </div>
-
+    <div className="flex flex-col h-full bg-card text-card-foreground rounded-lg shadow-lg">
+      <div className="p-2 border-b border-border/60 flex items-center justify-between">
+        <h2 className="text-md font-semibold group-data-[state=collapsed]:hidden">
+          Game Info
+        </h2>
+        <SidebarTrigger />
       </div>
-    </ScrollArea>
+      <ScrollArea className="flex-grow p-4">
+        <div className="space-y-6">
+          {seriesDetails && mc && ( 
+            <Card className="bg-background/50 border-border">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center group-data-[state=collapsed]:justify-center">
+                  <User className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" /> 
+                  <span className="group-data-[state=collapsed]:hidden">{characterNameToDisplay} - Stats</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm group-data-[state=collapsed]:hidden">
+                {stats?.strength && (
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center"><Shield className="mr-2 h-4 w-4 text-muted-foreground" /> Strength</span>
+                    <span>{stats.strength}</span>
+                  </div>
+                )}
+                {stats?.dexterity && (
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center"><Swords className="mr-2 h-4 w-4 text-muted-foreground" /> Dexterity</span>
+                    <span>{stats.dexterity}</span>
+                  </div>
+                )}
+                {stats?.intelligence && (
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center"><Brain className="mr-2 h-4 w-4 text-muted-foreground" /> Intelligence</span>
+                    <span>{stats.intelligence}</span>
+                  </div>
+                )}
+                {stats?.magicPower && stats.magicPower !== 'N/A' && (
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center"><Zap className="mr-2 h-4 w-4 text-muted-foreground" /> Magic Power</span>
+                    <span>{stats.magicPower}</span>
+                  </div>
+                )}
+                {stats?.luck && (
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center"><Clover className="mr-2 h-4 w-4 text-muted-foreground" /> Luck</span>
+                    <span>{stats.luck}</span>
+                  </div>
+                )}
+                {stats?.specialAbility && (
+                  <div className="mt-1 pt-1 border-t border-border/50">
+                    <span className="flex items-center font-semibold"><Star className="mr-2 h-4 w-4 text-yellow-400" /> Special</span>
+                    <p className="text-xs text-muted-foreground pl-6">{stats.specialAbility}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          <Separator className="group-data-[state=collapsed]:hidden" />
+
+          <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
+            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center">
+              <MapPin className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" /> 
+              <span className="group-data-[state=collapsed]:hidden">Current Location</span>
+            </h3>
+            <p className="text-sm text-muted-foreground p-2 bg-background/50 rounded-md group-data-[state=collapsed]:hidden">{currentLocation || 'Unknown'}</p>
+          </div>
+
+          <Separator className="group-data-[state=collapsed]:hidden"/>
+
+          <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
+            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center">
+              <Package className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" />
+               <span className="group-data-[state=collapsed]:hidden">Inventory</span>
+            </h3>
+            {inventory.length > 0 ? (
+              <ul className="space-y-1 text-sm list-disc list-inside pl-2 group-data-[state=collapsed]:hidden">
+                {inventory.map((item, index) => (
+                  <li key={index} className="text-muted-foreground">{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground italic group-data-[state=collapsed]:hidden">Your inventory is empty.</p>
+            )}
+          </div>
+
+          <Separator className="group-data-[state=collapsed]:hidden"/>
+          
+          <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
+            <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center">
+              <ScrollText className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" /> 
+              <span className="group-data-[state=collapsed]:hidden">Active Quests</span>
+            </h3>
+            {activeQuests.length > 0 ? (
+              <Accordion type="single" collapsible className="w-full group-data-[state=collapsed]:hidden">
+                {activeQuests.map((quest) => (
+                  <AccordionItem value={quest.id} key={quest.id} className="border-border/50">
+                    <AccordionTrigger className="text-sm hover:no-underline py-2">
+                      {quest.title}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-xs space-y-1 text-muted-foreground">
+                      <p>{quest.description}</p>
+                      <h4 className="font-medium text-foreground/80 pt-1">Objectives:</h4>
+                      <ul className="list-disc list-inside pl-2">
+                        {quest.objectives.map((obj, idx) => (
+                          <li key={idx} className="flex items-center">
+                            <Target size={12} className="mr-2 text-primary/70" /> {obj}
+                          </li>
+                        ))}
+                      </ul>
+                       <h4 className="font-medium text-foreground/80 pt-1">Rewards:</h4>
+                      <ul className="list-disc list-inside pl-2">
+                        {quest.rewards.map((rew, idx) => (
+                          <li key={idx}>{rew}</li>
+                        ))}
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <p className="text-sm text-muted-foreground italic group-data-[state=collapsed]:hidden">No active quests.</p>
+            )}
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

@@ -169,7 +169,7 @@ const Sidebar = React.forwardRef<
     {
       side = "left",
       variant = "sidebar",
-      collapsible = "offcanvas",
+      collapsible = "offcanvas", // Default value
       className,
       children,
       ...props
@@ -226,7 +226,7 @@ const Sidebar = React.forwardRef<
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
-            "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]",
+            "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]", // Adjusted for icon mode
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -264,24 +264,23 @@ Sidebar.displayName = "Sidebar"
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, ref) => {
+>(({ className, onClick, children, ...props }, ref) => {
   const { toggleSidebar } = useSidebar()
 
   return (
     <Button
       ref={ref}
       data-sidebar="trigger"
-      variant="default" // Changed for diagnostics
-      size="default"   // Changed for diagnostics
-      className={cn("p-2 bg-red-500 text-white font-bold", className)} // Changed for diagnostics
+      variant="outline" // Changed to outline for better visibility
+      size="icon"   // Ensure it's icon sized
+      className={cn("p-2", className)} 
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}
     >
-      TOGGLE {/* Explicit text for diagnostics */}
-      {/* <PanelLeft /> */} {/* Icon temporarily commented out */}
+      {children || <PanelLeft />} 
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
@@ -764,8 +763,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-
-    
-
-    
