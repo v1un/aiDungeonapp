@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -225,6 +226,7 @@ const Sidebar = React.forwardRef<
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
+            "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -269,7 +271,7 @@ const SidebarTrigger = React.forwardRef<
     <Button
       ref={ref}
       data-sidebar="trigger"
-      variant="ghost"
+      variant="outline" // Changed from "ghost" to "outline"
       size="icon"
       className={cn("h-7 w-7", className)}
       onClick={(event) => {
@@ -761,3 +763,6 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+
+    
