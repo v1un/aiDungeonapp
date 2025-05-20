@@ -1,3 +1,5 @@
-export default function Home() {
-  return <></>;
+import { ChatWindow } from '@/components/chat/ChatWindow';
+
+export default function MysticChatwaysPage() {
+  return <ChatWindow />;
 }
