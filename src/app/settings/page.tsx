@@ -20,6 +20,7 @@ const availableModels = [
   { id: 'googleai/gemini-1.5-flash-latest', name: 'Gemini 1.5 Flash' },
   { id: 'googleai/gemini-1.5-pro-latest', name: 'Gemini 1.5 Pro' },
   { id: 'googleai/gemini-pro', name: 'Gemini Pro' },
+  { id: 'googleai/gemini-2.5-flash-preview-04-17', name: 'Gemini 2.5 Flash Preview (04-17)' },
 ];
 
 export default function SettingsPage() {
@@ -35,7 +36,14 @@ export default function SettingsPage() {
     const storedApiKey = localStorage.getItem('mysticChatways_apiKey');
 
     if (storedName) setUserDisplayName(storedName);
-    if (storedModel) setAiModel(storedModel);
+    if (storedModel) {
+      // Ensure the stored model is still in the available list
+      if (availableModels.some(model => model.id === storedModel)) {
+        setAiModel(storedModel);
+      } else {
+        setAiModel(availableModels[0].id); // Fallback to default if not found
+      }
+    }
     if (storedApiKey) setApiKey(storedApiKey);
   }, []);
 
