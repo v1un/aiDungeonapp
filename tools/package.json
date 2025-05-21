@@ -1,0 +1,10 @@
+{
+  "name": "mystic-chatways-tools",
+  "version": "1.0.0",
+  "description": "Tools for Mystic Chatways",
+  "type": "module",
+  "main": "mystic-chatways-launcher.js",
+  "scripts": {
+    "start": "node ../dist/tools/mystic-chatways-launcher.js"
+  }
+}

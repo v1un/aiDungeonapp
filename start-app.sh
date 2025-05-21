@@ -3,6 +3,17 @@
 # Mystic Chatways Auto-Launcher Script
 # This script launches both the Next.js server and GenKit server required for Mystic Chatways
 
+# Default ports
+DEFAULT_NEXTJS_PORT=9003
+
+# GenKit uses multiple ports:
+# - API/Health: typically 4001
+# - Developer UI: typically 4000
+# - Telemetry: typically 4033
+
+# Allow overriding ports via environment variables
+export PORT=${NEXTJS_PORT:-$DEFAULT_NEXTJS_PORT}
+
 # Define colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -50,39 +61,132 @@ if [ ! -d "node_modules" ]; then
   fi
 fi
 
-# Find an available port for the Next.js server
-NEXTJS_PORT=9003
-while port_in_use $NEXTJS_PORT; do
-  echo -e "${YELLOW}Port $NEXTJS_PORT is already in use, trying next port...${NC}"
-  NEXTJS_PORT=$((NEXTJS_PORT+1))
+# Find available port for Next.js server
+echo -e "${YELLOW}Checking for available ports...${NC}"
+
+# Find available Next.js port
+while port_in_use $PORT; do
+  echo -e "${YELLOW}Port $PORT is already in use, trying next port...${NC}"
+  PORT=$((PORT + 1))
 done
+
+# We don't need to manually set GenKit ports as it will find available ports itself
+
+export PORT
+
+echo -e "${GREEN}Using ports:${NC}"
+echo -e "- Next.js: ${GREEN}$PORT${NC}"
+echo -e "- GenKit:  Will auto-select available ports"
 
 # Kill any previously running instances
 echo -e "${YELLOW}Checking for existing processes...${NC}"
 pkill -f "next dev" &>/dev/null
 pkill -f "genkit start" &>/dev/null
 
-# Create log directory if it doesn't exist
+# Clean up any stale GenKit server configurations
+if [ -d ".genkit/servers" ]; then
+  rm -f .genkit/servers/*.json
+fi
+
+# Create necessary directories
 mkdir -p logs
+mkdir -p .genkit/servers
 
 # Start GenKit server
 echo -e "${GREEN}Starting GenKit server...${NC}"
-npm run genkit:dev > logs/genkit.log 2>&1 &
+
+# Clean up any existing GenKit server processes
+pkill -f "genkit start" &>/dev/null
+
+# Start GenKit with a clean environment
+# Note: GenKit will automatically find available ports
+(
+  cd "$(pwd)" && \
+  npm run genkit:dev > logs/genkit.log 2>&1
+) &
 GENKIT_PID=$!
 
+# Wait for GenKit to start and detect the ports it's using
+echo -n "${YELLOW}Waiting for GenKit to start...${NC}"
+MAX_WAIT=90  # Increased timeout to 90 seconds
+WAITED=0
+GENKIT_UI_PORT=""
+GENKIT_API_PORT=""
+GENKIT_TELEMETRY_PORT=""
+
+while [ $WAITED -lt $MAX_WAIT ]; do
+  # Check if process is still running
+  if ! ps -p $GENKIT_PID > /dev/null; then
+    echo -e "\n${RED}GenKit process died during startup. Check logs/genkit.log for details.${NC}"
+    exit 1
+  fi
+  
+  # Try to extract port information from the log file
+  if [ -z "$GENKIT_UI_PORT" ]; then
+    GENKIT_UI_PORT=$(grep -o "Genkit Developer UI: http://localhost:[0-9]\+" logs/genkit.log | grep -o "[0-9]\+$")
+  fi
+  
+  if [ -z "$GENKIT_TELEMETRY_PORT" ]; then
+    GENKIT_TELEMETRY_PORT=$(grep -o "Telemetry API running on http://localhost:[0-9]\+" logs/genkit.log | grep -o "[0-9]\+$")
+  fi
+  
+  # If we found the UI port, we can assume GenKit is starting up correctly
+  if [ -n "$GENKIT_UI_PORT" ] && [ -n "$GENKIT_TELEMETRY_PORT" ]; then
+    # Now let's try various potential API port numbers
+    for potential_port in 4001 4002 4003 4004 8080; do
+      if curl -s "http://localhost:${potential_port}/health" > /dev/null 2>&1; then
+        GENKIT_API_PORT="$potential_port"
+        break
+      fi
+    done
+    
+    # If we found all ports, break out of the loop
+    if [ -n "$GENKIT_API_PORT" ]; then
+      echo -e " ${GREEN}✓${NC}"
+      break
+    fi
+  fi
+  
+  echo -n "."
+  sleep 1
+  WAITED=$((WAITED + 1))
+  
+  # Every 10 seconds, output a status update
+  if [ $((WAITED % 10)) -eq 0 ]; then
+    echo -e "\n${YELLOW}Still waiting for GenKit to start (${WAITED}/${MAX_WAIT}s)...${NC}"
+    echo -n "${YELLOW}Continuing to wait...${NC}"
+  fi
+done
+
 # Check if GenKit started successfully
-sleep 3
 if ! ps -p $GENKIT_PID > /dev/null; then
-  echo -e "${RED}Failed to start GenKit server. Check logs/genkit.log for details.${NC}"
+  echo -e "\n${RED}Failed to start GenKit server. Check logs/genkit.log for details.${NC}"
   exit 1
 fi
 
+if [ -z "$GENKIT_UI_PORT" ] || [ -z "$GENKIT_API_PORT" ] || [ -z "$GENKIT_TELEMETRY_PORT" ]; then
+  echo -e "\n${RED}Timed out waiting for GenKit to start or couldn't detect all ports.${NC}"
+  echo -e "${YELLOW}Last 20 lines of GenKit log:${NC}"
+  tail -n 20 logs/genkit.log
+  echo -e "${YELLOW}You may need to check your GenKit configuration or try running 'npm run genkit:dev' manually.${NC}"
+  exit 1
+fi
+
+# Export the detected GenKit ports so the Next.js app can use them
+export GENKIT_UI_PORT=$GENKIT_UI_PORT
+export GENKIT_API_PORT=$GENKIT_API_PORT
+export GENKIT_TELEMETRY_PORT=$GENKIT_TELEMETRY_PORT
+
 echo -e "${GREEN}GenKit server started with PID: $GENKIT_PID${NC}"
+echo -e "${GREEN}Detected GenKit ports:${NC}"
+echo -e "- API/Health: ${GREEN}$GENKIT_API_PORT${NC}"
+echo -e "- Developer UI: ${GREEN}$GENKIT_UI_PORT${NC}"
+echo -e "- Telemetry: ${GREEN}$GENKIT_TELEMETRY_PORT${NC}"
 echo -e "${BLUE}GenKit logs available at: $(pwd)/logs/genkit.log${NC}"
 
-# Start Next.js server
-echo -e "${GREEN}Starting Next.js server on port $NEXTJS_PORT...${NC}"
-PORT=$NEXTJS_PORT npm run dev > logs/nextjs.log 2>&1 &
+# Start Next.js server with environment variables for the GenKit ports
+echo -e "${GREEN}Starting Next.js server on port $PORT...${NC}"
+PORT=$PORT GENKIT_API_PORT=$GENKIT_API_PORT GENKIT_UI_PORT=$GENKIT_UI_PORT npm run dev > logs/nextjs.log 2>&1 &
 NEXTJS_PID=$!
 
 # Check if Next.js started successfully
@@ -99,8 +203,9 @@ echo -e "${BLUE}Next.js logs available at: $(pwd)/logs/nextjs.log${NC}"
 # Print URLs
 echo ""
 echo -e "${GREEN}Mystic Chatways is now running!${NC}"
-echo -e "${BLUE}Application URL: ${GREEN}http://localhost:$NEXTJS_PORT${NC}"
-echo -e "${BLUE}GenKit Developer UI: ${GREEN}http://localhost:4001${NC}"
+echo -e "${BLUE}Application URL: ${GREEN}http://localhost:$PORT${NC}"
+echo -e "${BLUE}GenKit Developer UI: ${GREEN}http://localhost:$GENKIT_UI_PORT${NC}"
+echo -e "${BLUE}GenKit API: ${GREEN}http://localhost:$GENKIT_API_PORT${NC}"
 
 # Check connection status
 echo ""
@@ -108,18 +213,26 @@ echo -e "${YELLOW}Checking connection status...${NC}"
 sleep 5
 
 # Check if Next.js server is accessible
-if curl -s "http://localhost:$NEXTJS_PORT" > /dev/null; then
+if curl -s "http://localhost:$PORT" > /dev/null; then
   echo -e "${GREEN}✓ Next.js server is accessible${NC}"
 else
   echo -e "${RED}✗ Next.js server is not accessible${NC}"
   echo -e "${YELLOW}Check logs/nextjs.log for details${NC}"
 fi
 
-# Check if GenKit server is accessible
-if curl -s "http://localhost:4001" > /dev/null; then
-  echo -e "${GREEN}✓ GenKit server is accessible${NC}"
+# Check if GenKit API server is accessible
+if curl -s "http://localhost:$GENKIT_API_PORT/health" > /dev/null; then
+  echo -e "${GREEN}✓ GenKit API server is accessible${NC}"
 else
-  echo -e "${RED}✗ GenKit server is not accessible${NC}"
+  echo -e "${RED}✗ GenKit API server is not accessible${NC}"
+  echo -e "${YELLOW}Check logs/genkit.log for details${NC}"
+fi
+
+# Check if GenKit UI server is accessible
+if curl -s "http://localhost:$GENKIT_UI_PORT" > /dev/null; then
+  echo -e "${GREEN}✓ GenKit UI server is accessible${NC}"
+else
+  echo -e "${RED}✗ GenKit UI server is not accessible${NC}"
   echo -e "${YELLOW}Check logs/genkit.log for details${NC}"
 fi
 
@@ -130,8 +243,24 @@ echo -e "${YELLOW}  To stop the servers, run:  ${NC}"
 echo -e "${RED}  pkill -f \"next dev\"; pkill -f \"genkit start\"  ${NC}"
 echo -e "${BLUE}=================================${NC}"
 
+# Function to clean up processes
+cleanup() {
+  echo -e "\n${YELLOW}Stopping servers...${NC}"
+  pkill -P $GENKIT_PID 2>/dev/null
+  pkill -P $NEXTJS_PID 2>/dev/null
+  pkill -f "genkit start" 2>/dev/null
+  echo -e "${GREEN}Servers stopped${NC}"
+  exit 0
+}
+
+# Set up trap for Ctrl+C
+trap cleanup INT
+
 # Keep the script running to maintain control of the terminal
-echo ""
-echo -e "${YELLOW}Press Ctrl+C to stop both servers and exit${NC}"
-trap "pkill -P $GENKIT_PID; pkill -P $NEXTJS_PID; echo -e '${RED}Servers stopped${NC}'; exit" INT
-wait
+echo -e "\n${YELLOW}Press Ctrl+C to stop both servers and exit${NC}"
+
+# Wait for background processes
+wait $GENKIT_PID $NEXTJS_PID
+
+# If we get here, one of the servers died
+cleanup
