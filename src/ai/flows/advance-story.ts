@@ -11,7 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { retrieveLoreInfoTool } from '@/ai/tools/retrieve-lore-info';
+import { retrieveLoreInfoTool } from '@/ai/lore-tools'; // Import from flattened lore-tools file
 import type { Quest, MainCharacter } from '@/types';
 
 const AdvanceStoryInputSchema = z.object({
