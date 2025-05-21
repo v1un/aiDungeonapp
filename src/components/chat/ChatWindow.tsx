@@ -324,7 +324,7 @@ export function ChatWindow() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen overflow-hidden bg-background/90 backdrop-blur-sm relative">
+      <div className="stretch-layout overflow-hidden bg-background/90 backdrop-blur-sm relative">
         {/* Background elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute -top-40 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
@@ -349,7 +349,7 @@ export function ChatWindow() {
         </Sidebar>
         
         {/* Main content area */}
-        <SidebarInset className="h-full w-full flex flex-col">
+        <SidebarInset className="stretch-child">
           <div className="sticky top-0 z-20 bg-background/50 backdrop-blur-md border-b border-white/10 p-3 flex items-center justify-between shadow-md">
             <div className="flex-1 flex items-center justify-between max-w-xl mx-auto w-full">
               {/* Game session dropdown */}

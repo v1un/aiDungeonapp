@@ -37,7 +37,7 @@ export function ChatLayout({
   }, [messages]);
 
   return (
-    <div className="flex h-full flex-col bg-background/90 backdrop-blur-sm relative overflow-hidden w-full">
+    <div className="stretch-layout bg-background/90 backdrop-blur-sm relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse-light"></div>
@@ -53,7 +53,7 @@ export function ChatLayout({
       </div>
       
       {/* Chat messages */}
-      <ScrollArea className="flex-grow p-2 sm:p-4 md:p-6 styled-scrollbar w-full" ref={scrollAreaRef}>
+      <ScrollArea className="stretch-child p-2 sm:p-4 md:p-6 styled-scrollbar" ref={scrollAreaRef}>
         <div className="mx-auto max-w-3xl space-y-3 w-full">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[200px] text-muted-foreground">
