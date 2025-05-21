@@ -225,15 +225,18 @@ const Sidebar = React.forwardRef<
         {/* No spacer div needed anymore */}
         <div
           className={cn(
-            "duration-200 fixed inset-y-0 z-20 hidden h-screen transition-all ease-linear md:flex",
-            state === "expanded" ? "w-[--sidebar-width]" : "w-16",
+            "duration-200 fixed inset-y-0 z-20 hidden transition-all ease-linear md:flex",
+            "h-screen bg-sidebar",
+            state === "expanded" 
+              ? "w-[--sidebar-width]" 
+              : "w-16",
             side === "left"
-              ? "left-0 border-r border-sidebar-border"
-              : "right-0 border-l border-sidebar-border",
+              ? "left-0 border-r border-sidebar-border/50"
+              : "right-0 border-l border-sidebar-border/50",
             // For inset variant, use appropriate margins in expanded state, but only vertical margins in collapsed state
-            variant === "inset" && state === "expanded" && "m-2",
-            variant === "inset" && state === "collapsed" && "my-2",
-            "flex-col bg-sidebar"
+            variant === "inset" && state === "expanded" && "m-2 rounded-lg overflow-hidden",
+            variant === "inset" && state === "collapsed" && "my-2 rounded-lg overflow-hidden",
+            "flex-col"
           )}
           {...props}
         >
@@ -241,8 +244,9 @@ const Sidebar = React.forwardRef<
             data-sidebar="sidebar"
             className={cn(
               "flex h-full w-full flex-col overflow-hidden",
-              "group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow",
-              state === "collapsed" ? "items-center px-0" : "px-3"
+              state === "collapsed" 
+                ? "items-center px-0 py-2" 
+                : "px-3 py-2"
             )}
           >
             {children}

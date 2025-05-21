@@ -31,44 +31,45 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
   const stats = mc?.stats;
 
   return (
-    <div className="flex flex-col h-full bg-background/80 backdrop-blur-sm text-card-foreground rounded-xl shadow-xl border border-border/30 overflow-hidden relative">
+    <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm text-foreground overflow-hidden relative border-r border-border/20">
       {/* Background elements */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 group-data-[state=collapsed]:hidden">
-        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-accent/5 rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl group-data-[state=collapsed]:opacity-20"></div>
+        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-accent/5 rounded-full blur-3xl group-data-[state=collapsed]:opacity-20"></div>
       </div>
       
       {/* Header */}
-      <div className="p-3 border-b border-border/20 bg-card/30 backdrop-blur-sm flex items-center justify-between relative z-10">
-        <h2 className="text-md font-semibold group-data-[state=collapsed]:hidden flex items-center">
-          <Info size={18} className="mr-2 text-gradient" /> 
-          <span className="text-gradient">Adventure Panel</span>
+      <div className="px-4 py-3 border-b border-border/20 bg-background/80 backdrop-blur-sm flex items-center justify-between relative z-10">
+        <h2 className="text-sm font-semibold tracking-wide group-data-[state=collapsed]:hidden flex items-center text-foreground/90">
+          <Info size={16} className="mr-2 text-primary" /> 
+          <span>Adventure Panel</span>
         </h2>
-        <SidebarTrigger className="hover:bg-primary/10 text-primary transition-colors" />
+        <SidebarTrigger className="h-8 w-8 p-0 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors" />
       </div>
       
-      <ScrollArea className="flex-grow p-4 group-data-[state=collapsed]:p-2 styled-scrollbar relative z-10">
-        <div className="space-y-6 animate-fade-in">
-
+      <ScrollArea className="flex-grow px-3 py-4 group-data-[state=expanded]:px-4 styled-scrollbar relative z-10">
+        <div className="space-y-5 animate-fade-in">
+          {/* Player info section */}
           {(userDisplayName || mc?.name) && (
             <div className="text-sm text-muted-foreground group-data-[state=collapsed]:hidden">
               {userDisplayName ? (
-                <p><span className="font-semibold text-foreground">Player Alias:</span> {userDisplayName}</p>
+                <p className="truncate"><span className="font-semibold text-foreground">Player:</span> {userDisplayName}</p>
               ) : (
-                mc?.name && <p>Playing as: <span className="font-semibold text-foreground">{mc.name}</span></p>
+                mc?.name && <p className="truncate">Playing as: <span className="font-semibold text-foreground">{mc.name}</span></p>
               )}
             </div>
           )}
-          { (userDisplayName || mc?.name) && <Separator className="group-data-[state=collapsed]:hidden" />}
+          {(userDisplayName || mc?.name) && <Separator className="group-data-[state=collapsed]:hidden" />}
 
+          {/* Character Stats */}
           {seriesDetails && mc && (
-            <Card className="bg-gradient-to-br from-background/70 to-background/90 border-white/10 shadow-xl overflow-hidden group hover:border-primary/20 transition-all duration-300">
-              <CardHeader className="group-data-[state=collapsed]:p-2 group-data-[state=collapsed]:py-3 pb-2">
-                <CardTitle className="text-lg flex items-center group-data-[state=collapsed]:justify-center">
-                  <div className="mr-2 h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center group-data-[state=collapsed]:mr-0">
+            <Card className="bg-gradient-to-br from-background/70 to-background/90 border border-border/20 shadow-sm overflow-hidden hover:border-primary/30 transition-all duration-200">
+              <CardHeader className="p-3 group-data-[state=collapsed]:p-2">
+                <CardTitle className="flex items-center group-data-[state=collapsed]:justify-center">
+                  <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center group-data-[state=collapsed]:mx-auto">
                     <User className="h-4 w-4 text-primary" />
                   </div>
-                  <span className="group-data-[state=collapsed]:hidden">{mc.name}'s Stats</span>
+                  <span className="ml-2 text-base group-data-[state=collapsed]:hidden">Stats</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm group-data-[state=collapsed]:hidden pt-0">
@@ -188,121 +189,120 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
               </div>
             </>
           )}
-          {seriesDetails && (
-            <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-md font-semibold flex items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:text-xs">
-                  <div className="mr-2 h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center group-data-[state=collapsed]:mr-0">
-                    <MapPin className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="group-data-[state=collapsed]:hidden">Current Location</span>
-                </h3>
-              </div>
-              <div className="glass-effect p-3 rounded-lg border border-white/5 group-data-[state=collapsed]:hidden animate-pulse-light shadow-lg">
-                <p className="text-sm">{currentLocation || 'Unknown'}</p>
-              </div>
-            </div>
-          )}
-          <Separator className="group-data-[state=collapsed]:hidden border-white/10"/>
+          {/* Location */}
+          <Card className="bg-gradient-to-br from-background/70 to-background/90 border border-border/20 shadow-sm overflow-hidden hover:border-primary/30 transition-all duration-200">
+            <CardHeader className="p-3 group-data-[state=collapsed]:p-2">
+              <CardTitle className="flex items-center group-data-[state=collapsed]:justify-center">
+                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center group-data-[state=collapsed]:mx-auto">
+                  <MapPin className="h-4 w-4 text-primary" />
+                </div>
+                <span className="ml-2 text-base group-data-[state=collapsed]:hidden">Location</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 text-sm group-data-[state=collapsed]:hidden">
+              <p className="truncate">{currentLocation || 'Unknown'}</p>
+            </CardContent>
+          </Card>
 
-          <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-md font-semibold flex items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:text-xs">
-                <div className="mr-2 h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center group-data-[state=collapsed]:mr-0">
+          {/* Inventory */}
+          <Card className="bg-gradient-to-br from-background/70 to-background/90 border border-border/20 shadow-sm overflow-hidden hover:border-primary/30 transition-all duration-200">
+            <CardHeader className="p-3 group-data-[state=collapsed]:p-2">
+              <CardTitle className="flex items-center group-data-[state=collapsed]:justify-center">
+                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center group-data-[state=collapsed]:mx-auto">
                   <Package className="h-4 w-4 text-primary" />
                 </div>
-                <span className="group-data-[state=collapsed]:hidden">Inventory</span>
-              </h3>
-            </div>
+                <span className="ml-2 text-base group-data-[state=collapsed]:hidden">Inventory</span>
+              </CardTitle>
+            </CardHeader>
             
-            <div className="glass-effect rounded-lg border border-white/5 group-data-[state=collapsed]:hidden shadow-lg overflow-hidden">
+            <CardContent className="p-2 group-data-[state=collapsed]:hidden">
               {inventory && inventory.length > 0 ? (
-                <ul className="divide-y divide-white/5">
+                <ul className="divide-y divide-border/50 rounded-md overflow-hidden">
                   {inventory.map((item, index) => (
                     <li key={index} className="p-2 hover:bg-primary/5 transition-colors flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-accent/50"></div>
-                      <span className="text-sm">{item}</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent/70 flex-shrink-0"></div>
+                      <span className="text-xs truncate">{item}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <div className="p-3 text-center">
-                  <p className="text-sm text-muted-foreground italic">Inventory is empty</p>
+                <div className="p-3 text-center bg-background/30 rounded-md">
+                  <p className="text-xs text-muted-foreground">Inventory is empty</p>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <Separator className="group-data-[state=collapsed]:hidden border-white/10"/>
-
-          <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-md font-semibold flex items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:text-xs">
-                <div className="mr-2 h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center group-data-[state=collapsed]:mr-0">
+          {/* Active Quests */}
+          <Card className="bg-gradient-to-br from-background/70 to-background/90 border border-border/20 shadow-sm overflow-hidden hover:border-primary/30 transition-all duration-200">
+            <CardHeader className="p-3 group-data-[state=collapsed]:p-2">
+              <CardTitle className="flex items-center group-data-[state=collapsed]:justify-center">
+                <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center group-data-[state=collapsed]:mx-auto">
                   <ScrollText className="h-4 w-4 text-primary" />
                 </div>
-                <span className="group-data-[state=collapsed]:hidden">Active Quests</span>
-              </h3>
-            </div>
-            
-            <div className="group-data-[state=collapsed]:hidden space-y-2">
-              {activeQuests.length > 0 ? (
-                <Accordion type="single" collapsible className="w-full">
-                  {activeQuests.map((quest) => (
-                    <AccordionItem 
-                      value={quest.id} 
-                      key={quest.id} 
-                      className="glass-effect mb-2 rounded-lg overflow-hidden border border-white/5 shadow-md"
-                    >
-                      <AccordionTrigger className="text-sm hover:no-underline p-3 bg-background/50 hover:bg-background/70 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-accent"></div>
-                          <span>{quest.title}</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="text-sm space-y-3 p-3 animate-slide-up">
-                        <div className="bg-background/30 p-3 rounded-md text-foreground/90 italic border border-white/5">
-                          {quest.description}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-sm text-primary/90 flex items-center gap-1">
-                            <Target size={14} /> Objectives
-                          </h4>
-                          <ul className="bg-background/30 rounded-md overflow-hidden border border-white/5 divide-y divide-white/5">
-                            {quest.objectives.map((obj, idx) => (
-                              <li key={idx} className="p-2 flex items-center gap-2 text-xs">
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary/70"></div>
-                                {obj}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        <div className="space-y-2">  
-                          <h4 className="font-semibold text-sm text-accent/90 flex items-center gap-1">
-                            <Star size={14} /> Rewards
-                          </h4>
-                          <ul className="bg-background/30 rounded-md overflow-hidden border border-white/5 divide-y divide-white/5">
-                            {quest.rewards.map((rew, idx) => (
-                              <li key={idx} className="p-2 flex items-center gap-2 text-xs">
-                                <div className="w-1.5 h-1.5 rounded-full bg-accent/70"></div>
-                                {rew}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              ) : (
-                <div className="glass-effect p-3 rounded-lg border border-white/5 text-center shadow-lg">
-                  <p className="text-sm text-muted-foreground italic">No active quests</p>
-                </div>
-              )}
-            </div>
-          </div>
+                <span className="ml-2 text-base group-data-[state=collapsed]:hidden">Quests</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 group-data-[state=collapsed]:hidden">
+              <div className="space-y-2">
+                {activeQuests.length > 0 ? (
+                  <Accordion type="single" collapsible className="w-full">
+                    {activeQuests.map((quest) => (
+                      <AccordionItem 
+                        value={quest.id} 
+                        key={quest.id} 
+                        className="mb-2 rounded-md overflow-hidden border border-border/50"
+                      >
+                        <AccordionTrigger className="text-xs hover:no-underline p-2 bg-background/30 hover:bg-background/50 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0"></div>
+                            <span className="truncate">{quest.title}</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="text-xs space-y-2 p-2">
+                          <div className="p-2 rounded bg-background/30 text-foreground/90 italic border border-border/30">
+                            {quest.description}
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <h4 className="font-semibold text-xs text-primary/90 flex items-center gap-1">
+                              <Target size={12} className="flex-shrink-0" /> Objectives
+                            </h4>
+                            <ul className="bg-background/30 rounded-md overflow-hidden border border-border/30">
+                              {quest.objectives.map((obj, idx) => (
+                                <li key={idx} className="p-1.5 flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-primary/70 flex-shrink-0"></div>
+                                  <span className="truncate">{obj}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <div className="space-y-1">  
+                            <h4 className="font-semibold text-xs text-accent/90 flex items-center gap-1">
+                              <Star size={12} className="flex-shrink-0" /> Rewards
+                            </h4>
+                            <ul className="bg-background/30 rounded-md overflow-hidden border border-border/30">
+                              {quest.rewards.map((rew, idx) => (
+                                <li key={idx} className="p-1.5 flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-accent/70 flex-shrink-0"></div>
+                                  <span className="truncate">{rew}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                ) : (
+                  <div className="p-2 text-center bg-background/30 rounded-md">
+                    <p className="text-xs text-muted-foreground">No active quests</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
           
           {/* Link to Lorebook */}
           <div className="mt-6 group-data-[state=collapsed]:hidden">
