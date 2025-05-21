@@ -6,7 +6,7 @@ import type { Message, ClientGameState, ProcessedPlayerInput } from '@/types';
 import { ChatLayout } from './ChatLayout';
 import { processPlayerInput } from '@/lib/game-actions';
 import { useToast } from '@/hooks/use-toast';
-import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent as UISidebarContent, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarContent as UISidebarContent, SidebarInset } from '@/components/ui/sidebar';
 import { GameSidebar } from '@/components/rpg/GameSidebar';
 import { Settings } from 'lucide-react';
 import Link from 'next/link';
@@ -31,16 +31,14 @@ export function ChatWindow() {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [gameState, setGameState] = useState<ClientGameState>(initialGameState);
+  const [currentLoadingMessage, setCurrentLoadingMessage] = useState<string | undefined>(undefined);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load settings from localStorage on mount
     const storedName = localStorage.getItem('mysticChatways_userDisplayName');
     if (storedName) {
       setGameState(prev => ({ ...prev, userDisplayName: storedName }));
     }
-    // Note: AI Model and API Key are also stored in localStorage by the settings page,
-    // but are not used to dynamically configure Genkit in this version.
   }, []);
 
 
@@ -63,6 +61,12 @@ export function ChatWindow() {
     setMessages(currentMessages);
     setInputValue('');
     setIsLoading(true);
+
+    if (!gameState.seriesDetails) {
+      setCurrentLoadingMessage("Crafting your series, this might take a moment...");
+    } else {
+      setCurrentLoadingMessage(undefined); 
+    }
 
     try {
       const result: ProcessedPlayerInput = await processPlayerInput(userMessage.text, currentMessages);
@@ -101,6 +105,7 @@ export function ChatWindow() {
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
       setIsLoading(false);
+      setCurrentLoadingMessage(undefined);
     }
   };
 
@@ -121,7 +126,6 @@ export function ChatWindow() {
         <SidebarInset className="flex-1 flex flex-col">
           <div className="p-2 border-b border-border flex items-center justify-between">
             <div className="flex items-center">
-              {/* SidebarTrigger is now inside GameSidebar for icon collapse mode */}
               <h1 className="text-lg font-semibold ml-2">Mystic Chatways</h1>
             </div>
             <Link href="/settings" passHref>
@@ -136,6 +140,7 @@ export function ChatWindow() {
             onInputChange={handleInputChange}
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
+            customLoadingMessage={currentLoadingMessage}
           />
         </SidebarInset>
       </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -12,6 +13,7 @@ interface ChatLayoutProps {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSendMessage: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
+  customLoadingMessage?: string;
 }
 
 export function ChatLayout({
@@ -20,6 +22,7 @@ export function ChatLayout({
   onInputChange,
   onSendMessage,
   isLoading,
+  customLoadingMessage,
 }: ChatLayoutProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -46,6 +49,7 @@ export function ChatLayout({
         onChange={onInputChange}
         onSubmit={onSendMessage}
         isLoading={isLoading}
+        customLoadingMessage={customLoadingMessage}
       />
     </div>
   );

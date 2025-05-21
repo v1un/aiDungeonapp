@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -11,12 +12,13 @@ interface ChatInputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
+  customLoadingMessage?: string;
 }
 
-export function ChatInput({ value, onChange, onSubmit, isLoading }: ChatInputProps) {
+export function ChatInput({ value, onChange, onSubmit, isLoading, customLoadingMessage }: ChatInputProps) {
   return (
     <div className="border-t border-border bg-background p-4 shadow- ऊपर">
-      {isLoading && <TypingIndicator />}
+      {isLoading && <TypingIndicator customMessage={customLoadingMessage} />}
       <form onSubmit={onSubmit} className="flex items-center space-x-2">
         <Input
           type="text"
