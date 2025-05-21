@@ -195,10 +195,12 @@ export default function ChatWindow() {
       return;
     }
     
+    const newName = renameInputValue.trim();
+    
     setAllSessions(prevSessions =>
       prevSessions.map(session =>
         session.id === renameSessionId
-          ? { ...session, name: renameInputValue.trim() }
+          ? { ...session, name: newName }
           : session
       )
     );
@@ -352,13 +354,18 @@ export default function ChatWindow() {
     }
   };
   
-  // Current session variables for display
-  const currentSession = allSessions.find(s => s.id === activeSessionId);
+  // Get the current session with proper dependency tracking
+  const currentSession = React.useMemo(() => 
+    allSessions.find(s => s.id === activeSessionId) || null,
+    [allSessions, activeSessionId]
+  );
+  
+  // Derive the current session name with a fallback
   const currentSessionName = currentSession?.name || "New Game";
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="relative flex h-screen w-full overflow-hidden bg-background">
         {/* Background elements - contained within the viewport */}
         <div className="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-0">
           <div className="absolute top-[5%] -right-[10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-3xl peer-data-[state=collapsed]:opacity-30 transition-opacity duration-300"></div>
@@ -368,14 +375,14 @@ export default function ChatWindow() {
         </div>
         
         {/* Layout structure */}
-        <div className="relative z-10 w-full flex">
+        <div className="relative z-10 flex w-full h-full">
           {/* Game sidebar with fixed width */}
           <Sidebar 
             side="left"
             collapsible="icon"
-            className="group z-20"
+            className="group z-20 h-full"
           >
-            <SidebarContent>
+            <SidebarContent className="h-full">
               <GameSidebar
                 seriesDetails={gameState.seriesDetails}
                 inventory={gameState.inventory}
@@ -387,26 +394,37 @@ export default function ChatWindow() {
           </Sidebar>
 
           {/* Main content area */}
-          <SidebarInset className="relative flex-1 flex flex-col h-screen overflow-hidden transition-[margin] duration-200 ease-in-out group-data-[state=collapsed]:ml-16">
-            <div className="flex flex-col h-full w-full max-w-7xl mx-auto px-4">
-              {/* Header with session selector */}
-              <div className="border-b border-border/40 backdrop-blur-sm bg-background/30 py-3 px-4 flex items-center justify-between sticky top-0 z-10">
+          <SidebarInset className="relative flex-1 h-full min-w-0 transition-all duration-200 ease-in-out group-data-[state=collapsed]:ml-16">
+            <div className="h-full w-full max-w-7xl mx-auto px-2 sm:px-4 flex flex-col overflow-hidden">
+              {/* Header with controls */}
+              <div className="border-b border-border/40 backdrop-blur-sm bg-background/30 py-2 sm:py-3 px-3 sm:px-4 flex items-center justify-between sticky top-0 z-10">
+                <div className="flex items-center">
+                  <SidebarTrigger className="md:hidden mr-2 flex-shrink-0" />
+                  <h1 
+                    key={currentSession?.id} // Force re-render when session changes
+                    className="text-sm sm:text-base font-medium truncate max-w-[120px] sm:max-w-[200px]"
+                  >
+                    {currentSessionName}
+                  </h1>
+                </div>
+
                 <div className="flex items-center gap-2">
-                  <SidebarTrigger className="md:hidden mr-2" />
+                  {/* Session selector */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button 
                         variant="ghost" 
-                        className="flex items-center pl-3 pr-2 gap-2 hover:bg-primary/10 hover:text-primary transition-colors"
+                        size="sm"
+                        className="flex items-center gap-1 sm:gap-2 hover:bg-primary/10 hover:text-primary transition-colors"
                       >
-                        <span className="text-sm font-medium truncate max-w-[180px]">
-                          {currentSessionName}
+                        <span className="text-xs sm:text-sm font-medium">
+                          Switch Game
                         </span>
-                        <ChevronDown className="h-4 w-4 opacity-50" />
+                        <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-50" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent 
-                      align="center" 
+                      align="end" 
                       className="w-64 bg-background/80 backdrop-blur-md border-white/10 shadow-xl rounded-xl p-1 animate-fade-in"
                     >
                       <DropdownMenuLabel className="text-primary/90 font-medium px-3 py-2">
@@ -465,16 +483,14 @@ export default function ChatWindow() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </div>
-
-                {/* Connection status and settings */}
-                <div className="flex items-center gap-2">
+                  
+                  {/* Connection status and settings */}
                   <ConnectionStatus />
                   
                   <Link href="/settings" passHref>
                     <Button 
                       variant="ghost" 
-                      size="icon" 
+                      size="icon"
                       aria-label="Settings"
                       className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
                     >
@@ -485,7 +501,7 @@ export default function ChatWindow() {
               </div>
               
               {/* Chat area */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 flex flex-col min-h-0">
                 {isInitialLoadComplete && activeSessionId ? (
                   <ChatLayout
                     messages={messages}
@@ -496,7 +512,7 @@ export default function ChatWindow() {
                     customLoadingMessage={currentLoadingMessage || undefined}
                   />
                 ) : (
-                  <div className="flex-grow flex items-center justify-center h-full">
+                  <div className="flex-1 flex items-center justify-center">
                     <div className="text-center animate-pulse-light">
                       <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
                         <Sparkles className="h-6 w-6 text-primary animate-pulse" />
