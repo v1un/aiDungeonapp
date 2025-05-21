@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Mystic Chatways Documentation
+    url: https://github.com/v1un/aiDungeonapp\#readme
+    about: Check our documentation before opening an issue

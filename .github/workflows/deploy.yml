@@ -1,0 +1,86 @@
+name: Mystic Chatways Deploy
+
+on:
+  workflow_run:
+    workflows: ["Mystic Chatways CI/CD"]
+    types:
+      - completed
+    branches:
+      - main
+      - master
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+      
+      - name: Deploy with SSH
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+          cd ${{ secrets.DEPLOY_PATH }}
+          
+          # Pull latest changes from Docker registry
+          docker pull ghcr.io/${{ github.repository }}/mystic-chatways:latest
+          
+          # Stop and remove existing container
+          docker stop mystic-chatways || true
+          docker rm mystic-chatways || true
+          
+          # Start new container
+          docker run -d \
+            --name mystic-chatways \
+            --restart unless-stopped \
+            -p 9003:9003 \
+            -v mystic-chatways-data:/app/data \
+            -v mystic-chatways-logs:/app/logs \
+            -e NODE_ENV=production \
+            ghcr.io/${{ github.repository }}/mystic-chatways:latest
+            
+          # Cleanup old images
+          docker system prune -f
+          ENDSSH
+          
+      - name: Verify deployment
+        run: |
+          echo "Deployment completed, verifying..."
+          sleep 15
+          curl -s --retry 5 --retry-delay 5 --retry-connrefused http://$\{\{ secrets.SSH_HOST }}:9003/api/health || echo "Health check endpoint not available, but deployment may still be successful"
+          
+  notify:
+    name: Notify on completion
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: always()
+    
+    steps:
+      - name: Success notification
+        if: ${{ needs.deploy-production.result == 'success' }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_TITLE: "✅ Mystic Chatways deployed successfully"
+          SLACK_MESSAGE: "The latest version has been deployed to production!"
+          SLACK_COLOR: '#36a64f'
+          
+      - name: Failure notification
+        if: ${{ needs.deploy-production.result != 'success' }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_TITLE: "❌ Mystic Chatways deployment failed"
+          SLACK_MESSAGE: "Deployment to production failed. Please check the logs."
+          SLACK_COLOR: '#dc3545'

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  mystic-chatways:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mystic-chatways:local
+    container_name: mystic-chatways
+    restart: unless-stopped
+    ports:
+      - "9003:9003"
+    volumes:
+      - mystic-data:/app/.genkit/servers
+      - mystic-logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=9003
+
+volumes:
+  mystic-data:
+  mystic-logs:

@@ -1,0 +1,137 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, dev, development ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Type checking
+        run: npm run typecheck
+        
+      - name: Lint
+        run: npm run lint
+        
+      - name: Build
+        run: npm run build
+        
+      - name: Test
+        run: npm test
+      
+      - name: Cache build output
+        if: success() && github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: actions/cache@v4
+        with:
+          path: .next
+          key: ${{ runner.os }}-nextjs-${{ github.sha }}
+
+  create-docker-image:
+    name: Create Docker Image
+    needs: build-and-test
+    if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/mystic-chatways
+          tags: |
+            type=semver,pattern={{version}}
+            type=ref,event=branch
+            type=sha,format=long
+            latest
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/mystic-chatways:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/mystic-chatways:buildcache,mode=max
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run security scan (npm audit)
+        run: npm audit --production
+        continue-on-error: true
+        
+      - name: Run dependency review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: critical
+
+  notify-success:
+    name: Notify Success
+    needs: [build-and-test, create-docker-image, security-scan]
+    if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send success notification
+        run: |
+          echo "Build succeeded! Workflow has completed successfully."
+          # You can add notification code here (Slack, Discord, etc.)
+
+  trigger-deployment:
+    name: Trigger Deployment Workflow
+    needs: [build-and-test, create-docker-image]
+    if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger deployment workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              ref: context.ref,
+              inputs: {
+                environment: 'production',
+                version: context.sha
+              }
+            });

@@ -18,6 +18,32 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "Docker Build",
+			"type": "shell",
+			"command": "npm run docker-build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"focus": true,
+				"clear": true
+			},
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "Docker Run",
+			"type": "shell",
+			"command": "npm run docker-run",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"focus": true,
+				"clear": true
+			},
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
 			"label": "Compile TypeScript Launcher",
 			"type": "shell",
 			"command": "cd tools && npx tsc --outDir ../dist/tools mystic-chatways-launcher.ts",
@@ -56,6 +82,43 @@
 			"presentation": {
 				"reveal": "always",
 				"panel": "dedicated",
+				"focus": true
+			},
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "CI Workflow Check",
+			"type": "shell",
+			"command": "npm run prepare-ci",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"focus": true,
+				"clear": true
+			},
+			"group": "test",
+			"problemMatcher": ["$tsc", "$eslint-stylish"]
+		},
+		{
+			"label": "Docker Compose Up",
+			"type": "shell",
+			"command": "npm run docker-compose-up",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"focus": true
+			},
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Docker Compose Down",
+			"type": "shell",
+			"command": "npm run docker-compose-down",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
 				"focus": true
 			},
 			"group": "none",

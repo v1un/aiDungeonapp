@@ -1,0 +1,39 @@
+# Node modules and dependencies
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build outputs
+.next
+dist
+out
+build
+
+# Development files
+.git
+.github
+.vscode
+.idea
+*.md
+!README.md
+
+# Logs and data
+logs
+*.log
+.genkit/servers
+
+# Testing
+coverage
+.nyc_output
+test
+__tests__
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
