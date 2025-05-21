@@ -1,7 +1,7 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  swcMinify: false, // Explicitly disable SWC minification
   typescript: {
     ignoreBuildErrors: true,
   },
