@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview AI agent for advancing the story in the text-based RPG.
@@ -120,10 +119,180 @@ const advanceStoryFlow = ai.defineFlow(
     outputSchema: AdvanceStoryOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    if (!output) {
-      throw new Error('AI failed to generate a story advancement.');
+    try {
+      // First, try to retrieve any existing context from our context manager
+      let contextResult;
+      try {
+        contextResult = await retrieveContextTool({
+          contextType: "all",
+          timeframe: "recent"
+        });
+      } catch (error) {
+        console.log("Context retrieval failed or empty, proceeding without context");
+        // Continue without context if retrieval fails
+        contextResult = { context: {} };
+      }
+
+      // Check if we have location details from world-building
+      let locationDetails;
+      try {
+        if (input.currentLocation) {
+          locationDetails = await retrieveLocationTool({
+            locationName: input.currentLocation,
+            includeHidden: false
+          });
+        }
+      } catch (error) {
+        console.log("Failed to retrieve location details:", error);
+        // Continue without location details
+      }
+
+      // Generate narrative branches based on the player's input
+      let branches;
+      try {
+        const branchInput = {
+          currentSituation: input.chatHistorySummary,
+          playerOptions: [input.playerInput],
+          storyGenre: input.seriesTitle,
+          currentCharacters: contextResult.context?.importantNPCs || [],
+          tonePreference: contextResult.context?.tonePreference || "dramatic"
+        };
+        branches = await generateBranchesTool(branchInput);
+      } catch (error) {
+        console.log("Branch generation failed:", error);
+        // Continue without branches
+      }
+
+      // Select the appropriate branch based on player action
+      let selectedBranch;
+      if (branches && branches.branches && branches.branches.length > 0) {
+        try {
+          const branchSelection = await selectBranchTool({
+            playerAction: input.playerInput,
+            relevantFactors: [
+              input.currentLocation,
+              ...(input.activeQuests.map(q => q.title) || []),
+              ...(contextResult.context?.worldState ? [contextResult.context.worldState] : [])
+            ],
+            preferTone: contextResult.context?.tonePreference
+          });
+          
+          if (branchSelection && branchSelection.selectedBranch) {
+            selectedBranch = branchSelection.selectedBranch;
+          }
+        } catch (error) {
+          console.log("Branch selection failed:", error);
+          // Continue without selected branch
+        }
+      }
+
+      // Use the selected branch to guide our story generation
+      let narrativeGuidance = "";
+      if (selectedBranch) {
+        narrativeGuidance = `Based on the player's action, this outcome seems most appropriate: 
+        ${selectedBranch.consequence} 
+        
+        The narrative should incorporate this hook: ${selectedBranch.narrativeHook}`;
+      }
+
+      // Generate environmental details if we have location information
+      let environmentDetails = "";
+      if (locationDetails && locationDetails.location) {
+        try {
+          const envInput = {
+            currentLocation: input.currentLocation,
+            timeProgression: 1, // Minimal time progression
+            currentWeather: contextResult.context?.worldState?.weather || undefined,
+            currentTimeOfDay: contextResult.context?.worldState?.timeOfDay || undefined,
+            desiredMood: "immersive"
+          };
+          const environment = await generateEnvironmentTool(envInput);
+          if (environment && environment.environmentalElements) {
+            environmentDetails = environment.environmentalElements
+              .map((e: { type: string; description: string }) => `${e.type}: ${e.description}`)
+              .join("\n");
+          }
+        } catch (error) {
+          console.log("Environment generation failed:", error);
+        }
+      }
+
+      // Check lorebook for any relevant information
+      let loreInfo = "";
+      try {
+        // Extract key terms from player input
+        const terms = input.playerInput
+          .split(/\s+/)
+          .filter(word => word.length > 3 && !['this', 'that', 'with', 'from', 'your', 'what', 'where', 'when', 'which'].includes(word.toLowerCase()));
+        
+        if (terms.length > 0) {
+          // Try to find lore information about the most specific term
+          const searchTerm = terms[Math.floor(Math.random() * terms.length)];
+          const loreResult = await retrieveLoreInfoTool({
+            searchTerm: searchTerm
+          });
+          
+          if (loreResult && loreResult.found) {
+            loreInfo = loreResult.relevantInfo;
+          }
+        }
+      } catch (error) {
+        console.log("Lore retrieval failed:", error);
+      }
+
+      // Prepare additional guidance to help with the response
+      const additionalContext = [
+        locationDetails && locationDetails.location ? `Location Description: ${locationDetails.location.description}` : '',
+        environmentDetails ? `Environmental Context:\n${environmentDetails}` : '',
+        narrativeGuidance ? `Narrative Guidance:\n${narrativeGuidance}` : '',
+        loreInfo ? `Relevant Lore Information:\n${loreInfo}` : ''
+      ].filter(Boolean).join("\n\n");
+
+      // Process through the AI with the standard input
+      // Note: We can't easily add enhanced system instructions due to the type constraints,
+      // but we can provide context in the chat history
+      const enhancedHistory = `${input.chatHistorySummary}\n\n[SYSTEM: ${additionalContext}]`;
+      
+      const { output } = await prompt({
+        ...input,
+        chatHistorySummary: enhancedHistory
+      });
+
+      if (!output) {
+        throw new Error('AI failed to generate a story advancement.');
+      }
+
+      // Update context with new information
+      try {
+        // Update world state with location if changed
+        if (output.updatedLocation) {
+          await updateContextTool({
+            updateType: "worldState", 
+            worldState: {
+              location: output.updatedLocation
+            }
+          });
+        }
+        
+        // Add the player action as an event
+        await updateContextTool({
+          updateType: "event",
+          event: {
+            description: `Actor: ${input.mainCharacter.name}, Action: ${input.playerInput}, Location: ${input.currentLocation}, Outcome: ${output.narrativeResponse.substring(0, 100)}...`,
+            importance: 1
+          }
+        });
+      } catch (error) {
+        console.log("Context update failed:", error);
+      }
+
+      return output;
+    } catch (error) {
+      console.error("Error in advanceStoryFlow:", error);
+      // Fallback response if something goes wrong
+      return {
+        narrativeResponse: `*The narrator pauses for a moment...*\n\nYour action leads to unexpected developments. As ${input.mainCharacter.name}, you find yourself adapting to the situation, drawing on your experience and instincts.\n\n*What do you do next?*`
+      };
     }
-    return output;
   }
 );

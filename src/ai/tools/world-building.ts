@@ -10,14 +10,39 @@ import { LocationDetail, EnvironmentalElement, generateLocationSchema, generateE
  * populate them with dynamic elements for a more immersive story experience.
  */
 
-// In-memory storage for world building elements
-// In production, this would be in a database
-let locationDetails: Record<string, LocationDetail> = {};
-let environmentalElements: EnvironmentalElement[] = [];
+// Session-based storage for world building elements
+const sessionLocationDetails = new Map<string, Record<string, LocationDetail>>();
+const sessionEnvironmentalElements = new Map<string, EnvironmentalElement[]>();
+
+// Helper to get the current session ID
+const getCurrentSessionId = (): string => {
+  // Use a default session ID if none is set
+  const sessionId = (global as any).currentSessionId || 'default-session';
+  return sessionId;
+};
+
+// Helper functions to get session-specific data
+const getLocationDetails = (): Record<string, LocationDetail> => {
+  const sessionId = getCurrentSessionId();
+  if (!sessionLocationDetails.has(sessionId)) {
+    sessionLocationDetails.set(sessionId, {});
+  }
+  return sessionLocationDetails.get(sessionId)!;
+};
+
+const getEnvironmentalElements = (): EnvironmentalElement[] => {
+  const sessionId = getCurrentSessionId();
+  if (!sessionEnvironmentalElements.has(sessionId)) {
+    sessionEnvironmentalElements.set(sessionId, []);
+  }
+  return sessionEnvironmentalElements.get(sessionId)!;
+};
 
 // Function to generate detailed location information
 export async function generateLocation(input: z.infer<typeof generateLocationSchema>) {
   const { locationName, locationType, seriesContext, mood, previouslyMentionedFeatures } = input;
+  
+  const locationDetails = getLocationDetails();
   
   // Check if this location already exists
   if (locationDetails[locationName]) {
@@ -94,10 +119,15 @@ export async function generateEnvironment(input: z.infer<typeof generateEnvironm
   };
   
   // Store the new elements (replacing old ones of the same type)
-  environmentalElements = environmentalElements.filter(e => 
+  const envElements = getEnvironmentalElements();
+  const filteredElements = envElements.filter(e => 
     (e.type !== 'weather' || !weather) && 
     (e.type !== 'timeOfDay' || !timeOfDay)
   );
+  
+  // Clear the array and add filtered elements back
+  envElements.length = 0;
+  filteredElements.forEach(element => envElements.push(element));
   
   const newElements = [
     weather,
@@ -107,7 +137,7 @@ export async function generateEnvironment(input: z.infer<typeof generateEnvironm
     smell
   ].filter(e => e) as EnvironmentalElement[];
   
-  environmentalElements = [...environmentalElements, ...newElements];
+  envElements.push(...newElements);
   
   return { 
     environmentalElements: newElements,
@@ -118,6 +148,8 @@ export async function generateEnvironment(input: z.infer<typeof generateEnvironm
 // Function to retrieve location information
 export async function retrieveLocation(input: z.infer<typeof retrieveLocationSchema>) {
   const { locationName, includeHidden } = input;
+  
+  const locationDetails = getLocationDetails();
   
   // Check if this location exists
   if (!locationDetails[locationName]) {

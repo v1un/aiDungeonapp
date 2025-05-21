@@ -2,10 +2,13 @@
 
 # Mystic Chatways wrapper script
 # This script is now a wrapper around the TypeScript launcher
+# Enhanced version with improved robustness
 
 # Display banner
 echo -e "\033[0;34m=================================\033[0m"
 echo -e "\033[0;32m  Mystic Chatways Launcher  \033[0m"
+echo -e "\033[0;34m=================================\033[0m"
+echo -e "\033[0;36m       Enhanced Edition       \033[0m"
 echo -e "\033[0;34m=================================\033[0m"
 echo ""
 echo -e "\033[1;33mLaunching Mystic Chatways using TypeScript launcher...\033[0m"

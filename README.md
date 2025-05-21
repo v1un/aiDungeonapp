@@ -1,4 +1,4 @@
-# Mystic Chatways
+# Mystic Chatways - Enhanced Edition
 
 Mystic Chatways is an AI-powered text-based RPG application that lets you explore fictional universes through an interactive chat interface with an AI Game Master. Create and play in AI-generated worlds based on your favorite media, manage your inventory, complete quests, and shape your own story.
 
@@ -8,6 +8,8 @@ Mystic Chatways is an AI-powered text-based RPG application that lets you explor
 - 🌌 Create and explore AI-generated fictional worlds
 - 📚 Track inventory, quests, and character information
 - 💾 Multiple game session support with local storage
+- 🧠 Enhanced narrative branching for more coherent storytelling
+- 📖 Improved Lorebook integration for a richer world experience
 - 📖 Lorebook system for each fictional universe
 - ⚙️ Customizable user settings
 
@@ -50,6 +52,7 @@ NEXT_PUBLIC_GENKIT_API_KEY="your-genkit-api-key"
 You'll need to run two servers:
 
 1. **Start the GenKit AI Server** (in a new terminal):
+
    ```bash
    npm run genkit:dev
    # or
@@ -57,6 +60,7 @@ You'll need to run two servers:
    ```
 
 2. **Start the Next.js Development Server** (in another terminal):
+
    ```bash
    npm run dev
    # or

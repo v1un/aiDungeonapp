@@ -9,6 +9,14 @@ import { ai } from '@/ai/genkit';
 import type { Lorebook } from '@/types';
 import { getCurrentGameState } from '@/lib/game-actions';
 
+// Global variable to store the current session ID during tool execution
+let currentSessionId: string | undefined;
+
+// Function to set the current session ID for tool usage
+export function setCurrentSessionIdForTools(sessionId: string | undefined) {
+  currentSessionId = sessionId;
+}
+
 // Schema definitions
 const RetrieveLoreInfoInputSchema = z.object({
   searchTerm: z.string().describe("A keyword or phrase to search for within the lorebook (e.g., a character's name, a location, a concept)."),
@@ -24,7 +32,7 @@ type RetrieveLoreInfoOutput = z.infer<typeof RetrieveLoreInfoOutputSchema>;
 
 // Implementation function
 async function retrieveLoreInfoImplementation(input: RetrieveLoreInfoInput): Promise<RetrieveLoreInfoOutput> {
-  const gameState = await getCurrentGameState();
+  const gameState = await getCurrentGameState(currentSessionId);
   if (!gameState || !gameState.seriesDetails || !gameState.seriesDetails.lorebook) {
     return { relevantInfo: "No lorebook has been established for the current series.", found: false };
   }
@@ -97,7 +105,7 @@ type AddNpcToLorebookOutput = z.infer<typeof AddNpcToLorebookOutputSchema>;
 
 // Implementation function for adding an NPC to the lorebook
 async function addNpcToLorebookImplementation(input: AddNpcToLorebookInput): Promise<AddNpcToLorebookOutput> {
-  const gameState = await getCurrentGameState();
+  const gameState = await getCurrentGameState(currentSessionId);
   if (!gameState || !gameState.seriesDetails || !gameState.seriesDetails.lorebook) {
     return { success: false, message: "No lorebook has been established for the current series." };
   }

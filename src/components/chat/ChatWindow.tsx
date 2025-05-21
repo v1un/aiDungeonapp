@@ -120,6 +120,11 @@ export default function ChatWindow() {
           setActiveSessionId(mostRecentSession.id);
           setMessages(mostRecentSession.messages);
           setGameState(mostRecentSession.gameState);
+          
+          // Sync series details to lorebook storage
+          if (mostRecentSession.gameState?.seriesDetails) {
+            syncSeriesDetailsToLorebook(mostRecentSession.gameState.seriesDetails);
+          }
         }
       } else {
         // Create a default session if none exists
@@ -167,6 +172,16 @@ export default function ChatWindow() {
       setActiveSessionId(sessionId);
       setMessages(selectedSession.messages);
       setGameState(selectedSession.gameState);
+      
+      // Sync series details to lorebook storage when switching sessions
+      if (selectedSession.gameState?.seriesDetails) {
+        syncSeriesDetailsToLorebook(selectedSession.gameState.seriesDetails);
+      } else {
+        // Clear lorebook storage if session has no series details
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('mysticChatways_seriesDetails');
+        }
+      }
     }
   };
 
@@ -280,8 +295,12 @@ export default function ChatWindow() {
       setMessages(updatedMessages);
       setInputValue('');
       
-      // Process the player input
-      const processedResult: ProcessedPlayerInput = await processPlayerInput(inputValue, messages);
+      // Process the player input with the session ID
+      const processedResult: ProcessedPlayerInput = await processPlayerInput(
+        inputValue, 
+        messages, 
+        activeSessionId // Pass the active session ID
+      );
       
       // Update loading message based on the current step in processing
       setCurrentLoadingMessage("Generating response...");
@@ -363,7 +382,25 @@ export default function ChatWindow() {
       setCurrentLoadingMessage(null);
     }
   };
-  
+
+  // Helper function to sync the current series details to the lorebook storage key
+  const syncSeriesDetailsToLorebook = useCallback((seriesDetails: any) => {
+    if (seriesDetails && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('mysticChatways_seriesDetails', JSON.stringify(seriesDetails));
+      } catch (error) {
+        console.error('Error syncing series details to lorebook storage:', error);
+      }
+    }
+  }, []);
+
+  // Effect to sync series details whenever the game state changes
+  useEffect(() => {
+    if (gameState.seriesDetails) {
+      syncSeriesDetailsToLorebook(gameState.seriesDetails);
+    }
+  }, [gameState.seriesDetails, syncSeriesDetailsToLorebook]);
+
   // Get the current session with proper dependency tracking
   const currentSession = React.useMemo(() => 
     allSessions.find(s => s.id === activeSessionId) || null,

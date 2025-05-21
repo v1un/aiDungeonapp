@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start AI Dungeon App",
+			"type": "shell",
+			"command": "zsh -c 'npm run genkit:watch & npm run dev'",
+			"group": "start",
+			"isBackground": true,
+			"problemMatcher": [
+				"$tsc"
+			]
+		}
+	]
+}

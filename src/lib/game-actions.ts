@@ -1,4 +1,3 @@
-
 'use server';
 
 import type { Message, SeriesDetails, ProcessedPlayerInput, ClientGameStateUpdate, Quest, Lorebook } from '@/types';
@@ -13,20 +12,74 @@ interface ServerGameState {
   activeQuests: Quest[];
 }
 
-let currentGameState: ServerGameState = {
+// Store game states by session ID
+const gameStates = new Map<string, ServerGameState>();
+
+// Default game state for new sessions
+const createDefaultGameState = (): ServerGameState => ({
   seriesSetupComplete: false,
   inventory: [],
   currentLocation: 'Not yet determined',
   activeQuests: [],
-};
+});
 
-// Function to allow Genkit tools to access current game state
-export async function getCurrentGameState(): Promise<ServerGameState> {
-  return currentGameState;
+// Function to allow Genkit tools to access current game state for a session
+export async function getCurrentGameState(sessionId?: string): Promise<ServerGameState> {
+  if (!sessionId) {
+    return createDefaultGameState();
+  }
+  
+  if (!gameStates.has(sessionId)) {
+    gameStates.set(sessionId, createDefaultGameState());
+  }
+  
+  return gameStates.get(sessionId)!;
 }
 
+// Make the currentSessionId accessible globally for tool functions
+// This is a workaround for passing session context to tools
+declare global {
+  namespace NodeJS {
+    interface Global {
+      currentSessionId?: string;
+    }
+  }
+}
 
-export async function processPlayerInput(playerInput: string, chatHistory: Message[]): Promise<ProcessedPlayerInput> {
+// Set the current session ID for tools to use
+export function setCurrentToolSessionId(sessionId?: string) {
+  (global as any).currentSessionId = sessionId;
+}
+
+/**
+ * Process player input and update game state accordingly
+ * @param playerInput The text input from the player
+ * @param chatHistory The message history of the current session
+ * @param sessionId The ID of the current game session
+ * @returns Processed player input with AI response and game state updates
+ */
+export async function processPlayerInput(
+  playerInput: string, 
+  chatHistory: Message[], 
+  sessionId?: string
+): Promise<ProcessedPlayerInput> {
+  // Set the current session ID for tools to use
+  setCurrentToolSessionId(sessionId);
+  
+  // Ensure we have a valid session ID
+  if (!sessionId) {
+    console.warn("No session ID provided to processPlayerInput");
+    return { 
+      responseText: "Session error: Please refresh the page and try again." 
+    };
+  }
+  
+  // Get or create the game state for this session
+  if (!gameStates.has(sessionId)) {
+    gameStates.set(sessionId, createDefaultGameState());
+  }
+  
+  const currentGameState = gameStates.get(sessionId)!;
   const gameStateUpdate: ClientGameStateUpdate = {};
 
   if (!currentGameState.seriesSetupComplete) {
@@ -52,17 +105,13 @@ export async function processPlayerInput(playerInput: string, chatHistory: Messa
 
       let responseText = `The world of **${seriesDetails.seriesTitle}** materializes around you. You are **${seriesDetails.mainCharacter.name}**, and right now...\n\n`;
       responseText += `${seriesDetails.initialPromptForPlayer}`;
-      responseText += `\n\n*(Character details, inventory, and your current quest are in the Game Info sidebar. You can explore the full **Lorebook** via the button there too!)*`;
+      responseText += `\n\n*(Character details, inventory, and your current quest are in the Game Info sidebar. Click the book icon to explore the full **Lorebook** with detailed information about this world!)*`;
       
       return { responseText, gameStateUpdate };
     } catch (error) {
       console.error('Error generating series details:', error);
-      currentGameState = { 
-        seriesSetupComplete: false,
-        inventory: [],
-        currentLocation: 'Not yet determined',
-        activeQuests: [],
-      };
+      gameStates.set(sessionId, createDefaultGameState()); // Reset the state on error
+      
       gameStateUpdate.seriesDetails = undefined;
       gameStateUpdate.inventory = [];
       gameStateUpdate.currentLocation = 'Not yet determined';

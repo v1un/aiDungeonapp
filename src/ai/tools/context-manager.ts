@@ -2,6 +2,7 @@
 
 import { z } from 'genkit';
 import { StoryEvent, CharacterRelationship, WorldState, retrieveContextSchema, updateContextSchema } from './context-manager-schemas';
+import { setCurrentSessionIdForTools } from '@/ai/lore-tools';
 
 /**
  * Context Manager Tool for maintaining narrative consistency
@@ -13,16 +14,48 @@ import { StoryEvent, CharacterRelationship, WorldState, retrieveContextSchema, u
  * - Narrative themes and tone
  */
 
-// In-memory storage that persists through the server lifetime
-// In a production app, this would be stored in a database
-let storyEvents: StoryEvent[] = [];
-let characterRelationships: CharacterRelationship[] = [];
-let currentWorldState: WorldState = {
-  location: '',
-  timeOfDay: '',
-  weather: '',
-  recentEvents: [],
-  currentThemes: []
+// Using Map to store context per session ID
+const sessionStoryEvents = new Map<string, StoryEvent[]>();
+const sessionCharacterRelationships = new Map<string, CharacterRelationship[]>();
+const sessionWorldStates = new Map<string, WorldState>();
+
+// Helper to get the current session ID 
+const getCurrentSessionId = (): string => {
+  // Use a default session ID if none is set
+  // Access the currentSessionId from the lore-tools module
+  const sessionId = (global as any).currentSessionId || 'default-session';
+  return sessionId;
+};
+
+// Helper functions to get session-specific data
+const getStoryEvents = (): StoryEvent[] => {
+  const sessionId = getCurrentSessionId();
+  if (!sessionStoryEvents.has(sessionId)) {
+    sessionStoryEvents.set(sessionId, []);
+  }
+  return sessionStoryEvents.get(sessionId)!;
+};
+
+const getCharacterRelationships = (): CharacterRelationship[] => {
+  const sessionId = getCurrentSessionId();
+  if (!sessionCharacterRelationships.has(sessionId)) {
+    sessionCharacterRelationships.set(sessionId, []);
+  }
+  return sessionCharacterRelationships.get(sessionId)!;
+};
+
+const getWorldState = (): WorldState => {
+  const sessionId = getCurrentSessionId();
+  if (!sessionWorldStates.has(sessionId)) {
+    sessionWorldStates.set(sessionId, {
+      location: '',
+      timeOfDay: '',
+      weather: '',
+      recentEvents: [],
+      currentThemes: []
+    });
+  }
+  return sessionWorldStates.get(sessionId)!;
 };
 
 // Function to retrieve context
@@ -32,7 +65,7 @@ export async function retrieveContext(input: z.infer<typeof retrieveContextSchem
   let result: any = {};
   
   if (contextType === 'events' || contextType === 'all') {
-    let events = [...storyEvents];
+    let events = [...getStoryEvents()];
     if (timeframe === 'recent') {
       // Only keep the 5 most recent events and any important events (>7 importance)
       events = events
@@ -43,7 +76,7 @@ export async function retrieveContext(input: z.infer<typeof retrieveContextSchem
   }
   
   if (contextType === 'relationships' || contextType === 'all') {
-    let relationships = [...characterRelationships];
+    let relationships = [...getCharacterRelationships()];
     if (relevantCharacters && relevantCharacters.length > 0) {
       // Filter relationships to only include the specified characters
       relationships = relationships.filter(rel => 
@@ -55,7 +88,7 @@ export async function retrieveContext(input: z.infer<typeof retrieveContextSchem
   }
   
   if (contextType === 'worldState' || contextType === 'all') {
-    result.worldState = currentWorldState;
+    result.worldState = getWorldState();
   }
   
   return result;
@@ -71,7 +104,7 @@ export async function updateContext(input: z.infer<typeof updateContextSchema>) 
       importance: input.event.importance,
       timestamp: Date.now()
     };
-    storyEvents.push(newEvent);
+    getStoryEvents().push(newEvent);
     return { success: true, message: 'Story event added' };
   }
   
@@ -79,18 +112,18 @@ export async function updateContext(input: z.infer<typeof updateContextSchema>) 
     const { character1, character2, relationship, notes } = input.relationship;
     
     // Check if this relationship already exists
-    const existingIndex = characterRelationships.findIndex(
+    const existingIndex = getCharacterRelationships().findIndex(
       r => (r.character1 === character1 && r.character2 === character2) ||
            (r.character1 === character2 && r.character2 === character1)
     );
     
     if (existingIndex >= 0) {
       // Update existing relationship
-      characterRelationships[existingIndex] = { character1, character2, relationship, notes };
+      getCharacterRelationships()[existingIndex] = { character1, character2, relationship, notes };
       return { success: true, message: 'Character relationship updated' };
     } else {
       // Add new relationship
-      characterRelationships.push({ character1, character2, relationship, notes });
+      getCharacterRelationships().push({ character1, character2, relationship, notes });
       return { success: true, message: 'Character relationship added' };
     }
   }
@@ -98,23 +131,25 @@ export async function updateContext(input: z.infer<typeof updateContextSchema>) 
   if (updateType === 'worldState' && input.worldState) {
     const { location, timeOfDay, weather, eventToAdd, themeToAdd } = input.worldState;
     
-    if (location) currentWorldState.location = location;
-    if (timeOfDay) currentWorldState.timeOfDay = timeOfDay;
-    if (weather) currentWorldState.weather = weather;
+    const worldState = getWorldState();
+    
+    if (location) worldState.location = location;
+    if (timeOfDay) worldState.timeOfDay = timeOfDay;
+    if (weather) worldState.weather = weather;
     
     if (eventToAdd) {
       // Keep only the 10 most recent events
-      currentWorldState.recentEvents.unshift(eventToAdd);
-      if (currentWorldState.recentEvents.length > 10) {
-        currentWorldState.recentEvents.pop();
+      worldState.recentEvents.unshift(eventToAdd);
+      if (worldState.recentEvents.length > 10) {
+        worldState.recentEvents.pop();
       }
     }
     
-    if (themeToAdd && !currentWorldState.currentThemes.includes(themeToAdd)) {
+    if (themeToAdd && !worldState.currentThemes.includes(themeToAdd)) {
       // Keep only the 5 most recent themes
-      currentWorldState.currentThemes.unshift(themeToAdd);
-      if (currentWorldState.currentThemes.length > 5) {
-        currentWorldState.currentThemes.pop();
+      worldState.currentThemes.unshift(themeToAdd);
+      if (worldState.currentThemes.length > 5) {
+        worldState.currentThemes.pop();
       }
     }
     

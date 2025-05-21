@@ -72,3 +72,1249 @@
 
 [2025-05-21T19:53:02.679Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
 
+[2025-05-21T19:53:32.665Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T19:53:32.677Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
+
+[2025-05-21T19:54:02.668Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
+
+[2025-05-21T19:54:02.682Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-21T19:54:32.665Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T19:54:32.683Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-21T19:55:02.664Z] [BACKEND]  GET /api/health [32m200[39m in 9ms
+
+[2025-05-21T19:55:02.678Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
+
+[2025-05-21T19:55:32.665Z] [BACKEND]  GET /api/health [32m200[39m in 9ms
+
+[2025-05-21T19:55:32.676Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 9ms
+
+[2025-05-21T19:56:02.665Z] [BACKEND]  GET /api/health [32m200[39m in 9ms
+
+[2025-05-21T19:56:02.677Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-21T19:56:32.665Z] [BACKEND]  GET /api/health [32m200[39m in 9ms
+
+[2025-05-21T19:56:32.677Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
+
+[2025-05-21T19:57:02.667Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
+
+[2025-05-21T19:57:02.678Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
+
+[2025-05-21T19:57:32.665Z] [BACKEND]  GET /api/health [32m200[39m in 9ms
+
+[2025-05-21T19:57:32.677Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
+
+[2025-05-21T19:58:02.669Z] [BACKEND]  GET /api/health [32m200[39m in 14ms
+
+[2025-05-21T19:58:02.685Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
+
+[2025-05-21T19:58:07.600Z] [BACKEND]  GET / [32m200[39m in 299ms
+
+[2025-05-21T19:58:32.670Z] [BACKEND]  GET /api/health [32m200[39m in 14ms
+
+[2025-05-21T19:58:32.686Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 14ms
+
+[2025-05-21T19:59:02.700Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
+
+[2025-05-21T19:59:02.714Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
+
+[2025-05-21T19:59:32.700Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T19:59:32.712Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-21T20:00:02.701Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
+
+[2025-05-21T20:00:02.715Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
+
+[2025-05-21T20:00:31.129Z] [BACKEND]  GET / [32m200[39m in 265ms
+
+[2025-05-21T20:00:32.704Z] [BACKEND]  GET /api/health [32m200[39m in 14ms
+
+[2025-05-21T20:00:32.719Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
+
+[2025-05-21T20:01:02.705Z] [BACKEND]  GET /api/health [32m200[39m in 14ms
+
+[2025-05-21T20:01:02.720Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
+
+[2025-05-21T20:01:32.701Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
+
+[2025-05-21T20:01:32.715Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
+
+[2025-05-21T20:01:41.588Z] [BACKEND]  GET / [32m200[39m in 275ms
+
+[2025-05-21T20:01:58.968Z] [BACKEND]  GET / [32m200[39m in 299ms
+
+[2025-05-21T20:02:02.705Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
+
+[2025-05-21T20:02:02.722Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 16ms
+
+[2025-05-21T20:02:32.705Z] [BACKEND]  GET /api/health [32m200[39m in 14ms
+
+[2025-05-21T20:02:32.720Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
+
+[2025-05-21T20:03:03.408Z] [BACKEND]  GET /api/health [31m500[39m in 717ms
+
+[2025-05-21T20:03:03.445Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 22ms
+
+[2025-05-21T20:03:32.716Z] [BACKEND]  GET /api/health [31m500[39m in 26ms
+
+[2025-05-21T20:03:32.754Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 23ms
+
+[2025-05-21T20:04:02.716Z] [BACKEND]  GET /api/health [31m500[39m in 25ms
+
+[2025-05-21T20:04:02.750Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 25ms
+
+[2025-05-21T20:04:32.712Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:04:32.745Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 21ms
+
+[2025-05-21T20:05:02.712Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:05:02.741Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:05:32.712Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:05:32.742Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 20ms
+
+[2025-05-21T20:06:02.711Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:06:02.742Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:06:32.711Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:06:32.739Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:07:02.711Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:07:02.754Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 32ms
+
+[2025-05-21T20:07:32.714Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:07:32.748Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:08:02.782Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:08:02.813Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:08:32.782Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:08:32.817Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:09:02.781Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:09:02.810Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:09:32.781Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:09:32.809Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:10:02.782Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:10:02.812Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:10:32.782Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:10:32.812Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:11:02.782Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:11:02.812Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:11:32.782Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:11:32.812Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:12:02.783Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:12:02.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:12:32.782Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:12:32.812Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:13:02.784Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:13:02.816Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:13:32.787Z] [BACKEND]  GET /api/health [31m500[39m in 24ms
+
+[2025-05-21T20:13:32.821Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 21ms
+
+[2025-05-21T20:14:02.783Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:14:02.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:14:32.783Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:14:32.813Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:15:02.782Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:15:02.813Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:15:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:15:32.822Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:16:02.784Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:16:02.816Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 20ms
+
+[2025-05-21T20:16:32.784Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:16:32.820Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:17:02.785Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:17:02.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:17:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:17:32.823Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 27ms
+
+[2025-05-21T20:18:02.788Z] [BACKEND]  GET /api/health [31m500[39m in 22ms
+
+[2025-05-21T20:18:02.817Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:18:32.784Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:18:32.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:19:02.784Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:19:02.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:19:32.784Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:19:32.813Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:20:02.786Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:20:02.816Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:20:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:20:32.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:21:02.784Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:21:02.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:21:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:21:32.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:22:02.786Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:22:02.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:22:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:22:32.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:23:02.786Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:23:02.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:23:32.786Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:23:32.816Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:24:02.785Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:24:02.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:24:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:24:32.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:25:02.787Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:25:02.822Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:25:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:25:32.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:26:02.789Z] [BACKEND]  GET /api/health [31m500[39m in 22ms
+
+[2025-05-21T20:26:02.825Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 20ms
+
+[2025-05-21T20:26:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:26:32.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:27:02.792Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:27:02.821Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:27:32.785Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:27:32.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:28:02.787Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:28:02.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:28:32.786Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:28:32.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:29:02.786Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:29:02.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:29:32.786Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:29:32.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:30:02.788Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:30:02.816Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:30:32.786Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:30:32.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:31:02.792Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:31:02.821Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:31:32.786Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:31:32.815Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:32:02.786Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:32:02.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T20:32:32.786Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:32:32.814Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:33:02.787Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:33:02.816Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:33:32.787Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:33:32.818Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 20ms
+
+[2025-05-21T20:34:02.792Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:34:02.822Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:34:32.789Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:34:32.836Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 34ms
+
+[2025-05-21T20:35:02.788Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:35:02.818Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:35:32.843Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:35:32.871Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:36:02.844Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:36:02.874Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:36:32.845Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:36:32.874Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:37:02.844Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:37:02.873Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:37:32.844Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:37:32.875Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:38:03.061Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:38:03.090Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:38:32.843Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:38:32.873Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:39:02.843Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:39:02.871Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:39:32.845Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:39:32.874Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:40:02.845Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:40:02.872Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:40:32.844Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:40:32.873Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:41:02.845Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:41:02.873Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:41:32.845Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:41:32.872Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T20:42:02.844Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:42:02.874Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:42:32.846Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:42:32.874Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:43:02.845Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:43:02.874Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:43:32.844Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:43:32.872Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:44:02.847Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T20:44:02.875Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:44:32.846Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:44:32.882Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:45:02.915Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:45:02.943Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:45:32.914Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:45:32.948Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:46:03.102Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:46:03.132Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:46:32.915Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:46:32.942Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T20:47:02.916Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:47:02.945Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:47:32.914Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:47:32.953Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:48:02.915Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:48:02.944Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:48:32.915Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:48:32.946Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:49:02.915Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:49:02.944Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:49:32.916Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:49:32.946Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:50:02.914Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:50:02.942Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:50:32.915Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:50:32.944Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:51:02.915Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:51:02.943Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:51:32.915Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:51:32.943Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:52:02.914Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:52:02.957Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 31ms
+
+[2025-05-21T20:52:32.916Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:52:32.946Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:53:02.915Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:53:02.944Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:53:32.915Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:53:32.944Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:54:02.915Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T20:54:02.947Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 20ms
+
+[2025-05-21T20:54:32.917Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:54:32.946Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:55:02.966Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T20:55:02.996Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:55:32.966Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:55:32.997Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T20:56:02.966Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:56:02.994Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:56:32.966Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:56:32.994Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:57:02.965Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:57:02.992Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T20:57:32.966Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:57:32.994Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:58:02.965Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:58:02.994Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:58:32.966Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T20:58:32.996Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T20:59:02.967Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:59:02.995Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T20:59:32.967Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T20:59:32.996Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:00:02.966Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:00:02.994Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:00:32.967Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:00:32.996Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:01:02.967Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:01:02.996Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:01:32.967Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:01:32.995Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:02:02.967Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:02:02.996Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:02:32.967Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:02:32.995Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:03:02.967Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:03:02.996Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:03:32.967Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:03:32.996Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:04:02.967Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:04:03.002Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:04:33.038Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:04:33.066Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:05:03.039Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T21:05:03.072Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:05:33.037Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:05:33.065Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:06:03.038Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:06:03.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:06:33.039Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:06:33.069Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:07:03.038Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:07:03.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:07:33.039Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:07:33.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:08:03.038Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:08:03.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:08:33.038Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:08:33.066Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:09:03.039Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:09:03.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:09:33.038Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:09:33.081Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 31ms
+
+[2025-05-21T21:10:03.040Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:10:03.070Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:10:33.038Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:10:33.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:11:03.038Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:11:03.068Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:11:33.038Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:11:33.066Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:12:03.038Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:12:03.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:12:33.041Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T21:12:33.069Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:13:03.039Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:13:03.068Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:13:33.040Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:13:33.078Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:14:03.039Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:14:03.069Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:14:33.041Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:14:33.075Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:15:03.039Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:15:03.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:15:33.042Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:15:33.069Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:16:03.040Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:16:03.068Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:16:33.041Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:16:33.071Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:17:03.040Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:17:03.068Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:17:33.039Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:17:33.068Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:18:03.040Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:18:03.069Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:18:33.041Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:18:33.069Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:19:03.040Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:19:03.068Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:19:33.041Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:19:33.070Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:20:03.040Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:20:03.067Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:20:33.042Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:20:33.070Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:21:03.042Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:21:03.070Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:21:33.042Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:21:33.071Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:22:03.042Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:22:03.070Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:22:33.041Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:22:33.069Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:23:03.041Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:23:03.071Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T21:23:33.042Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:23:33.070Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:24:03.090Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:24:03.119Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:24:33.090Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:24:33.119Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:25:03.090Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:25:03.117Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:25:33.089Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:25:33.116Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:26:03.090Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:26:03.118Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:26:33.092Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:26:33.120Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:27:03.090Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:27:03.126Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 25ms
+
+[2025-05-21T21:27:33.091Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:27:33.119Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:28:03.090Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:28:03.120Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T21:28:33.091Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:28:33.120Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:29:03.091Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:29:03.120Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:29:33.090Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:29:33.118Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:30:03.091Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:30:03.119Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:30:33.092Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:30:33.121Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:31:03.091Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:31:03.119Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:31:33.093Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:31:33.119Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:32:03.092Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:32:03.120Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:32:33.091Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:32:33.120Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:33:03.092Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:33:03.127Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:33:33.160Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T21:33:33.188Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:34:03.159Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:34:03.193Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:34:33.158Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:34:33.186Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:35:03.158Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:35:03.186Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:35:33.158Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:35:33.187Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:36:03.158Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:36:03.186Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:36:33.160Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:36:33.189Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:37:03.160Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:37:03.188Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:37:33.160Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:37:33.188Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:38:03.161Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:38:03.188Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:38:33.161Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:38:33.190Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:39:03.159Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:39:03.186Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:39:33.159Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:39:33.187Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:40:03.159Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:40:03.187Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:40:33.160Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:40:33.188Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:41:03.160Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:41:03.188Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 15ms
+
+[2025-05-21T21:41:33.161Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:41:33.189Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:42:03.160Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:42:03.188Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:42:33.160Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:42:33.188Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:43:03.162Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:43:03.190Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:43:33.235Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:43:33.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 20ms
+
+[2025-05-21T21:44:03.235Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:44:03.263Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:44:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T21:44:33.274Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 22ms
+
+[2025-05-21T21:45:03.235Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:45:03.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:45:33.236Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:45:33.265Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:46:03.237Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T21:46:03.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:46:33.236Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:46:33.263Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:47:03.235Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:47:03.264Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:47:33.236Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:47:33.263Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 15ms
+
+[2025-05-21T21:48:03.236Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:48:03.265Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:48:33.236Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:48:33.263Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:49:03.236Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:49:03.264Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:49:33.236Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:49:33.265Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:50:03.238Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:50:03.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:50:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:50:33.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:51:03.237Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:51:03.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:51:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:51:33.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:52:03.236Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:52:03.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:52:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:52:33.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:53:03.237Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:53:03.265Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:53:33.237Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:53:33.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:54:03.239Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T21:54:03.269Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:54:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:54:33.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:55:03.237Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:55:03.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T21:55:33.237Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:55:33.265Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:56:03.238Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:56:03.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:56:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:56:33.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:57:03.239Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T21:57:03.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:57:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:57:33.265Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:58:03.238Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:58:03.265Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:58:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:58:33.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T21:59:03.238Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:59:03.266Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T21:59:33.238Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T21:59:33.265Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 15ms
+
+[2025-05-21T22:00:03.239Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:00:03.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:00:33.240Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:00:33.268Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:01:03.239Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:01:03.267Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:01:33.241Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:01:33.269Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:02:03.242Z] [BACKEND]  GET /api/health [31m500[39m in 20ms
+
+[2025-05-21T22:02:03.291Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 31ms
+
+[2025-05-21T22:02:33.241Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:02:33.270Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:03:03.241Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:03:03.277Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:03:33.241Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:03:33.270Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:04:03.240Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:04:03.269Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:04:33.241Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:04:33.269Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:05:03.240Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:05:03.268Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:05:33.240Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:05:33.268Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:06:03.241Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:06:03.269Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:06:33.241Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:06:33.269Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:07:03.244Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T22:07:03.274Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T22:07:33.242Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:07:33.270Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:08:03.241Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:08:03.272Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:08:33.241Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:08:33.270Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:09:03.241Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:09:03.269Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:09:33.241Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:09:33.269Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:10:03.243Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:10:03.270Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:10:33.243Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:10:33.272Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:11:03.243Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:11:03.270Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:11:33.243Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:11:33.271Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:12:03.244Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:12:03.275Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 19ms
+
+[2025-05-21T22:12:33.317Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:12:33.346Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:13:03.319Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:13:03.348Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T22:13:33.317Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:13:33.344Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:14:03.318Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:14:03.346Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:14:33.318Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:14:33.347Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:15:03.317Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:15:03.345Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:15:33.318Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:15:33.347Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T22:16:03.318Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:16:03.345Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:16:33.319Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:16:33.347Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:17:03.318Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:17:03.346Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:17:33.320Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:17:33.347Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 16ms
+
+[2025-05-21T22:18:03.318Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:18:03.346Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:18:33.319Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:18:33.348Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:19:03.319Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:19:03.348Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:19:33.319Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:19:33.364Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 33ms
+
+[2025-05-21T22:20:03.319Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:20:03.350Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:20:33.320Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:20:33.348Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:21:03.319Z] [BACKEND]  GET /api/health [31m500[39m in 17ms
+
+[2025-05-21T22:21:03.348Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:21:33.320Z] [BACKEND]  GET /api/health [31m500[39m in 18ms
+
+[2025-05-21T22:21:33.350Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 17ms
+
+[2025-05-21T22:22:03.396Z] [BACKEND]  GET /api/health [31m500[39m in 19ms
+
+[2025-05-21T22:22:03.426Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 18ms
+
+[2025-05-21T22:22:33.398Z] [BACKEND]  GET /api/health [31m500[39m in 21ms
+
+[2025-05-21T22:22:33.435Z] [BACKEND]  GET /api/genkit-health [31m500[39m in 21ms
+
+[2025-05-21T22:22:42.136Z] [BACKEND] ERROR:  [31m[1m⨯[22m[39m ./src/lib/game-actions.ts:50:8
+Ecmascript file had an error
+[0m [90m 48 |[39m[0m
+[0m [90m 49 |[39m [90m// Set the current session ID for tools to use[39m[0m
+[0m[31m[1m>[22m[39m[90m 50 |[39m [36mexport[39m [36mfunction[39m setCurrentToolSessionId(sessionId[33m?[39m[33m:[39m string) {[0m
+[0m [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+[0m[31m[1m>[22m[39m[90m 51 |[39m   (global [36mas[39m any)[33m.[39mcurrentSessionId [33m=[39m sessionId[33m;[39m[0m
+[0m [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+[0m[31m[1m>[22m[39m[90m 52 |[39m }[0m
+[0m [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+[0m [90m 53 |[39m[0m
+[0m [90m 54 |[39m [90m/**[39m[0m
+[0m [90m 55 |[39m [90m * Process player input and update game state accordingly[39m[0m
+
+Server Actions must be async functions.
+
+
+
+
+[2025-05-21T22:22:42.144Z] [BACKEND]  GET / [31m500[39m in 24ms
+
+[2025-05-21T22:22:44.512Z] [BACKEND] ERROR:  [31m[1m⨯[22m[39m ./src/lib/game-actions.ts:50:8
+Ecmascript file had an error
+[0m [90m 48 |[39m[0m
+[0m [90m 49 |[39m [90m// Set the current session ID for tools to use[39m[0m
+[0m[31m[1m>[22m[39m[90m 50 |[39m [36mexport[39m [36mfunction[39m setCurrentToolSessionId(sessionId[33m?[39m[33m:[39m string) {[0m
+[0m [90m    |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+[0m[31m[1m>[22m[39m[90m 51 |[39m   (global [36mas[39m any)[33m.[39mcurrentSessionId [33m=[39m sessionId[33m;[39m[0m
+[0m [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+[0m[31m[1m>[22m[39m[90m 52 |[39m }[0m
+[0m [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+[0m [90m 53 |[39m[0m
+[0m [90m 54 |[39m [90m/**[39m[0m
+[0m [90m 55 |[39m [90m * Process player input and update game state accordingly[39m[0m
+
+Server Actions must be async functions.
+
+
+
+
+[2025-05-21T22:22:44.520Z] [BACKEND]  GET / [31m500[39m in 17ms
+
