@@ -8,7 +8,7 @@ import { processPlayerInput } from '@/lib/game-actions';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, Sidebar, SidebarContent as UISidebarContent, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { GameSidebar } from '@/components/rpg/GameSidebar';
-import { Settings, ChevronDown, PlusCircle, Check, Edit3, Trash2 } from 'lucide-react';
+import { Settings, ChevronDown, PlusCircle, Check, Edit3, Trash2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -324,111 +324,143 @@ export function ChatWindow() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen w-full bg-background">
-        <Sidebar side="left" className="w-80 border-r border-border" collapsible="icon">
+      <div className="flex h-screen overflow-hidden bg-background/90 backdrop-blur-sm relative">
+        {/* Background elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute -top-40 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+        </div>
+        
+        {/* Game sidebar */}
+        <Sidebar 
+          side="left"
+          collapsible="icon"
+          className="group z-10"
+        >
           <UISidebarContent>
-             <GameSidebar
-                seriesDetails={gameState.seriesDetails}
-                inventory={gameState.inventory}
-                currentLocation={gameState.currentLocation}
-                activeQuests={gameState.activeQuests}
-                userDisplayName={gameState.userDisplayName}
-              />
+            <GameSidebar
+              seriesDetails={gameState.seriesDetails}
+              inventory={gameState.inventory}
+              currentLocation={gameState.currentLocation}
+              activeQuests={gameState.activeQuests}
+              userDisplayName={gameState.userDisplayName}
+            />
           </UISidebarContent>
         </Sidebar>
-        <SidebarInset className="flex-1 flex flex-col">
-          <div className="p-2 border-b border-border flex items-center justify-between">
-            <div className="flex items-center">
-              <SidebarTrigger className="mr-2 md:hidden" />
-              <h1 className="text-lg font-semibold ml-2">Mystic Chatways</h1>
-            </div>
-            <div className="flex items-center space-x-2">
+        
+        {/* Main content area */}
+        <SidebarInset className="h-full w-full flex flex-col">
+          <div className="sticky top-0 z-20 bg-background/50 backdrop-blur-md border-b border-white/10 p-3 flex items-center justify-between shadow-md">
+            <div className="flex-1 flex items-center justify-between max-w-xl mx-auto w-full">
+              {/* Game session dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="min-w-[150px] max-w-[250px] truncate justify-between">
-                    <span className="truncate">{activeSessionName}</span>
-                    <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0" />
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center pl-3 pr-2 gap-2 hover:bg-primary/10 hover:text-primary transition-colors"
+                  >
+                    <span className="font-semibold truncate max-w-[160px] sm:max-w-xs text-gradient">
+                      {allSessions.find(s => s.id === activeSessionId)?.name || "No active game"}
+                    </span>
+                    <ChevronDown size={16} className="text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[280px]">
-                  <DropdownMenuLabel>Game Sessions</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {allSessions.length > 0 ? allSessions.map(session => (
-                    <DropdownMenuItem
-                      key={session.id}
-                      onSelect={(e) => {
-                        if ((e.target as HTMLElement).closest('[data-action-button="true"]')) {
-                          e.preventDefault(); // Prevent selection if an action icon was clicked
-                          return;
+                <DropdownMenuContent 
+                  align="center" 
+                  className="w-64 bg-background/80 backdrop-blur-md border-white/10 shadow-xl rounded-xl p-1 animate-fade-in"
+                >
+                  <DropdownMenuLabel className="text-primary/90 font-medium px-3 py-2">
+                    Your Adventures
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/5" />
+                  <div className="max-h-[250px] overflow-y-auto styled-scrollbar py-1">
+                    {allSessions.length > 0 ? allSessions.map((session) => (
+                      <DropdownMenuItem
+                        key={session.id}
+                        className="flex items-center justify-between relative group rounded-lg p-2 mx-1 hover:bg-primary/10 transition-colors"
+                        onSelect={() => handleSelectSession(session.id)}
+                      >
+                        <div className="flex-1 truncate flex items-center">
+                          <span className="truncate">{session.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            data-action-button="true"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-primary/20 hover:text-primary rounded-full"
+                            onClick={(e) => { e.stopPropagation(); openRenameDialog(session.id); }}
+                            aria-label="Rename session"
+                          >
+                            <Edit3 size={14} />
+                          </Button>
+                          <Button
+                            data-action-button="true"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive rounded-full"
+                            onClick={(e) => { e.stopPropagation(); openDeleteDialog(session.id); }}
+                            aria-label="Delete session"
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                        {session.id === activeSessionId && 
+                          <Check className="h-4 w-4 text-primary absolute right-2 top-1/2 -translate-y-1/2 group-hover:opacity-0" />
                         }
-                        handleSelectSession(session.id);
-                      }}
-                      className="justify-between group" // Added group for hover effects if needed
-                    >
-                      <div className="flex flex-col">
-                        <span className="truncate font-medium">{session.name}</span>
-                        <p className="text-xs text-muted-foreground">
-                          Last played: {new Date(session.lastPlayed).toLocaleDateString()}
-                        </p>
+                      </DropdownMenuItem>
+                    )) : (
+                      <div className="px-3 py-2 text-center text-muted-foreground text-sm">
+                        No saved games yet.
                       </div>
-                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          data-action-button="true"
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={(e) => { e.stopPropagation(); openRenameDialog(session.id); }}
-                          aria-label="Rename session"
-                        >
-                          <Edit3 size={14} />
-                        </Button>
-                        <Button
-                          data-action-button="true"
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); openDeleteDialog(session.id); }}
-                          aria-label="Delete session"
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      </div>
-                       {session.id === activeSessionId && <Check className="h-4 w-4 text-primary ml-2 absolute right-2 top-1/2 -translate-y-1/2 group-hover:opacity-0" />}
-                    </DropdownMenuItem>
-                  )) : (
-                    <DropdownMenuItem disabled>No saved games yet.</DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={handleStartNewGame}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
+                    )}
+                  </div>
+                  <DropdownMenuSeparator className="bg-white/5" />
+                  <DropdownMenuItem 
+                    onSelect={handleStartNewGame}
+                    className="rounded-lg m-1 p-2 hover:bg-primary/10 transition-colors"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4 text-primary" />
                     Start New Game
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Settings button */}
               <Link href="/settings" passHref>
-                <Button variant="ghost" size="icon" aria-label="Settings">
-                  <Settings size={20} />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  aria-label="Settings"
+                  className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <Settings size={18} />
                 </Button>
               </Link>
             </div>
           </div>
-           {isInitialLoadComplete && activeSessionId ? (
+          
+          {/* Chat area */}
+          {isInitialLoadComplete && activeSessionId ? (
             <ChatLayout
-                messages={messages}
-                inputValue={inputValue}
-                onInputChange={handleInputChange}
-                onSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                customLoadingMessage={currentLoadingMessage}
+              messages={messages}
+              inputValue={inputValue}
+              onInputChange={handleInputChange}
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              customLoadingMessage={currentLoadingMessage}
             />
-            ) : (
+          ) : (
             <div className="flex-grow flex items-center justify-center">
-                <p>Loading your adventure sessions...</p>
+              <div className="text-center animate-pulse-light">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+                </div>
+                <p className="text-lg">Loading your adventure sessions...</p>
+              </div>
             </div>
-            )}
+          )}
         </SidebarInset>
-      </div>
 
       {/* Rename Session Dialog */}
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
@@ -479,6 +511,7 @@ export function ChatWindow() {
         </AlertDialogContent>
       </AlertDialog>
 
+    </div>
     </SidebarProvider>
   );
 }

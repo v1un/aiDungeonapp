@@ -2,64 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
-  The explicit font-family rule for body is removed from here.
-  Tailwind's base styles will now apply the font specified by the
-  `font-mono` class on the <body> tag in layout.tsx, which in turn
-  uses `var(--font-geist-mono)` as configured in tailwind.config.ts.
-*/
-
 @layer base {
   :root {
-    --background: 240 3% 15%; /* Dark Gray #262629 */
-    --foreground: 0 0% 98%; /* Light gray/white for text */
+    /* Enhanced color palette with more vibrant options */
+    --background: 240 3% 15%; /* Dark Gray base */
+    --foreground: 0 0% 98%; /* Light text */
 
-    --card: 240 3% 18%; /* Slightly lighter dark gray for card backgrounds */
+    --card: 240 3% 18%; /* Card backgrounds */
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 3% 10%; /* Darker for popovers */
+    --popover: 240 3% 10%; /* Popovers */
     --popover-foreground: 0 0% 98%;
 
-    --primary: 240 100% 70%; /* Deep Indigo #6666FF */
-    --primary-foreground: 240 100% 10%; /* Dark color for text on primary */
+    /* More vibrant primary color - purplish blue */
+    --primary: 255 70% 65%; /* #8865FF */
+    --primary-foreground: 255 100% 98%;
 
-    --secondary: 240 3% 25%; /* Another shade of gray for secondary elements */
+    --secondary: 240 3% 25%;
     --secondary-foreground: 0 0% 98%;
 
     --muted: 240 3% 25%;
-    --muted-foreground: 0 0% 60%; /* Lighter muted text */
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 195 100% 74%; /* Electric Blue #7DF9FF */
-    --accent-foreground: 195 100% 10%; /* Dark color for text on accent */
+    /* More vibrant accent color - cyan */
+    --accent: 180 100% 70%; /* #66FFFF */
+    --accent-foreground: 180 100% 10%;
 
-    --destructive: 0 70% 55%; /* Standard destructive red */
+    --destructive: 0 85% 65%; /* Brighter red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3% 30%; /* Border color */
-    --input: 240 3% 22%; /* Input background */
-    --ring: 195 100% 74%; /* Electric blue for focus rings */
+    /* Refined UI element colors */
+    --border: 240 3% 30%;
+    --input: 240 3% 22%;
+    --ring: 180 100% 70%;
     
-    --radius: 0.5rem;
+    /* Rounded corners throughout the app */
+    --radius: 0.625rem;
 
-    /* Chart colors - can remain or be adjusted if charts are used */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* Chart colors - more vibrant */
+    --chart-1: 12 80% 65%;
+    --chart-2: 173 70% 45%;
+    --chart-3: 197 50% 30%;
+    --chart-4: 43 80% 70%;
+    --chart-5: 27 90% 70%;
 
-    /* Sidebar colors - themed for consistency if sidebar components are used later */
-    --sidebar-background: 240 3% 12%;
-    --sidebar-foreground: 0 0% 85%;
-    --sidebar-primary: 240 100% 70%;
-    --sidebar-primary-foreground: 240 100% 15%;
-    --sidebar-accent: 195 100% 74%;
-    --sidebar-accent-foreground: 195 100% 10%;
-    --sidebar-border: 240 3% 25%;
-    --sidebar-ring: 195 100% 74%;
+    /* Enhanced sidebar colors */
+    --sidebar-background: 240 4% 10%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 255 70% 65%;
+    --sidebar-primary-foreground: 255 100% 98%;
+    --sidebar-accent: 180 100% 70%;
+    --sidebar-accent-foreground: 180 100% 10%;
+    --sidebar-border: 240 3% 20%;
+    --sidebar-ring: 180 100% 70%;
   }
-
-  /* Removed .dark block as :root now defines the dark theme by default */
 }
 
 @layer base {
@@ -68,5 +64,71 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Remove outline on focus for cleaner look, but ensure we maintain accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* Animation classes */
+@layer utilities {
+  /* Fade in animation */
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-in-out;
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Slide up animation */
+  .animate-slide-up {
+    animation: slide-up 0.4s ease-out;
+  }
+  @keyframes slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* Pulse animation for loading states */
+  .animate-pulse-light {
+    animation: pulse-light 1.5s infinite;
+  }
+  @keyframes pulse-light {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Glass effect for cards and elements */
+  .glass-effect {
+    @apply bg-opacity-10 backdrop-blur-md border border-white/10;
+  }
+
+  /* Custom scrollbar for better aesthetics */
+  .styled-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary)/0.3) transparent;
+  }
+  .styled-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .styled-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .styled-scrollbar::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--primary)/0.3);
+    border-radius: 3px;
+  }
+
+  /* Responsive utility classes */
+  .responsive-padding {
+    @apply px-2 sm:px-4 md:px-6 lg:px-8;
+  }
+
+  /* Text gradient effect for headings */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
 }
