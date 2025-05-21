@@ -6,30 +6,40 @@ import type { Message, ClientGameState, ProcessedPlayerInput, SeriesDetails, Que
 import { ChatLayout } from './ChatLayout';
 import { processPlayerInput } from '@/lib/game-actions';
 import { useToast } from '@/hooks/use-toast';
-import { SidebarProvider, Sidebar, SidebarContent as UISidebarContent, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarContent as UISidebarContent, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { GameSidebar } from '@/components/rpg/GameSidebar';
-import { Settings } from 'lucide-react';
+import { Settings, ChevronDown, PlusCircle, Check } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { LOCAL_STORAGE_GAME_SESSIONS_KEY, DEFAULT_SESSION_ID } from '@/config/constants';
 
 const initialAiWelcomeMessage: Message = {
   id: 'ai-initial-welcome-' + Date.now(),
   sender: 'ai',
-  text: "Welcome to Mystic Chatways! Enter the name of a fictional series (e.g., TV show, book, movie, game) you'd like to explore.",
+  text: "Welcome to Mystic Chatways! Enter the name of a fictional series (e.g., TV show, book, movie, game) you'd like to explore, or choose an existing game from the menu.",
   timestamp: Date.now(),
 };
 
 const createNewSession = (idSuffix: string | number = Date.now()): GameSession => {
+  // Ensure a unique ID for new sessions, even if created rapidly
+  const uniqueId = `${DEFAULT_SESSION_ID}${idSuffix}-${Math.random().toString(36).substring(2, 7)}`;
   return {
-    id: `${DEFAULT_SESSION_ID}${idSuffix}`,
+    id: uniqueId,
     name: "New Game",
     lastPlayed: Date.now(),
     gameState: {
       inventory: [],
       currentLocation: "Not yet initialized",
       activeQuests: [],
-      userDisplayName: localStorage.getItem('mysticChatways_userDisplayName') || undefined, // Load display name separately for now
+      userDisplayName: typeof window !== 'undefined' ? localStorage.getItem('mysticChatways_userDisplayName') || undefined : undefined,
       seriesDetails: undefined,
     },
     messages: [initialAiWelcomeMessage],
@@ -40,7 +50,7 @@ const createNewSession = (idSuffix: string | number = Date.now()): GameSession =
 export function ChatWindow() {
   const [allSessions, setAllSessions] = useState<GameSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  
+
   // Derived states based on activeSession
   const [messages, setMessages] = useState<Message[]>([]);
   const [gameState, setGameState] = useState<ClientGameState>({
@@ -68,24 +78,20 @@ export function ChatWindow() {
       }
 
       if (loadedSessions.length > 0) {
-        // Sort by lastPlayed to get the most recent session
         loadedSessions.sort((a, b) => b.lastPlayed - a.lastPlayed);
         setAllSessions(loadedSessions);
         setActiveSessionId(loadedSessions[0].id);
       } else {
-        // No sessions, create a new default one
         const newSession = createNewSession();
         setAllSessions([newSession]);
         setActiveSessionId(newSession.id);
       }
     } catch (error) {
       console.error("Error loading sessions from localStorage:", error);
-      // Fallback to a single new session if loading fails
       const newSession = createNewSession('fallback');
       setAllSessions([newSession]);
       setActiveSessionId(newSession.id);
     }
-    // Load user display name separately - this could be integrated into session/user settings later
     const storedUserName = localStorage.getItem('mysticChatways_userDisplayName');
     if (storedUserName) {
         setGameState(prev => ({...prev, userDisplayName: storedUserName}));
@@ -101,11 +107,17 @@ export function ChatWindow() {
     if (currentActiveSession) {
       setMessages(currentActiveSession.messages);
       setGameState(currentActiveSession.gameState);
+       // Ensure userDisplayName from localStorage is prioritized if session doesn't have one yet
+      const storedUserName = localStorage.getItem('mysticChatways_userDisplayName');
+      if (storedUserName && !currentActiveSession.gameState.userDisplayName) {
+        setGameState(prev => ({...prev, userDisplayName: storedUserName}));
+      } else if (currentActiveSession.gameState.userDisplayName){
+         setGameState(prev => ({...prev, userDisplayName: currentActiveSession.gameState.userDisplayName}));
+      }
+
     } else if (allSessions.length > 0) {
-      // Active session ID might be invalid, fallback to the first session
       setActiveSessionId(allSessions[0].id);
     } else {
-      // No sessions at all, create a new default one (should be rare if mount logic is correct)
       const newSession = createNewSession('active_fallback');
       setAllSessions([newSession]);
       setActiveSessionId(newSession.id);
@@ -126,30 +138,28 @@ export function ChatWindow() {
   }, [allSessions, isInitialLoadComplete]);
 
 
-  // Update the active session's messages (debounced or direct)
   const updateActiveSessionMessages = useCallback((newMessages: Message[]) => {
     if (!activeSessionId) return;
-    setMessages(newMessages); // Update local messages state for immediate UI response
+    setMessages(newMessages);
     setAllSessions(prevSessions =>
       prevSessions.map(session =>
         session.id === activeSessionId
           ? { ...session, messages: newMessages, lastPlayed: Date.now() }
           : session
-      )
+      ).sort((a,b) => b.lastPlayed - a.lastPlayed) // Keep sorted by lastPlayed
     );
   }, [activeSessionId]);
 
-  // Update the active session's gameState
   const updateActiveSessionGameState = useCallback((newGameState: ClientGameState) => {
     if (!activeSessionId) return;
-    setGameState(newGameState); // Update local gameState for immediate UI response
-     const sessionName = newGameState.seriesDetails ? newGameState.seriesDetails.seriesTitle : "New Game";
+    setGameState(newGameState);
+    const sessionName = newGameState.seriesDetails ? newGameState.seriesDetails.seriesTitle : "New Game";
     setAllSessions(prevSessions =>
       prevSessions.map(session =>
         session.id === activeSessionId
           ? { ...session, gameState: newGameState, name: sessionName, lastPlayed: Date.now() }
           : session
-      )
+      ).sort((a,b) => b.lastPlayed - a.lastPlayed) // Keep sorted by lastPlayed
     );
   }, [activeSessionId]);
 
@@ -170,37 +180,37 @@ export function ChatWindow() {
     };
 
     const currentMessages = [...messages, userMessage];
-    updateActiveSessionMessages(currentMessages); // Save new user message to active session
+    updateActiveSessionMessages(currentMessages);
     setInputValue('');
     setIsLoading(true);
 
     if (!gameState.seriesDetails) {
       setCurrentLoadingMessage("Crafting your series, this might take a moment...");
     } else {
-      setCurrentLoadingMessage(undefined); 
+      setCurrentLoadingMessage(undefined);
     }
 
     try {
       const result: ProcessedPlayerInput = await processPlayerInput(userMessage.text, currentMessages);
-      
+
       const aiMessage: Message = {
         id: 'ai-' + Date.now(),
         sender: 'ai',
         text: result.responseText,
         timestamp: Date.now(),
       };
-      updateActiveSessionMessages([...currentMessages, aiMessage]); // Save AI message
+      updateActiveSessionMessages([...currentMessages, aiMessage]);
 
       if (result.gameStateUpdate) {
         const updatedClientGameState: ClientGameState = {
-          ...gameState, // Start with current client game state
+          ...gameState,
           seriesDetails: result.gameStateUpdate?.seriesDetails || gameState.seriesDetails,
           inventory: result.gameStateUpdate?.inventory || gameState.inventory,
           currentLocation: result.gameStateUpdate?.currentLocation || gameState.currentLocation,
           activeQuests: result.gameStateUpdate?.activeQuests || gameState.activeQuests,
-          userDisplayName: gameState.userDisplayName, // Preserve user display name
+          userDisplayName: localStorage.getItem('mysticChatways_userDisplayName') || gameState.userDisplayName, // Re-check userDisplayName
         };
-        updateActiveSessionGameState(updatedClientGameState); // Save updated game state
+        updateActiveSessionGameState(updatedClientGameState);
       }
 
     } catch (error) {
@@ -216,22 +226,39 @@ export function ChatWindow() {
         text: "Sorry, I'm having trouble connecting. Please try again in a moment.",
         timestamp: Date.now(),
       };
-      updateActiveSessionMessages([...currentMessages, errorMessage]); // Save error message
+      updateActiveSessionMessages([...currentMessages, errorMessage]);
     } finally {
       setIsLoading(false);
       setCurrentLoadingMessage(undefined);
     }
   };
 
-  // Placeholder for UI to switch sessions - not implemented in this pass
-  // const handleSwitchSession = (sessionId: string) => { setActiveSessionId(sessionId); };
+  const handleStartNewGame = () => {
+    const newSession = createNewSession();
+    setAllSessions(prevSessions => [newSession, ...prevSessions].sort((a,b) => b.lastPlayed - a.lastPlayed)); // Add to start, then re-sort
+    setActiveSessionId(newSession.id);
+  };
+
+  const handleSelectSession = (sessionId: string) => {
+    // Touch the lastPlayed to bring it to the top of the sorted list
+    setAllSessions(prevSessions =>
+      prevSessions.map(session =>
+        session.id === sessionId
+          ? { ...session, lastPlayed: Date.now() }
+          : session
+      ).sort((a,b) => b.lastPlayed - a.lastPlayed)
+    );
+    setActiveSessionId(sessionId);
+  };
+
+  const activeSessionName = allSessions.find(s => s.id === activeSessionId)?.name || "Loading...";
 
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-background">
         <Sidebar side="left" className="w-80 border-r border-border" collapsible="icon">
           <UISidebarContent>
-             <GameSidebar 
+             <GameSidebar
                 seriesDetails={gameState.seriesDetails}
                 inventory={gameState.inventory}
                 currentLocation={gameState.currentLocation}
@@ -243,15 +270,47 @@ export function ChatWindow() {
         <SidebarInset className="flex-1 flex flex-col">
           <div className="p-2 border-b border-border flex items-center justify-between">
             <div className="flex items-center">
+              <SidebarTrigger className="mr-2 md:hidden" /> {/* Trigger for mobile */}
               <h1 className="text-lg font-semibold ml-2">Mystic Chatways</h1>
             </div>
-            {/* Placeholder for session management UI */}
-            {/* <div><small>Active Session: {allSessions.find(s=>s.id === activeSessionId)?.name || 'N/A'}</small></div> */}
-            <Link href="/settings" passHref>
-              <Button variant="ghost" size="icon" aria-label="Settings">
-                <Settings size={20} />
-              </Button>
-            </Link>
+            <div className="flex items-center space-x-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="min-w-[150px] max-w-[250px] truncate justify-between">
+                    <span className="truncate">{activeSessionName}</span>
+                    <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[250px]">
+                  <DropdownMenuLabel>Game Sessions</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {allSessions.length > 0 ? allSessions.map(session => (
+                    <DropdownMenuItem key={session.id} onSelect={() => handleSelectSession(session.id)}>
+                      <div className="flex items-center justify-between w-full">
+                        <span className="truncate">{session.name}</span>
+                        {session.id === activeSessionId && <Check className="h-4 w-4 text-primary" />}
+                      </div>
+                       <p className="text-xs text-muted-foreground">
+                        Last played: {new Date(session.lastPlayed).toLocaleDateString()}
+                      </p>
+                    </DropdownMenuItem>
+                  )) : (
+                    <DropdownMenuItem disabled>No saved games yet.</DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={handleStartNewGame}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Start New Game
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Link href="/settings" passHref>
+                <Button variant="ghost" size="icon" aria-label="Settings">
+                  <Settings size={20} />
+                </Button>
+              </Link>
+            </div>
           </div>
            {isInitialLoadComplete && activeSessionId ? (
             <ChatLayout
@@ -272,5 +331,4 @@ export function ChatWindow() {
     </SidebarProvider>
   );
 }
-
     
