@@ -2,9 +2,11 @@ name: Main CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master, dev, development ]
+    # Trigger CI on every branch
+    branches: [ '*' ]
   pull_request:
-    branches: [ main, master ]
+    # Trigger CI on pull requests targeting any branch
+    branches: [ '*' ]
 
 jobs:
   build-and-test:
