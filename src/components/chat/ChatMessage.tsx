@@ -1,5 +1,7 @@
+
 "use client";
 
+import React from 'react';
 import type { Message } from '@/types';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,8 +12,23 @@ interface ChatMessageProps {
   message: Message;
 }
 
+// Simple markdown parser
+const parseMarkdown = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index} className="text-primary font-semibold">{part.slice(2, -2)}</strong>;
+    }
+    if ((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) {
+      return <em key={index} className="text-accent italic">{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+};
+
 export function ChatMessage({ message }: ChatMessageProps) {
   const isPlayer = message.sender === 'player';
+  const parsedText = parseMarkdown(message.text);
 
   return (
     <div
@@ -36,7 +53,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         )}
       >
         <CardContent className="p-3">
-          <p className="whitespace-pre-wrap text-sm">{message.text}</p>
+          <p className="whitespace-pre-wrap text-sm">{parsedText}</p>
         </CardContent>
       </Card>
       {isPlayer && (

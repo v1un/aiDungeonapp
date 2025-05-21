@@ -14,7 +14,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { SidebarTrigger } from '@/components/ui/sidebar'; 
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 
 
@@ -52,11 +52,11 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
           )}
           { (userDisplayName || mc?.name) && <Separator className="group-data-[state=collapsed]:hidden" />}
 
-          {seriesDetails && mc && ( 
+          {seriesDetails && mc && (
             <Card className="bg-background/50 border-border">
               <CardHeader className="group-data-[state=collapsed]:p-2 group-data-[state=collapsed]:py-3">
                 <CardTitle className="text-lg flex items-center group-data-[state=collapsed]:justify-center">
-                  <User className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" /> 
+                  <User className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" />
                   <span className="group-data-[state=collapsed]:hidden">{mc.name}'s Stats</span>
                 </CardTitle>
               </CardHeader>
@@ -100,25 +100,27 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
               </CardContent>
             </Card>
           )}
-
-          <Separator className="group-data-[state=collapsed]:hidden" />
           
+          {/* Conditional rendering for the Lorebook button */}
           {seriesDetails && (
-            <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
-               <Link href="/lorebook" passHref legacyBehavior>
-                <Button variant="outline" className="w-full group-data-[state=collapsed]:w-auto group-data-[state=collapsed]:p-2">
-                  <BookOpen className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" />
-                  <span className="group-data-[state=collapsed]:hidden">View Lorebook</span>
-                </Button>
-              </Link>
-            </div>
+            <>
+              <Separator className="group-data-[state=collapsed]:hidden" />
+              <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
+                 <Link href="/lorebook" passHref legacyBehavior>
+                  <Button variant="outline" className="w-full group-data-[state=collapsed]:w-auto group-data-[state=collapsed]:p-2">
+                    <BookOpen className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0" />
+                    <span className="group-data-[state=collapsed]:hidden">View Lorebook</span>
+                  </Button>
+                </Link>
+              </div>
+            </>
           )}
           {seriesDetails && <Separator className="group-data-[state=collapsed]:hidden" />}
 
 
           <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
             <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:text-xs">
-              <MapPin className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0 group-data-[state=collapsed]:mb-1 group-data-[state=collapsed]:h-6 group-data-[state=collapsed]:w-6" /> 
+              <MapPin className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0 group-data-[state=collapsed]:mb-1 group-data-[state=collapsed]:h-6 group-data-[state=collapsed]:w-6" />
               <span className="group-data-[state=collapsed]:hidden">Current Location</span>
             </h3>
             <p className="text-sm text-muted-foreground p-2 bg-background/50 rounded-md group-data-[state=collapsed]:hidden">{currentLocation || 'Unknown'}</p>
@@ -143,10 +145,10 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
           </div>
 
           <Separator className="group-data-[state=collapsed]:hidden"/>
-          
+
           <div className="group-data-[state=collapsed]:flex group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center">
             <h3 className="text-md font-semibold mb-2 flex items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:text-xs">
-              <ScrollText className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0 group-data-[state=collapsed]:mb-1 group-data-[state=collapsed]:h-6 group-data-[state=collapsed]:w-6" /> 
+              <ScrollText className="mr-2 h-5 w-5 text-primary group-data-[state=collapsed]:mr-0 group-data-[state=collapsed]:mb-1 group-data-[state=collapsed]:h-6 group-data-[state=collapsed]:w-6" />
               <span className="group-data-[state=collapsed]:hidden">Active Quests</span>
             </h3>
             {activeQuests.length > 0 ? (
@@ -185,4 +187,3 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
     </div>
   );
 }
-

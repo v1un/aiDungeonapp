@@ -21,7 +21,7 @@ const GenerateSeriesDetailsOutputSchema = z.object({
   seriesTitle: z.string().describe("The canonical, official title of the series."),
   mainCharacter: z.object({
     name: z.string().describe("The full name of the primary protagonist."),
-    description: z.string().describe("A detailed description of the main character, focusing on their personality, core motivations, iconic abilities/traits relevant at the series' start, and perhaps a key internal conflict they face early on. Should be 2-3 sentences."),
+    description: z.string().describe("A detailed description of the main character, focusing on their personality, core motivations, iconic abilities/traits relevant at the series' start, and perhaps a key internal conflict they face early on. Should be 2-3 sentences. Use markdown for emphasis (e.g., **bold** for names or key traits, *italics* for thoughts or nuances)."),
     stats: z.object({
       strength: z.string().describe("A thematic or descriptive value for the character's physical strength (e.g., 'Average', 'Overwhelmingly Powerful', 'Weak but Resilient'). Be creative and true to the series."),
       dexterity: z.string().describe("A thematic or descriptive value for the character's agility, reflexes, or nimbleness."),
@@ -31,17 +31,17 @@ const GenerateSeriesDetailsOutputSchema = z.object({
       specialAbility: z.string().optional().describe("A concise description of a notable special ability or unique trait pivotal to the character, especially early in the series (e.g., 'Return by Death - Resets time upon death', 'Force Sensitivity - Untrained').")
     }).describe("Key thematic stats or attributes. These should be fitting and descriptive, reflecting the character's portrayal at the beginning of the series.")
   }).describe("Detailed information about the main protagonist."),
-  lorebook: z.string().describe("A comprehensive summary of the series' lore (target 3-5 detailed paragraphs). It should cover: 1. The primary world/setting (key regions, general atmosphere/mood). 2. Prevalent magic systems, unique technologies, or supernatural elements (how they generally work, who uses them, limitations). 3. Major factions, organizations, or societal structures relevant early in the series (their general aims or influence). 4. A brief mention of 1-2 pivotal historical events or background elements that directly shape the series' starting conditions. 5. The central conflict or overarching themes of the series."),
+  lorebook: z.string().describe("A comprehensive summary of the series' lore (target 3-5 detailed paragraphs). It should cover: 1. The primary world/setting (key regions, general atmosphere/mood). 2. Prevalent magic systems, unique technologies, or supernatural elements (how they generally work, who uses them, limitations). 3. Major factions, organizations, or societal structures relevant early in the series (their general aims or influence). 4. A brief mention of 1-2 pivotal historical events or background elements that directly shape the series' starting conditions. 5. The central conflict or overarching themes of the series. Use markdown for emphasis."),
   otherCharacters: z.array(
     z.object({
       name: z.string().describe("The full name of an important supporting character, antagonist, or key figure present or relevant early in the series."),
-      description: z.string().describe("A brief description (1-2 sentences) of this character, their relationship to the main character (if any), their primary goal/role at the series' start, and a defining trait."),
+      description: z.string().describe("A brief description (1-2 sentences) of this character, their relationship to the main character (if any), their primary goal/role at the series' start, and a defining trait. Use markdown for emphasis."),
     })
   ).min(3).max(5).describe("A list of 3 to 5 other notable characters crucial to the initial stages of the series."),
   initialInventory: z.array(z.string()).optional().describe("A list of 2-3 thematic starting items for the main character, directly relevant to their situation at the very beginning of the series. e.g., ['Tattered Clothes', 'A Mysterious Locket', 'Empty Water Canteen']. If none, can be an empty array or omit.").default([]),
   startingLocation: z.string().optional().describe("The specific, named location where the story or player interaction begins, from the main character's perspective at the series' outset. e.g., 'A Dusty Alley in the Lower District of Lugnica', 'Inside the Millennium Falcon Cockpit', 'The Forbidden Forest Edge'. Default to 'An Unfamiliar Place' if truly ambiguous for the series start.").default("An Unfamiliar Place"),
   initialQuest: QuestSchema.omit({ id: true, status: true }).describe("An initial main quest. This quest must be an *immediate* challenge or goal for the main character, directly stemming from their `startingLocation` and initial predicament as described in `initialPromptForPlayer`. It should guide the player's very first actions."),
-  initialPromptForPlayer: z.string().describe("A compelling, direct question or immediate choice to present to the player to start their interaction. This prompt should seamlessly flow from the `startingLocation` and the `initialQuest` description, putting the player in the MC's shoes. e.g., 'The alley is dark, and the thugs are closing in on the silver-haired girl. What do you shout, or what is your first move?' or 'The escape pod has crashed. Alarms are blaring. Your first priority is...? What do you do?'")
+  initialPromptForPlayer: z.string().describe("A compelling, direct question or immediate choice to present to the player to start their interaction. This prompt should seamlessly flow from the `startingLocation` and the `initialQuest` description, putting the player in the MC's shoes. e.g., 'The alley is dark, and the thugs are closing in on the silver-haired girl. What do you shout, or what is your first move?' or 'The escape pod has crashed. Alarms are blaring. Your first priority is...? What do you do?' Use markdown for emphasis and atmosphere.")
 }).describe("Comprehensive details generated for a fictional series to set up an RPG-like experience.");
 export type GenerateSeriesDetailsOutput = z.infer<typeof GenerateSeriesDetailsOutputSchema>;
 
@@ -67,7 +67,7 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateSeriesDetailsOutputSchema},
   prompt: `You are an expert world-builder and narrative designer for immersive text-based RPGs. Your task is to generate a rich and detailed starting point for a game set in the universe of "{{seriesName}}".
 
-Adhere strictly to the JSON output schema provided.
+Adhere strictly to the JSON output schema provided. Encourage the use of simple markdown (like **bold** for emphasis, *italics* for thoughts or nuances) in descriptive text fields (mainCharacter.description, lorebook, otherCharacters.description, initialPromptForPlayer) to enhance readability and immersion.
 
 Key Generation Guidelines:
 
@@ -113,4 +113,3 @@ const generateSeriesDetailsFlow = ai.defineFlow(
     return output;
   }
 );
-
