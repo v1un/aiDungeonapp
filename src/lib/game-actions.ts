@@ -33,69 +33,54 @@ export async function processPlayerInput(playerInput: string, chatHistory: Messa
       const seriesDetails = await generateSeriesDetails({ seriesName: playerInput });
       currentGameState.seriesSetupComplete = true;
       currentGameState.seriesDetails = seriesDetails;
-      currentGameState.inventory = seriesDetails.initialInventory || ['Your Pockets (empty)'];
+      currentGameState.inventory = seriesDetails.initialInventory || [];
       currentGameState.currentLocation = seriesDetails.startingLocation || 'An Unknown Place';
       currentGameState.activeQuests = [];
       if (seriesDetails.initialQuest) {
-        // The generateSeriesDetails flow already adds an ID and status
         currentGameState.activeQuests.push(seriesDetails.initialQuest as Quest);
       }
       
-      gameStateUpdate.seriesDetails = seriesDetails;
+      gameStateUpdate.seriesDetails = seriesDetails; // Send full details for client state and lorebook page
       gameStateUpdate.inventory = currentGameState.inventory;
       gameStateUpdate.currentLocation = currentGameState.currentLocation;
       gameStateUpdate.activeQuests = currentGameState.activeQuests;
 
-      let responseText = `## Series: ${seriesDetails.seriesTitle} ##\n\n`;
-      responseText += `You are at: **${currentGameState.currentLocation}**\n\n`;
-      responseText += `**Playing as: ${seriesDetails.mainCharacter.name}**\n${seriesDetails.mainCharacter.description}\n`;
-      
-      responseText += `**Stats:**\n`;
-      const stats = seriesDetails.mainCharacter.stats;
-      responseText += `  - Strength: ${stats.strength}\n`;
-      responseText += `  - Dexterity: ${stats.dexterity}\n`;
-      responseText += `  - Intelligence: ${stats.intelligence}\n`;
-      if (stats.magicPower) responseText += `  - Magic Power: ${stats.magicPower}\n`;
-      if (stats.luck) responseText += `  - Luck: ${stats.luck}\n`;
-      if (stats.specialAbility) responseText += `  - Special Ability: ${stats.specialAbility}\n`;
-      responseText += `\n`;
-
-      if (currentGameState.activeQuests.length > 0) {
-        const mainQuest = currentGameState.activeQuests[0];
-        responseText += `**Current Main Quest: ${mainQuest.title}**\n`;
-        responseText += `${mainQuest.description}\n`;
-        responseText += `Objectives:\n${mainQuest.objectives.map(obj => `- ${obj}`).join('\n')}\n\n`;
-      }
-
-      responseText += `**Lorebook Snippet:**\n${seriesDetails.lorebook.substring(0, 300)}...\n\n`; // Keep initial message shorter
-      // responseText += `**Other Notable Characters:**\n`;
-      // seriesDetails.otherCharacters.forEach(char => {
-      //   responseText += `- **${char.name}**: ${char.description}\n`;
-      // });
-      // responseText += `\n**Initial Inventory:**\n${currentGameState.inventory.map(item => `- ${item}`).join('\n')}\n`;
-      responseText += `\n${seriesDetails.initialPromptForPlayer}`;
+      // Refined initial response text
+      let responseText = `The world of **${seriesDetails.seriesTitle}** materializes around you. You are **${seriesDetails.mainCharacter.name}**, and right now...\n\n`;
+      responseText += `${seriesDetails.initialPromptForPlayer}`;
+      responseText += `\n\n*(You can check your character's status, inventory, and current quest in the Game Info sidebar.)*`;
       
       return { responseText, gameStateUpdate };
     } catch (error) {
       console.error('Error generating series details:', error);
-      currentGameState = { // Reset state
+      currentGameState = { 
         seriesSetupComplete: false,
         inventory: [],
         currentLocation: 'Not yet determined',
         activeQuests: [],
       };
-      return { responseText: 'I encountered an issue setting up that series. Please try a different series name or try again.' };
+      // Clear seriesDetails from gameStateUpdate if error occurs
+      gameStateUpdate.seriesDetails = undefined;
+      gameStateUpdate.inventory = [];
+      gameStateUpdate.currentLocation = 'Not yet determined';
+      gameStateUpdate.activeQuests = [];
+      return { 
+        responseText: 'I encountered an issue setting up that series. Please try a different series name or try again.',
+        gameStateUpdate 
+      };
     }
   } else {
     // Story continuation logic
     try {
       // Simple summarization for now
       const recentHistory = chatHistory.slice(-5).map(m => `${m.sender === 'player' ? currentGameState.seriesDetails?.mainCharacter.name || 'Player' : 'Narrator'}: ${m.text}`).join('\n');
-      const historyToSummarize = `Current Location: ${currentGameState.currentLocation}\nInventory: ${currentGameState.inventory.join(', ')}\nActive Quests: ${currentGameState.activeQuests.map(q => q.title).join(', ')}\n\n${recentHistory || "The adventure continues."}`;
+      const historyToSummarize = `Current Location: ${currentGameState.currentLocation}\nInventory: ${currentGameState.inventory.join(', ')}\nActive Quests: ${currentGameState.activeQuests.map(q => q.title).join(', ')}\n\nAs ${currentGameState.seriesDetails?.mainCharacter.name}, I said: "${playerInput}"\n\nRecent events:\n${recentHistory || "The adventure continues."}`;
       
-      const combinedInputForAI = `Player input: "${playerInput}"\n\nContext:\nSeries: ${currentGameState.seriesDetails?.seriesTitle}\nPlaying as: ${currentGameState.seriesDetails?.mainCharacter.name}\n${historyToSummarize}`;
+      const combinedInputForAI = `Continue the story based on the player's input. Player input: "${playerInput}"\n\nGame Context:\nSeries: ${currentGameState.seriesDetails?.seriesTitle}\nPlayer is: ${currentGameState.seriesDetails?.mainCharacter.name}\n${historyToSummarize}\n\nNarrate the outcome of the player's action and describe the current situation. Be engaging and descriptive.`;
       
-      const response = await summarizeAdventure({ adventureHistory: combinedInputForAI });
+      // Using summarizeAdventure as a placeholder for a more advanced story continuation flow
+      const response = await summarizeAdventure({ adventureHistory: combinedInputForAI }); 
+      
       // This flow doesn't currently update game state like inventory, location, or quest status.
       // A more advanced flow would be needed with structured output for game state changes.
       // Example: if AI response implies quest objective completion, update quest status here.

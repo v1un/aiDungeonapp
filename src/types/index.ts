@@ -6,7 +6,7 @@ export interface Message {
   sender: 'player' | 'ai';
   text: string;
   timestamp: number;
-  image?: string; // Optional: for future image generation feature
+  image?: string; 
 }
 
 export interface CharacterStats {
@@ -38,19 +38,20 @@ export interface Quest {
   status: 'active' | 'completed' | 'failed';
 }
 
-// Zod schema for Quest, aligned with the Quest type
 export const QuestSchema = z.object({
   id: z.string().describe("A unique identifier for the quest."),
   title: z.string().describe('The title of the generated quest.'),
   description: z
     .string()
-    .describe('A detailed description of the generated quest.'),
+    .describe('A detailed description of the generated quest from the main character\'s perspective.'),
   objectives: z
     .array(z.string())
-    .describe('A list of objectives for the generated quest.'),
+    .min(2).max(4)
+    .describe('A list of 2-4 clear, actionable objectives for the quest.'),
   rewards: z
     .array(z.string())
-    .describe('A list of possible rewards for completing the quest.'),
+    .min(1).max(3)
+    .describe('A list of 1-3 thematic rewards for completing the quest (e.g., item, information, new contact).'),
   status: z.enum(['active', 'completed', 'failed']).describe("The current status of the quest.").default('active'),
 });
 
@@ -58,33 +59,30 @@ export const QuestSchema = z.object({
 export interface SeriesDetails {
   seriesTitle: string;
   mainCharacter: MainCharacter;
-  lorebook: string;
+  lorebook: string; // This will be a more detailed, multi-paragraph summary
   otherCharacters: OtherCharacter[];
   initialPromptForPlayer: string;
   initialInventory?: string[];
   startingLocation?: string;
-  initialQuest?: Quest; // Uses the Quest interface
+  initialQuest?: Quest; 
 }
 
-// For client-side state management in ChatWindow
 export interface ClientGameState {
-  seriesDetails?: SeriesDetails;
+  seriesDetails?: SeriesDetails; // Now holds the richer SeriesDetails
   inventory: string[];
   currentLocation: string;
-  activeQuests: Quest[]; // Uses the Quest interface
-  userDisplayName?: string; // Added for user-set display name
+  activeQuests: Quest[]; 
+  userDisplayName?: string; 
 }
 
-// For updates from server to client
 export interface ClientGameStateUpdate {
-  seriesDetails?: SeriesDetails; // Full details on initial load
+  seriesDetails?: SeriesDetails; 
   inventory?: string[];
   currentLocation?: string;
-  activeQuests?: Quest[]; // Uses the Quest interface
+  activeQuests?: Quest[]; 
 }
 
 export interface ProcessedPlayerInput {
   responseText: string;
   gameStateUpdate?: ClientGameStateUpdate;
 }
-

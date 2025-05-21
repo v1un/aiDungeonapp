@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import type { Message, ClientGameState, ProcessedPlayerInput } from '@/types';
+import type { Message, ClientGameState, ProcessedPlayerInput, SeriesDetails } from '@/types';
 import { ChatLayout } from './ChatLayout';
 import { processPlayerInput } from '@/lib/game-actions';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +24,10 @@ const initialGameState: ClientGameState = {
   currentLocation: "Not yet initialized",
   activeQuests: [],
   userDisplayName: undefined,
+  seriesDetails: undefined, // Initialize seriesDetails
 };
+
+const SERIES_DETAILS_STORAGE_KEY = 'mysticChatways_seriesDetails';
 
 export function ChatWindow() {
   const [messages, setMessages] = useState<Message[]>([initialAiMessage]);
@@ -36,9 +39,36 @@ export function ChatWindow() {
 
   useEffect(() => {
     const storedName = localStorage.getItem('mysticChatways_userDisplayName');
+    const storedSeriesDetails = localStorage.getItem(SERIES_DETAILS_STORAGE_KEY);
+
+    let newGameState = { ...initialGameState };
     if (storedName) {
-      setGameState(prev => ({ ...prev, userDisplayName: storedName }));
+      newGameState.userDisplayName = storedName;
     }
+    if (storedSeriesDetails) {
+      try {
+        const parsedSeriesDetails: SeriesDetails = JSON.parse(storedSeriesDetails);
+        newGameState = {
+          ...newGameState,
+          seriesDetails: parsedSeriesDetails,
+          inventory: parsedSeriesDetails.initialInventory || [],
+          currentLocation: parsedSeriesDetails.startingLocation || "Unknown",
+          activeQuests: parsedSeriesDetails.initialQuest ? [parsedSeriesDetails.initialQuest] : [],
+        };
+         // If series details are loaded, skip the initial AI prompt and show a welcome back
+        setMessages([{
+          id: 'ai-welcome-back-' + Date.now(),
+          sender: 'ai',
+          text: `Welcome back to your adventure in **${parsedSeriesDetails.seriesTitle}**! What would you like to do?`,
+          timestamp: Date.now(),
+        }]);
+
+      } catch (error) {
+        console.error("Failed to parse series details from localStorage", error);
+        localStorage.removeItem(SERIES_DETAILS_STORAGE_KEY); // Clear corrupted data
+      }
+    }
+    setGameState(newGameState);
   }, []);
 
 
@@ -80,13 +110,18 @@ export function ChatWindow() {
       setMessages((prevMessages) => [...prevMessages, aiMessage]);
 
       if (result.gameStateUpdate) {
-        setGameState(prev => ({
-          ...prev,
-          seriesDetails: result.gameStateUpdate?.seriesDetails || prev.seriesDetails,
-          inventory: result.gameStateUpdate?.inventory || prev.inventory,
-          currentLocation: result.gameStateUpdate?.currentLocation || prev.currentLocation,
-          activeQuests: result.gameStateUpdate?.activeQuests || prev.activeQuests,
-        }));
+        const updatedGameState = {
+          ...gameState,
+          seriesDetails: result.gameStateUpdate?.seriesDetails || gameState.seriesDetails,
+          inventory: result.gameStateUpdate?.inventory || gameState.inventory,
+          currentLocation: result.gameStateUpdate?.currentLocation || gameState.currentLocation,
+          activeQuests: result.gameStateUpdate?.activeQuests || gameState.activeQuests,
+        };
+        setGameState(updatedGameState);
+        // Save seriesDetails to localStorage if it was updated (typically on first generation)
+        if (result.gameStateUpdate?.seriesDetails) {
+          localStorage.setItem(SERIES_DETAILS_STORAGE_KEY, JSON.stringify(result.gameStateUpdate.seriesDetails));
+        }
       }
 
     } catch (error) {
@@ -103,6 +138,10 @@ export function ChatWindow() {
         timestamp: Date.now(),
       };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
+       // If series setup failed, clear stored series details
+      if (!gameState.seriesDetails) {
+        localStorage.removeItem(SERIES_DETAILS_STORAGE_KEY);
+      }
     } finally {
       setIsLoading(false);
       setCurrentLoadingMessage(undefined);
@@ -126,6 +165,7 @@ export function ChatWindow() {
         <SidebarInset className="flex-1 flex flex-col">
           <div className="p-2 border-b border-border flex items-center justify-between">
             <div className="flex items-center">
+              {/* SidebarTrigger is now part of GameSidebar */}
               <h1 className="text-lg font-semibold ml-2">Mystic Chatways</h1>
             </div>
             <Link href="/settings" passHref>
