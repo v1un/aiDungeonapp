@@ -1,11 +1,9 @@
 
 'use server';
 
-import type { Message, SeriesDetails, ProcessedPlayerInput, ClientGameStateUpdate, Quest } from '@/types';
+import type { Message, SeriesDetails, ProcessedPlayerInput, ClientGameStateUpdate, Quest, Lorebook } from '@/types';
 import { generateSeriesDetails } from '@/ai/flows/generate-series-details';
-import { summarizeAdventure } from '@/ai/flows/summarize-adventure';
-// Placeholder for future dynamic quest generation
-// import { generateQuest } from '@/ai/flows/generate-quest';
+import { advanceStory, type AdvanceStoryInput } from '@/ai/flows/advance-story'; // Updated import
 
 interface ServerGameState {
   seriesSetupComplete: boolean;
@@ -22,6 +20,12 @@ let currentGameState: ServerGameState = {
   activeQuests: [],
 };
 
+// Function to allow Genkit tools to access current game state
+export async function getCurrentGameState(): Promise<ServerGameState> {
+  return currentGameState;
+}
+
+
 export async function processPlayerInput(playerInput: string, chatHistory: Message[]): Promise<ProcessedPlayerInput> {
   const gameStateUpdate: ClientGameStateUpdate = {};
 
@@ -37,18 +41,22 @@ export async function processPlayerInput(playerInput: string, chatHistory: Messa
       currentGameState.currentLocation = seriesDetails.startingLocation || 'An Unknown Place';
       currentGameState.activeQuests = [];
       if (seriesDetails.initialQuest) {
-        currentGameState.activeQuests.push(seriesDetails.initialQuest as Quest);
+        // Ensure the initialQuest is fully formed Quest object
+        currentGameState.activeQuests.push({
+            id: seriesDetails.initialQuest.id || `quest-init-${Date.now()}`, // Ensure ID
+            status: seriesDetails.initialQuest.status || 'active', // Ensure status
+            ...seriesDetails.initialQuest
+        } as Quest);
       }
       
-      gameStateUpdate.seriesDetails = seriesDetails; // Send full details for client state and lorebook page
+      gameStateUpdate.seriesDetails = seriesDetails;
       gameStateUpdate.inventory = currentGameState.inventory;
       gameStateUpdate.currentLocation = currentGameState.currentLocation;
       gameStateUpdate.activeQuests = currentGameState.activeQuests;
 
-      // Refined initial response text
       let responseText = `The world of **${seriesDetails.seriesTitle}** materializes around you. You are **${seriesDetails.mainCharacter.name}**, and right now...\n\n`;
       responseText += `${seriesDetails.initialPromptForPlayer}`;
-      responseText += `\n\n*(You can check your character's status, inventory, and current quest in the Game Info sidebar.)*`;
+      responseText += `\n\n*(Character details, inventory, and your current quest are in the Game Info sidebar. You can explore the full **Lorebook** via the button there too!)*`;
       
       return { responseText, gameStateUpdate };
     } catch (error) {
@@ -59,7 +67,6 @@ export async function processPlayerInput(playerInput: string, chatHistory: Messa
         currentLocation: 'Not yet determined',
         activeQuests: [],
       };
-      // Clear seriesDetails from gameStateUpdate if error occurs
       gameStateUpdate.seriesDetails = undefined;
       gameStateUpdate.inventory = [];
       gameStateUpdate.currentLocation = 'Not yet determined';
@@ -70,25 +77,56 @@ export async function processPlayerInput(playerInput: string, chatHistory: Messa
       };
     }
   } else {
-    // Story continuation logic
+    // Story continuation logic using the new advanceStory flow
     try {
-      // Simple summarization for now
       const recentHistory = chatHistory.slice(-5).map(m => `${m.sender === 'player' ? currentGameState.seriesDetails?.mainCharacter.name || 'Player' : 'Narrator'}: ${m.text}`).join('\n');
-      const historyToSummarize = `Current Location: ${currentGameState.currentLocation}\nInventory: ${currentGameState.inventory.join(', ')}\nActive Quests: ${currentGameState.activeQuests.map(q => q.title).join(', ')}\n\nAs ${currentGameState.seriesDetails?.mainCharacter.name}, I said: "${playerInput}"\n\nRecent events:\n${recentHistory || "The adventure continues."}`;
       
-      const combinedInputForAI = `Continue the story based on the player's input. Player input: "${playerInput}"\n\nGame Context:\nSeries: ${currentGameState.seriesDetails?.seriesTitle}\nPlayer is: ${currentGameState.seriesDetails?.mainCharacter.name}\n${historyToSummarize}\n\nNarrate the outcome of the player's action and describe the current situation. Be engaging and descriptive.`;
+      const advanceStoryInput: AdvanceStoryInput = {
+        playerInput: playerInput,
+        chatHistorySummary: recentHistory || "The adventure has just begun.",
+        mainCharacter: { // Pass simplified main character details
+            name: currentGameState.seriesDetails!.mainCharacter.name,
+            description: currentGameState.seriesDetails!.mainCharacter.description,
+        },
+        currentLocation: currentGameState.currentLocation,
+        inventory: currentGameState.inventory,
+        activeQuests: currentGameState.activeQuests.map(q => ({ // Pass simplified active quest details
+            title: q.title,
+            description: q.description,
+            objectives: q.objectives,
+        })),
+        seriesTitle: currentGameState.seriesDetails!.seriesTitle,
+      };
       
-      // Using summarizeAdventure as a placeholder for a more advanced story continuation flow
-      const response = await summarizeAdventure({ adventureHistory: combinedInputForAI }); 
+      const aiResponse = await advanceStory(advanceStoryInput);
       
-      // This flow doesn't currently update game state like inventory, location, or quest status.
-      // A more advanced flow would be needed with structured output for game state changes.
-      // Example: if AI response implies quest objective completion, update quest status here.
+      // Update server game state based on AI response
+      if (aiResponse.updatedLocation) {
+        currentGameState.currentLocation = aiResponse.updatedLocation;
+        gameStateUpdate.currentLocation = currentGameState.currentLocation;
+      }
+      if (aiResponse.updatedInventory) {
+        currentGameState.inventory = aiResponse.updatedInventory;
+        gameStateUpdate.inventory = currentGameState.inventory;
+      }
+      // Basic quest progress handling (can be expanded)
+      if (aiResponse.questProgress) {
+        if (aiResponse.questProgress.questCompleted && aiResponse.questProgress.questId) {
+          const questIdToUpdate = currentGameState.activeQuests.find(q=> q.title.includes(aiResponse.questProgress!.questId!))?.id || aiResponse.questProgress.questId;
+          currentGameState.activeQuests = currentGameState.activeQuests.map(q => 
+            q.id === questIdToUpdate ? { ...q, status: 'completed' } : q
+          );
+        }
+        // For now, we're not dynamically adding new quests described by AI's `newQuest` field.
+        // That would require a separate call to generate a full quest object.
+        // We also don't have fine-grained objective tracking update from AI yet.
+        gameStateUpdate.activeQuests = [...currentGameState.activeQuests]; // Send updated list
+      }
       
-      return { responseText: response.summary, gameStateUpdate };
+      return { responseText: aiResponse.narrativeResponse, gameStateUpdate };
     } catch (error) {
-      console.error('Error in AI response:', error);
-      return { responseText: `The threads of fate tangle... (AI response error). You said: "${playerInput}". Try rephrasing your action.` };
+      console.error('Error in AI story advancement:', error);
+      return { responseText: `The mists of possibility swirl unpredictably... (AI response error). You said: "${playerInput}". Perhaps try a different approach?` };
     }
   }
 }

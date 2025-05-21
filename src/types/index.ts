@@ -6,7 +6,7 @@ export interface Message {
   sender: 'player' | 'ai';
   text: string;
   timestamp: number;
-  image?: string; 
+  image?: string;
 }
 
 export interface CharacterStats {
@@ -29,15 +29,6 @@ export interface OtherCharacter {
   description: string;
 }
 
-export interface Quest {
-  id: string;
-  title: string;
-  description: string;
-  objectives: string[];
-  rewards: string[];
-  status: 'active' | 'completed' | 'failed';
-}
-
 export const QuestSchema = z.object({
   id: z.string().describe("A unique identifier for the quest."),
   title: z.string().describe('The title of the generated quest.'),
@@ -54,32 +45,47 @@ export const QuestSchema = z.object({
     .describe('A list of 1-3 thematic rewards for completing the quest (e.g., item, information, new contact).'),
   status: z.enum(['active', 'completed', 'failed']).describe("The current status of the quest.").default('active'),
 });
+export type Quest = z.infer<typeof QuestSchema>;
+
+// New Lorebook Structure
+export const LoreEntrySchema = z.object({
+  name: z.string().describe("The name or title of the lore entry (e.g., a specific location, character, event, or concept)."),
+  description: z.string().describe("A detailed description of this lore entry, potentially using markdown for emphasis. Aim for 2-4 sentences per entry."),
+  category: z.string().describe("A general category for this lore entry (e.g., 'Locations', 'Key Characters & NPCs', 'Historical Events', 'Magic Systems & Unique Technologies', 'Factions & Organizations', 'Creatures & Races', 'Cultural Notes', 'Important Items & Artifacts').")
+});
+export type LoreEntry = z.infer<typeof LoreEntrySchema>;
+
+export const LorebookSchema = z.object({
+  overallSummary: z.string().describe("A 1-2 paragraph overarching summary of the series' world, its primary conflict, and central themes."),
+  entries: z.array(LoreEntrySchema).min(10).max(20).describe("A collection of specific lore entries. Aim for 10-20 detailed entries in total, distributed across various relevant categories to provide a rich understanding of the series' universe.")
+});
+export type Lorebook = z.infer<typeof LorebookSchema>;
 
 
 export interface SeriesDetails {
   seriesTitle: string;
   mainCharacter: MainCharacter;
-  lorebook: string; // This will be a more detailed, multi-paragraph summary
+  lorebook: Lorebook; // Updated to new structured type
   otherCharacters: OtherCharacter[];
   initialPromptForPlayer: string;
   initialInventory?: string[];
   startingLocation?: string;
-  initialQuest?: Quest; 
+  initialQuest?: Quest;
 }
 
 export interface ClientGameState {
-  seriesDetails?: SeriesDetails; // Now holds the richer SeriesDetails
+  seriesDetails?: SeriesDetails;
   inventory: string[];
   currentLocation: string;
-  activeQuests: Quest[]; 
-  userDisplayName?: string; 
+  activeQuests: Quest[];
+  userDisplayName?: string;
 }
 
 export interface ClientGameStateUpdate {
-  seriesDetails?: SeriesDetails; 
+  seriesDetails?: SeriesDetails;
   inventory?: string[];
   currentLocation?: string;
-  activeQuests?: Quest[]; 
+  activeQuests?: Quest[];
 }
 
 export interface ProcessedPlayerInput {
