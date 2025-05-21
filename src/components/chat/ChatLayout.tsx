@@ -37,7 +37,7 @@ export function ChatLayout({
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full w-full relative overflow-hidden bg-background flex-1">
+    <div className="flex flex-col h-full w-full relative overflow-hidden bg-background">
       {/* Animated background elements - contained within boundaries */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-[5%] -right-[10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-3xl animate-pulse-light"></div>
@@ -47,7 +47,7 @@ export function ChatLayout({
       </div>
       
       {/* Header */}
-      <div className="border-b border-border/40 backdrop-blur-sm bg-background/70 py-3 px-4 flex justify-center items-center sticky top-0 z-10">
+      <div className="border-b border-border/40 backdrop-blur-sm bg-background/80 py-3 px-4 flex justify-center items-center sticky top-0 z-10">
         <h1 className="text-xl font-semibold flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
           <span className="text-gradient">Mystic Chatways</span>
@@ -55,8 +55,8 @@ export function ChatLayout({
       </div>
       
       {/* Chat messages */}
-      <ScrollArea className="flex-grow overflow-y-auto p-2 sm:p-4 md:p-6 lg:px-8 lg:py-6 styled-scrollbar" ref={scrollAreaRef}>
-        <div className="mx-auto max-w-4xl w-full space-y-3">
+      <ScrollArea className="flex-1 overflow-y-auto styled-scrollbar" ref={scrollAreaRef}>
+        <div className="mx-auto w-full max-w-4xl p-4 sm:p-6 md:p-8 space-y-3">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[200px] text-muted-foreground">
               Begin your adventure by typing a message below...
@@ -86,8 +86,8 @@ export function ChatLayout({
       </ScrollArea>
       
       {/* Chat input */}
-      <div className="border-t border-border/40 backdrop-blur-sm bg-background/70 p-2 sm:p-4 w-full">
-        <div className="mx-auto max-w-4xl w-full px-2 sm:px-4 lg:px-0">
+      <div className="border-t border-border/40 backdrop-blur-sm bg-background/80 p-4 w-full">
+        <div className="mx-auto w-full max-w-4xl px-2 sm:px-4">
           <ChatInput
             value={inputValue}
             onChange={onInputChange}

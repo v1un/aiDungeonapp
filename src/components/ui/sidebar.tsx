@@ -225,21 +225,25 @@ const Sidebar = React.forwardRef<
         {/* No spacer div needed anymore */}
         <div
           className={cn(
-            "duration-200 fixed inset-y-0 z-20 hidden h-svh transition-all ease-linear md:flex",
-            state === "expanded" ? "w-[--sidebar-width]" : "w-[3rem]",
+            "duration-200 fixed inset-y-0 z-20 hidden h-screen transition-all ease-linear md:flex",
+            state === "expanded" ? "w-[--sidebar-width]" : "w-16",
             side === "left"
-              ? "flex-col items-start left-0 border-r border-sidebar-border bg-sidebar"
-              : "flex-col items-end right-0 border-l border-sidebar-border bg-sidebar",
+              ? "left-0 border-r border-sidebar-border"
+              : "right-0 border-l border-sidebar-border",
             // For inset variant, use appropriate margins in expanded state, but only vertical margins in collapsed state
             variant === "inset" && state === "expanded" && "m-2",
             variant === "inset" && state === "collapsed" && "my-2",
-            "px-2 pt-safe pb-safe rounded-xl shadow"
+            "flex-col bg-sidebar"
           )}
           {...props}
         >
           <div
             data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
+            className={cn(
+              "flex h-full w-full flex-col overflow-hidden",
+              "group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow",
+              state === "collapsed" ? "items-center px-0" : "px-3"
+            )}
           >
             {children}
           </div>
