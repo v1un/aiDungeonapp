@@ -5,9 +5,6 @@ on:
     workflows: ["Mystic Chatways CI/CD"]
     types:
       - completed
-    branches:
-      - main
-      - master
   # Allow manual triggering
   workflow_dispatch:
 
@@ -16,8 +13,8 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-    environment: production
-    
+    env:
+      NODE_ENV: production
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
