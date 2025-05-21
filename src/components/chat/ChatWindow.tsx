@@ -359,21 +359,21 @@ export default function ChatWindow() {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full overflow-hidden">
-        {/* Background elements - full screen with improved positioning */}
+        {/* Background elements - contained within the viewport */}
         <div className="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-0 bg-background/95 backdrop-blur-sm">
-          <div className="absolute -top-40 right-0 w-[50vw] h-[50vh] bg-primary/5 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/3 left-1/3 w-[60vw] h-[60vh] bg-secondary/3 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 left-0 w-[50vw] h-[50vh] bg-accent/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-[30vw] h-[30vh] bg-primary/3 rounded-full blur-3xl"></div>
+          <div className="absolute top-[5%] -right-[10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-3xl peer-data-[state=collapsed]:opacity-30 transition-opacity duration-300"></div>
+          <div className="absolute top-1/3 left-1/4 w-[70%] h-[70%] bg-secondary/3 rounded-full blur-3xl peer-data-[state=collapsed]:opacity-30 transition-opacity duration-300"></div>
+          <div className="absolute bottom-[5%] -left-[5%] w-[50%] h-[50%] bg-accent/5 rounded-full blur-3xl peer-data-[state=collapsed]:opacity-30 transition-opacity duration-300"></div>
+          <div className="absolute bottom-1/4 right-1/6 w-[40%] h-[40%] bg-primary/3 rounded-full blur-3xl peer-data-[state=collapsed]:opacity-30 transition-opacity duration-300"></div>
         </div>
         
-        {/* Layout structure - using grid for better control */}
-        <div className="relative z-10 w-full grid grid-cols-[auto_1fr]">
-          {/* Game sidebar */}
+        {/* Layout structure - using flex for better control with fixed sidebar width */}
+        <div className="relative z-10 w-full flex min-h-screen">
+          {/* Game sidebar with fixed width */}
           <Sidebar 
             side="left"
             collapsible="icon"
-            className="group z-20 bg-sidebar-background/90 backdrop-blur-md border-r border-sidebar-border h-screen"
+            className="group z-20 bg-sidebar-background/90 backdrop-blur-md border-r border-sidebar-border h-screen w-[260px] flex-shrink-0 fixed left-0 top-0"
           >
             <SidebarContent>
               <GameSidebar
@@ -387,7 +387,7 @@ export default function ChatWindow() {
           </Sidebar>
 
           {/* Main content area - using flex for vertical structure */}
-          <SidebarInset className="relative flex flex-col h-screen overflow-hidden">
+          <SidebarInset className="relative flex flex-col min-h-screen w-full ml-[260px] transition-[margin] duration-200 ease-in-out group-data-[state=collapsed]:ml-[4rem]">
             <div className="flex flex-col h-full w-full max-w-7xl mx-auto px-4">
               {/* Header with session selector */}
               <div className="border-b border-border/40 backdrop-blur-sm bg-background/30 py-3 px-4 flex items-center justify-between sticky top-0 z-10">

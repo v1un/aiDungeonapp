@@ -81,6 +81,23 @@
     from { opacity: 0; }
     to { opacity: 1; }
   }
+  
+  /* Hide debugging elements when sidebar is collapsed */
+  .peer[data-state="collapsed"] ~ * [class*="debug"],
+  .peer[data-state="collapsed"] ~ * [class*="indicator"],
+  .peer[data-state="collapsed"] ~ * svg[stroke="orange"],
+  .peer[data-state="collapsed"] ~ * svg[fill="orange"],
+  .peer[data-state="collapsed"] ~ * [style*="orange"],
+  .group[data-state="collapsed"] [class*="debug"],
+  .group[data-state="collapsed"] [class*="indicator"],
+  .group[data-state="collapsed"] svg[stroke="orange"],
+  .group[data-state="collapsed"] svg[fill="orange"],
+  .group[data-state="collapsed"] [style*="orange"] {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
 
   /* Slide up animation */
   .animate-slide-up {

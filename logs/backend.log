@@ -1,0 +1,50 @@
+[2025-05-21T17:12:13.561Z] [BACKEND]    - Local:        http://localhost:9003
+   - Network:      http://192.168.1.69:9003
+   - Environments: .env
+
+
+[2025-05-21T17:12:17.811Z] [BACKEND]  GET / [32m200[39m in 61ms
+
+[2025-05-21T17:12:39.699Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/health in 253ms
+
+[2025-05-21T17:12:39.734Z] [BACKEND]  GET /api/health [32m200[39m in 289ms
+
+[2025-05-21T17:12:39.929Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/genkit-health in 193ms
+
+[2025-05-21T17:12:39.949Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 214ms
+
+[2025-05-21T17:13:02.910Z] [BACKEND] ERROR:  [33m[1m⚠[22m[39m Blocked cross-origin request from 127.0.0.1. To allow this, configure "allowedDevOrigins" in next.config
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+
+[2025-05-21T17:13:03.093Z] [BACKEND]  GET /api/health [32m200[39m in 23ms
+
+[2025-05-21T17:13:03.134Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
+
+[2025-05-21T17:13:33.082Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
+
+[2025-05-21T17:13:33.096Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
+
+[2025-05-21T17:14:03.080Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T17:14:03.093Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-21T17:14:33.080Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T17:14:33.094Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-21T17:15:03.081Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T17:15:03.094Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-21T17:15:33.081Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T17:15:33.094Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
+
+[2025-05-21T17:16:03.080Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T17:16:03.093Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-21T17:16:33.080Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
+
+[2025-05-21T17:16:33.096Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
+

@@ -1,0 +1,3 @@
+[2025-05-21T17:13:02.909Z] [ERROR] ERROR:  [33m[1m⚠[22m[39m Blocked cross-origin request from 127.0.0.1. To allow this, configure "allowedDevOrigins" in next.config
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+

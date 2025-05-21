@@ -33,7 +33,7 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
   return (
     <div className="flex flex-col h-full bg-background/80 backdrop-blur-sm text-card-foreground rounded-xl shadow-xl border border-border/30 overflow-hidden relative">
       {/* Background elements */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 group-data-[state=collapsed]:hidden">
         <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-accent/5 rounded-full blur-3xl"></div>
       </div>

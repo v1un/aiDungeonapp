@@ -23,6 +23,9 @@ interface ProcessInfo {
   name: string;
   logStream: fs.FileHandle | null;
   logFile: string;
+  frontendLogFile?: string;
+  backendLogFile?: string;
+  errorLogFile?: string;
 }
 
 interface Ports {
@@ -56,6 +59,36 @@ const config: Config = {
     nextjs: 'Next.js'
   }
 };
+
+// Frontend detection patterns (used to filter and categorize logs)
+const FRONTEND_PATTERNS = [
+  /client/i,
+  /browser/i,
+  /react/i,
+  /component/i,
+  /rendering/i,
+  /jsx|tsx/i,
+  /\[HMR\]/i
+];
+
+// Backend detection patterns
+const BACKEND_PATTERNS = [
+  /api/i,
+  /server/i,
+  /route/i,
+  /endpoint/i,
+  /http/i,
+  /POST|GET|PUT|DELETE/i
+];
+
+// Error detection patterns
+const ERROR_PATTERNS = [
+  /error/i,
+  /exception/i,
+  /fail/i,
+  /crash/i,
+  /unable to/i
+];
 
 // Store detected ports
 const ports: Ports = {
@@ -103,15 +136,22 @@ const processes: Record<string, ProcessInfo> = {
     process: null,
     name: config.processNames.genkit,
     logStream: null,
-    logFile: path.join(config.logDir, 'genkit.log')
+    logFile: path.join(config.logDir, 'genkit.log'),
+    errorLogFile: path.join(config.logDir, 'genkit-error.log')
   },
   nextjs: {
     process: null,
     name: config.processNames.nextjs,
     logStream: null,
-    logFile: path.join(config.logDir, 'nextjs.log')
+    logFile: path.join(config.logDir, 'nextjs.log'),
+    frontendLogFile: path.join(config.logDir, 'frontend.log'),
+    backendLogFile: path.join(config.logDir, 'backend.log'),
+    errorLogFile: path.join(config.logDir, 'nextjs-error.log')
   }
 };
+
+// Create a centralized error log
+const centralErrorLogFile = path.join(config.logDir, 'errors.log');
 
 /**
  * Print a banner message
@@ -128,6 +168,50 @@ function printBanner(): void {
 function log(message: string, color: string = colors.reset): void {
   const timestamp = new Date().toLocaleTimeString();
   console.log(`${color}[${timestamp}] ${message}${colors.reset}`);
+}
+
+/**
+ * Write a message to a log file with timestamp
+ */
+async function writeToLog(message: string, logFile: string, category?: string): Promise<void> {
+  try {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}]${category ? ` [${category}]` : ''} ${message}\n`;
+    await fs.appendFile(logFile, logMessage);
+  } catch (error) {
+    console.error(`Failed to write to log file ${logFile}: ${(error as Error).message}`);
+  }
+}
+
+/**
+ * Process log output to categorize as frontend, backend, or error
+ */
+async function processLogOutput(message: string, source: 'genkit' | 'nextjs'): Promise<void> {
+  const sourceProcess = processes[source];
+  
+  // Write to main log file
+  await writeToLog(message, sourceProcess.logFile);
+  
+  // Check if it's an error message
+  const isError = ERROR_PATTERNS.some(pattern => pattern.test(message));
+  if (isError) {
+    if (sourceProcess.errorLogFile) {
+      await writeToLog(message, sourceProcess.errorLogFile, 'ERROR');
+    }
+    await writeToLog(`[${sourceProcess.name}] ${message}`, centralErrorLogFile, 'ERROR');
+  }
+  
+  // Only categorize frontend/backend for nextjs
+  if (source === 'nextjs') {
+    const isFrontend = FRONTEND_PATTERNS.some(pattern => pattern.test(message));
+    const isBackend = BACKEND_PATTERNS.some(pattern => pattern.test(message));
+    
+    if (isFrontend && sourceProcess.frontendLogFile) {
+      await writeToLog(message, sourceProcess.frontendLogFile, 'FRONTEND');
+    } else if (isBackend && sourceProcess.backendLogFile) {
+      await writeToLog(message, sourceProcess.backendLogFile, 'BACKEND');
+    }
+  }
 }
 
 /**
@@ -328,12 +412,14 @@ async function startGenkitServer(): Promise<void> {
       const output = data.toString();
       logStream.write(output);
       extractPortInfo(output);
+      processLogOutput(output, 'genkit');
       console.log(`[${processes.genkit.name}] ${output}`);
     });
     
     genkitProcess.stderr?.on('data', (data) => {
       const error = data.toString();
       logStream.write(`ERROR: ${error}`);
+      processLogOutput(`ERROR: ${error}`, 'genkit');
       console.error(`[${processes.genkit.name} ERROR] ${error}`);
     });
     
@@ -403,12 +489,14 @@ async function startNextjsServer(): Promise<void> {
     nextProcess.stdout?.on('data', (data) => {
       const output = data.toString();
       logStream.write(output);
+      processLogOutput(output, 'nextjs');
       console.log(`[${processes.nextjs.name}] ${output}`);
     });
     
     nextProcess.stderr?.on('data', (data) => {
       const error = data.toString();
       logStream.write(`ERROR: ${error}`);
+      processLogOutput(`ERROR: ${error}`, 'nextjs');
       console.error(`[${processes.nextjs.name} ERROR] ${error}`);
     });
     
@@ -435,6 +523,8 @@ async function startNextjsServer(): Promise<void> {
   }
 }
 
+// ... (rest of the code remains the same)
+
 /**
  * Print a summary of the running services
  */
@@ -454,8 +544,13 @@ function printSummary(): void {
   console.log(`  ${colors.cyan}•${colors.reset} Next.js:         ${colors.yellow}http://localhost:${ports.nextjs}${colors.reset}`);
   
   console.log(`\n${colors.bright.green}Logs:${colors.reset}`);
-  console.log(`  ${colors.cyan}•${colors.reset} GenKit:   ${colors.yellow}${processes.genkit.logFile}${colors.reset}`);
-  console.log(`  ${colors.cyan}•${colors.reset} Next.js:  ${colors.yellow}${processes.nextjs.logFile}${colors.reset}`);
+  console.log(`  ${colors.cyan}•${colors.reset} GenKit:          ${colors.yellow}${processes.genkit.logFile}${colors.reset}`);
+  console.log(`  ${colors.cyan}•${colors.reset} Next.js:         ${colors.yellow}${processes.nextjs.logFile}${colors.reset}`);
+  console.log(`  ${colors.cyan}•${colors.reset} Frontend:        ${colors.yellow}${processes.nextjs.frontendLogFile}${colors.reset}`);
+  console.log(`  ${colors.cyan}•${colors.reset} Backend:         ${colors.yellow}${processes.nextjs.backendLogFile}${colors.reset}`);
+  console.log(`  ${colors.cyan}•${colors.reset} GenKit Errors:   ${colors.yellow}${processes.genkit.errorLogFile}${colors.reset}`);
+  console.log(`  ${colors.cyan}•${colors.reset} Next.js Errors:  ${colors.yellow}${processes.nextjs.errorLogFile}${colors.reset}`);
+  console.log(`  ${colors.cyan}•${colors.reset} All Errors:      ${colors.yellow}${centralErrorLogFile}${colors.reset}`);
   
   console.log('\n' + colors.bg.blue + colors.white + '='.repeat(80) + colors.reset + '\n');
 }
@@ -535,6 +630,42 @@ async function main(): Promise<void> {
     setupSignalHandlers();
     
     logInfo('Starting Mystic Chatways services...');
+    
+    // Create logs directory
+    await fs.mkdir(config.logDir, { recursive: true });
+    
+    // Clear or rotate log files
+    const logFiles = [
+      processes.genkit.logFile,
+      processes.nextjs.logFile,
+      processes.nextjs.frontendLogFile,
+      processes.nextjs.backendLogFile,
+      processes.genkit.errorLogFile,
+      processes.nextjs.errorLogFile,
+      centralErrorLogFile
+    ];
+    
+    for (const logFile of logFiles) {
+      if (!logFile) continue;
+      
+      try {
+        // Check if file exists
+        const stats = await fs.stat(logFile).catch(() => null);
+        
+        if (stats) {
+          // If larger than 10MB, rotate the log
+          if (stats.size > 10 * 1024 * 1024) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            await fs.rename(logFile, `${logFile}.${timestamp}.bak`);
+          } else {
+            // Otherwise just clear it
+            await fs.writeFile(logFile, '');
+          }
+        }
+      } catch (err) {
+        // Ignore errors
+      }
+    }
     
     // Check for available ports before starting
     await setupAvailablePorts();
