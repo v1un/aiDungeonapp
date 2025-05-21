@@ -1,7 +1,8 @@
+"use client";
 
 import { ChatWindow } from '@/components/chat/ChatWindow';
 
 export default function AdventurePage() {
-  // ChatWindow now includes the sidebar and main chat area
+  // ChatWindow is designed to handle its own full-page layout
   return <ChatWindow />;
 }
