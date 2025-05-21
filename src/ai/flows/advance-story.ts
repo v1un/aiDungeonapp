@@ -14,6 +14,15 @@ import {z} from 'genkit';
 import { retrieveLoreInfoTool } from '@/ai/lore-tools'; // Import from flattened lore-tools file
 import type { Quest, MainCharacter } from '@/types';
 
+// Import our new advanced storytelling tools
+import { retrieveContextTool, updateContextTool } from '@/ai/tools/context-manager';
+import { generateBranchesTool, selectBranchTool } from '@/ai/tools/narrative-branching';
+import { 
+  generateLocationTool, 
+  generateEnvironmentTool, 
+  retrieveLocationTool 
+} from '@/ai/tools/world-building';
+
 const AdvanceStoryInputSchema = z.object({
   playerInput: z.string().describe("The player's latest action or dialogue."),
   chatHistorySummary: z.string().describe("A brief summary of the last 3-5 turns of conversation."),
@@ -53,7 +62,16 @@ const prompt = ai.definePrompt({
   name: 'advanceStoryPrompt',
   input: {schema: AdvanceStoryInputSchema},
   output: {schema: AdvanceStoryOutputSchema},
-  tools: [retrieveLoreInfoTool],
+  tools: [
+    retrieveLoreInfoTool,
+    retrieveContextTool,
+    updateContextTool,
+    generateBranchesTool,
+    selectBranchTool,
+    generateLocationTool,
+    generateEnvironmentTool,
+    retrieveLocationTool
+  ],
   prompt: `You are a master storyteller and Game Master for an immersive text-based RPG set in the world of **{{seriesTitle}}**.
 The player is controlling **{{mainCharacter.name}}** ({{mainCharacter.description}}).
 
