@@ -47,7 +47,6 @@ export const QuestSchema = z.object({
 });
 export type Quest = z.infer<typeof QuestSchema>;
 
-// New Lorebook Structure
 export const LoreEntrySchema = z.object({
   name: z.string().describe("The name or title of the lore entry (e.g., a specific location, character, event, or concept)."),
   description: z.string().describe("A detailed description of this lore entry, potentially using markdown for emphasis. Aim for 2-4 sentences per entry."),
@@ -65,12 +64,12 @@ export type Lorebook = z.infer<typeof LorebookSchema>;
 export interface SeriesDetails {
   seriesTitle: string;
   mainCharacter: MainCharacter;
-  lorebook: Lorebook; // Updated to new structured type
+  lorebook: Lorebook;
   otherCharacters: OtherCharacter[];
   initialPromptForPlayer: string;
   initialInventory?: string[];
   startingLocation?: string;
-  initialQuest?: Quest;
+  initialQuest?: Quest; // This is the full Quest object after system processing
 }
 
 export interface ClientGameState {
@@ -92,3 +91,14 @@ export interface ProcessedPlayerInput {
   responseText: string;
   gameStateUpdate?: ClientGameStateUpdate;
 }
+
+// New type for managing multiple game sessions
+export interface GameSession {
+  id: string;
+  name: string; // Typically the series title, or "New Game"
+  lastPlayed: number; // Timestamp for sorting
+  gameState: ClientGameState;
+  messages: Message[];
+}
+
+    
