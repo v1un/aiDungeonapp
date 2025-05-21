@@ -15,13 +15,13 @@ import { retrieveLoreInfoTool } from '@/ai/lore-tools'; // Import from flattened
 import type { Quest, MainCharacter } from '@/types';
 
 // Import our new advanced storytelling tools
-import { retrieveContextTool, updateContextTool } from '@/ai/tools/context-manager';
-import { generateBranchesTool, selectBranchTool } from '@/ai/tools/narrative-branching';
+import { retrieveContextTool, updateContextTool } from '@/ai/tools/context-manager-tools';
+import { generateBranchesTool, selectBranchTool } from '@/ai/tools/narrative-branching-tools';
 import { 
   generateLocationTool, 
   generateEnvironmentTool, 
   retrieveLocationTool 
-} from '@/ai/tools/world-building';
+} from '@/ai/tools/world-building-tools';
 
 const AdvanceStoryInputSchema = z.object({
   playerInput: z.string().describe("The player's latest action or dialogue."),

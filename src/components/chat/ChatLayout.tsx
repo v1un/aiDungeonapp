@@ -37,11 +37,13 @@ export function ChatLayout({
   }, [messages]);
 
   return (
-    <div className="stretch-layout bg-background/90 backdrop-blur-sm relative overflow-hidden">
-      {/* Animated background elements */}
+    <div className="flex flex-col h-full w-full relative overflow-hidden">
+      {/* Animated background elements - full screen positioning */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse-light"></div>
-        <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-accent/5 rounded-full blur-3xl animate-pulse-light" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute -top-[20%] -right-[10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-3xl animate-pulse-light"></div>
+        <div className="absolute top-1/3 left-1/3 w-[75%] h-[75%] bg-secondary/3 rounded-full blur-3xl animate-pulse-light" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-accent/5 rounded-full blur-3xl animate-pulse-light" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[40%] h-[40%] bg-primary/3 rounded-full blur-3xl animate-pulse-light" style={{ animationDelay: '3s' }}></div>
       </div>
       
       {/* Header */}
@@ -52,9 +54,9 @@ export function ChatLayout({
         </h1>
       </div>
       
-      {/* Chat messages */}
-      <ScrollArea className="stretch-child p-2 sm:p-4 md:p-6 styled-scrollbar" ref={scrollAreaRef}>
-        <div className="mx-auto max-w-3xl space-y-3 w-full">
+      {/* Chat messages - increased max-width for better balance */}
+      <ScrollArea className="flex-grow overflow-y-auto p-2 sm:p-4 md:p-6 styled-scrollbar" ref={scrollAreaRef}>
+        <div className="mx-auto max-w-4xl space-y-3 w-full">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[200px] text-muted-foreground">
               Begin your adventure by typing a message below...
@@ -85,7 +87,7 @@ export function ChatLayout({
       
       {/* Chat input */}
       <div className="border-t border-border/40 backdrop-blur-sm bg-background/40 p-2 sm:p-4 w-full">
-        <div className="mx-auto max-w-3xl w-full">
+        <div className="mx-auto max-w-4xl w-full">
           <ChatInput
             value={inputValue}
             onChange={onInputChange}

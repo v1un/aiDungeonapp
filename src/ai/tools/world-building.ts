@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'genkit';
-import { ai } from '@/ai/genkit';
+import { LocationDetail, EnvironmentalElement, generateLocationSchema, generateEnvironmentSchema, retrieveLocationSchema } from './world-building-schemas';
 
 /**
  * World Building Tool
@@ -10,49 +10,10 @@ import { ai } from '@/ai/genkit';
  * populate them with dynamic elements for a more immersive story experience.
  */
 
-interface LocationDetail {
-  name: string;
-  description: string;
-  atmosphere: string;
-  notableFeatures: string[];
-  hiddenElements: string[];
-  connectedLocations: string[];
-}
-
-interface EnvironmentalElement {
-  type: 'weather' | 'timeOfDay' | 'atmosphere' | 'sound' | 'smell';
-  description: string;
-  impact: string; // How this affects gameplay/narrative
-}
-
 // In-memory storage for world building elements
 // In production, this would be in a database
 let locationDetails: Record<string, LocationDetail> = {};
 let environmentalElements: EnvironmentalElement[] = [];
-
-// Tool schema for generating location details
-export const generateLocationSchema = z.object({
-  locationName: z.string().describe('Name of the location to detail'),
-  locationType: z.string().describe('Type of location (e.g., forest, castle, spaceship)'),
-  seriesContext: z.string().describe('Context from the fictional series this is based on'),
-  mood: z.string().optional().describe('Desired mood for the location description'),
-  previouslyMentionedFeatures: z.array(z.string()).optional().describe('Features already mentioned in the narrative')
-});
-
-// Tool schema for generating environmental elements
-export const generateEnvironmentSchema = z.object({
-  currentLocation: z.string().describe('The current location name'),
-  timeProgression: z.number().min(0).max(1).describe('How much time has passed (0-1 scale, where 0 is no time passed, 1 is significant time passed)'),
-  currentWeather: z.string().optional().describe('Current weather condition if known'),
-  currentTimeOfDay: z.string().optional().describe('Current time of day if known'),
-  desiredMood: z.string().optional().describe('Desired mood for the environment')
-});
-
-// Tool schema for retrieving location information
-export const retrieveLocationSchema = z.object({
-  locationName: z.string().describe('Name of the location to retrieve details for'),
-  includeHidden: z.boolean().default(false).describe('Whether to include hidden elements in the response')
-});
 
 // Function to generate detailed location information
 export async function generateLocation(input: z.infer<typeof generateLocationSchema>) {
@@ -624,61 +585,4 @@ function generateSmells(location: string): string {
   return possibleSmells[Math.floor(Math.random() * possibleSmells.length)];
 }
 
-// Define the tools for the AI to use
-export const generateLocationTool = ai.defineTool(
-  {
-    name: "generateLocation",
-    description: "Generate detailed information about a location in the story",
-    inputSchema: generateLocationSchema,
-    outputSchema: z.object({
-      location: z.object({
-        name: z.string(),
-        description: z.string(),
-        atmosphere: z.string(),
-        notableFeatures: z.array(z.string()),
-        hiddenElements: z.array(z.string()),
-        connectedLocations: z.array(z.string())
-      }),
-      isNew: z.boolean()
-    }),
-  },
-  generateLocation
-);
 
-export const generateEnvironmentTool = ai.defineTool(
-  {
-    name: "generateEnvironment",
-    description: "Generate environmental elements like weather, time of day, and sensory details",
-    inputSchema: generateEnvironmentSchema,
-    outputSchema: z.object({
-      environmentalElements: z.array(z.object({
-        type: z.enum(['weather', 'timeOfDay', 'atmosphere', 'sound', 'smell']),
-        description: z.string(),
-        impact: z.string()
-      })),
-      timeHasProgressed: z.boolean()
-    }),
-  },
-  generateEnvironment
-);
-
-export const retrieveLocationTool = ai.defineTool(
-  {
-    name: "retrieveLocation",
-    description: "Retrieve previously generated details about a location",
-    inputSchema: retrieveLocationSchema,
-    outputSchema: z.object({
-      exists: z.boolean(),
-      location: z.object({
-        name: z.string(),
-        description: z.string(),
-        atmosphere: z.string(),
-        notableFeatures: z.array(z.string()),
-        hiddenElements: z.array(z.string()),
-        connectedLocations: z.array(z.string())
-      }).optional(),
-      message: z.string().optional()
-    }),
-  },
-  retrieveLocation
-);

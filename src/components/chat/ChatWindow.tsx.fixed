@@ -279,10 +279,10 @@ export default function ChatWindow() {
       setInputValue('');
       
       // Process the player input
-      const processedResult: ProcessedPlayerInput = await processPlayerInput(inputValue, messages);
+      const processedResult: ProcessedPlayerInput = await processPlayerInput(inputValue, gameState);
       
       // Update loading message based on the current step in processing
-      setCurrentLoadingMessage("Generating response...");
+      setCurrentLoadingMessage(processedResult.intermediateResponse || "Generating response...");
       
       // If there's no input, exit early
       if (!processedResult) {
@@ -295,7 +295,7 @@ export default function ChatWindow() {
       const aiMessage: Message = {
         id: uuidv4(),
         sender: 'ai',
-        text: processedResult.responseText || 'I did not understand that. Could you try again?',
+        text: processedResult.response || 'I did not understand that. Could you try again?',
         timestamp: Date.now(),
       };
       
