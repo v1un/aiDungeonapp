@@ -31,7 +31,7 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
   const stats = mc?.stats;
 
   return (
-    <div className="flex flex-col h-full bg-background/95 backdrop-blur-sm text-foreground overflow-hidden relative border-r border-border/20">
+    <div className="flex flex-col h-full w-full bg-background/95 backdrop-blur-sm text-foreground overflow-hidden relative border-r border-border/10">
       {/* Background elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl group-data-[state=collapsed]:opacity-20"></div>
@@ -39,7 +39,7 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
       </div>
       
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border/20 bg-background/80 backdrop-blur-sm flex items-center justify-between relative z-10">
+      <div className="px-4 py-3 border-b border-border/10 bg-background/90 backdrop-blur-sm flex items-center justify-between relative z-10 sticky top-0">
         <h2 className="text-sm font-semibold tracking-wide group-data-[state=collapsed]:hidden flex items-center text-foreground/90">
           <Info size={16} className="mr-2 text-primary" /> 
           <span>Adventure Panel</span>
@@ -47,7 +47,7 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
         <SidebarTrigger className="h-8 w-8 p-0 hover:bg-accent text-muted-foreground hover:text-foreground transition-colors" />
       </div>
       
-      <ScrollArea className="flex-grow px-3 py-4 group-data-[state=expanded]:px-4 styled-scrollbar relative z-10">
+      <ScrollArea className="flex-grow w-full px-4 py-3 styled-scrollbar relative z-10 pb-4">
         <div className="space-y-5 animate-fade-in">
           {/* Player info section */}
           {(userDisplayName || mc?.name) && (
@@ -63,7 +63,7 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
 
           {/* Character Stats */}
           {seriesDetails && mc && (
-            <Card className="bg-gradient-to-br from-background/70 to-background/90 border border-border/20 shadow-sm overflow-hidden hover:border-primary/30 transition-all duration-200">
+            <Card className="bg-background/80 border border-border/10 shadow-sm overflow-hidden hover:border-border/20 transition-all duration-200">
               <CardHeader className="p-3 group-data-[state=collapsed]:p-2">
                 <CardTitle className="flex items-center group-data-[state=collapsed]:justify-center">
                   <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center group-data-[state=collapsed]:mx-auto">

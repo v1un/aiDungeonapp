@@ -142,7 +142,7 @@ const SidebarProvider = React.forwardRef<
               } as React.CSSProperties
             }
             className={cn(
-              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar",
+              "group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar relative",
               className
             )}
             ref={ref}
@@ -182,7 +182,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground",
+            "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground border-r border-border/10",
             className
           )}
           ref={ref}
@@ -216,26 +216,25 @@ const Sidebar = React.forwardRef<
     return (
       <div
         ref={ref}
-        className="group peer hidden md:block text-sidebar-foreground"
+        className="group peer hidden md:block text-sidebar-foreground relative z-30"
         data-state={state}
         data-collapsible={state === "collapsed" ? collapsible : ""}
         data-variant={variant}
         data-side={side}
       >
-        {/* No spacer div needed anymore */}
         <div
           className={cn(
-            "duration-200 fixed inset-y-0 z-20 hidden transition-all ease-linear md:flex",
+            "duration-200 fixed inset-y-0 z-30 flex transition-all ease-in-out md:flex",
             "h-screen bg-sidebar",
             state === "expanded" 
               ? "w-[--sidebar-width]" 
               : "w-16",
             side === "left"
-              ? "left-0 border-r border-sidebar-border/50"
-              : "right-0 border-l border-sidebar-border/50",
+              ? "left-0 border-r border-border/10"
+              : "right-0 border-l border-border/10",
             // For inset variant, use appropriate margins in expanded state, but only vertical margins in collapsed state
-            variant === "inset" && state === "expanded" && "m-2 rounded-lg overflow-hidden",
-            variant === "inset" && state === "collapsed" && "my-2 rounded-lg overflow-hidden",
+            variant === "inset" && state === "expanded" && "m-0 rounded-lg overflow-hidden",
+            variant === "inset" && state === "collapsed" && "my-0 rounded-lg overflow-hidden",
             "flex-col"
           )}
           {...props}
@@ -245,8 +244,8 @@ const Sidebar = React.forwardRef<
             className={cn(
               "flex h-full w-full flex-col overflow-hidden",
               state === "collapsed" 
-                ? "items-center px-0 py-2" 
-                : "px-3 py-2"
+                ? "items-center p-0" 
+                : "p-0"
             )}
           >
             {children}
@@ -322,14 +321,16 @@ const SidebarInset = React.forwardRef<
     <main
       ref={ref}
       className={cn(
-        "relative flex min-h-svh flex-1 flex-col bg-background transition-all duration-200 ease-linear",
-        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
-        // Clear left margin when sidebar is collapsed to avoid spacing issues
-        "md:peer-data-[state=expanded]:ml-[var(--sidebar-width)]", 
-        "md:peer-data-[state=collapsed]:ml-[3rem]",
-        // Handle right sidebar if needed
-        "md:peer-data-[state=expanded][data-side=right]:mr-[var(--sidebar-width)] md:peer-data-[state=expanded][data-side=right]:ml-0",
-        "md:peer-data-[state=collapsed][data-side=right]:mr-[3rem] md:peer-data-[state=collapsed][data-side=right]:ml-0",
+        "relative flex min-h-svh flex-1 flex-col bg-background transition-all duration-200 ease-in-out ml-0",
+        // Add left margin when sidebar is expanded on the left
+        "group-data-[side=left][data-state=expanded]:ml-[--sidebar-width]",
+        // Add right margin when sidebar is expanded on the right
+        "group-data-[side=right][data-state=expanded]:mr-[--sidebar-width]",
+        // Ensure content doesn't get hidden behind the sidebar
+        "group-data-[side=left][data-state=collapsed]:ml-16",
+        "group-data-[side=right][data-state=collapsed]:mr-16",
+        // Prevent horizontal scrolling
+        "overflow-x-hidden w-full",
         className
       )}
       {...props}
