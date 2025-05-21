@@ -45,6 +45,10 @@ interface Config {
     genkit: string;
     nextjs: string;
   };
+  dependencies: {
+    required: string[];
+    recommended: string[];
+  };
 }
 
 // Configuration
@@ -57,6 +61,10 @@ const config: Config = {
   processNames: {
     genkit: 'GenKit',
     nextjs: 'Next.js'
+  },
+  dependencies: {
+    required: ['next', 'genkit', 'typescript'],
+    recommended: ['tsx', 'tailwindcss', 'genkit-cli']
   }
 };
 
@@ -523,7 +531,143 @@ async function startNextjsServer(): Promise<void> {
   }
 }
 
-// ... (rest of the code remains the same)
+/**
+ * Check if a dependency is installed
+ */
+async function isDependencyInstalled(packageName: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    exec(`npm list ${packageName} --depth=0`, (error) => {
+      resolve(!error);
+    });
+  });
+}
+
+/**
+ * Check and install dependencies
+ */
+async function checkDependencies(): Promise<void> {
+  logInfo('Checking dependencies...');
+  
+  const installationPromises: Promise<void>[] = [];
+  
+  // Check required dependencies
+  for (const dep of config.dependencies.required) {
+    const isInstalled = await isDependencyInstalled(dep);
+    if (!isInstalled) {
+      logInfo(`Required dependency ${dep} is not installed. Installing...`);
+      installationPromises.push(
+        new Promise((resolve) => {
+          exec(`npm install ${dep}`, (error) => {
+            if (error) {
+              logError(`Failed to install ${dep}: ${error.message}`);
+            } else {
+              logSuccess(`Installed ${dep} successfully`);
+            }
+            resolve();
+          });
+        })
+      );
+    }
+  }
+  
+  // Check recommended dependencies
+  for (const dep of config.dependencies.recommended) {
+    const isInstalled = await isDependencyInstalled(dep);
+    if (!isInstalled) {
+      logInfo(`Recommended dependency ${dep} is not installed. You may want to install it with: npm install ${dep}`);
+    }
+  }
+  
+  // Wait for all installations to complete
+  if (installationPromises.length > 0) {
+    logInfo('Installing missing dependencies...');
+    await Promise.all(installationPromises);
+  }
+}
+
+/**
+ * Detect if a process has gone unresponsive or crashed
+ */
+async function monitorProcessHealth(): Promise<void> {
+  logInfo('Setting up health monitoring...');
+  
+  // Check every 30 seconds
+  const healthInterval = setInterval(async () => {
+    // Check GenKit health
+    if (processes.genkit.process && !processes.genkit.process.killed) {
+      if (ports.genkitAPI) {
+        const isHealthy = await isUrlReachable(`http://localhost:${ports.genkitAPI}/health`);
+        if (!isHealthy) {
+          logError('GenKit API is not responding. Attempting to restart...');
+          try {
+            processes.genkit.process.kill('SIGTERM');
+            // Wait a moment for the process to fully terminate
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await startGenkitServer();
+          } catch (error) {
+            logError(`Failed to restart GenKit: ${(error as Error).message}`);
+          }
+        }
+      }
+    }
+    
+    // Check Next.js health
+    if (processes.nextjs.process && !processes.nextjs.process.killed) {
+      const isHealthy = await isUrlReachable(`http://localhost:${ports.nextjs}/`);
+      if (!isHealthy) {
+        logError('Next.js is not responding. Attempting to restart...');
+        try {
+          processes.nextjs.process.kill('SIGTERM');
+          // Wait a moment for the process to fully terminate
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          await startNextjsServer();
+        } catch (error) {
+          logError(`Failed to restart Next.js: ${(error as Error).message}`);
+        }
+      }
+    }
+  }, 30000); // Check every 30 seconds
+  
+  // Clear interval on shutdown
+  process.on('exit', () => {
+    clearInterval(healthInterval);
+  });
+}
+
+/**
+ * Check if any processes with the same names are already running
+ */
+async function killConflictingProcesses(): Promise<void> {
+  logInfo('Checking for conflicting processes...');
+  
+  return new Promise((resolve) => {
+    exec('ps aux | grep -e "next dev" -e "genkit start" | grep -v grep', (error, stdout) => {
+      if (error) {
+        // No conflicting processes found, which is fine
+        resolve();
+        return;
+      }
+      
+      // Found potentially conflicting processes
+      if (stdout.trim()) {
+        logInfo('Found potentially conflicting processes. Attempting to terminate them...');
+        
+        exec('pkill -f "next dev"; pkill -f "genkit start"', (killError) => {
+          if (killError) {
+            logError('Failed to kill some processes. You may need to manually close them.');
+          } else {
+            logSuccess('Successfully terminated conflicting processes.');
+          }
+          
+          // Wait a bit before continuing
+          setTimeout(resolve, 2000);
+        });
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
 /**
  * Print a summary of the running services
@@ -631,8 +775,9 @@ async function main(): Promise<void> {
     
     logInfo('Starting Mystic Chatways services...');
     
-    // Create logs directory
+    // Create required directories
     await fs.mkdir(config.logDir, { recursive: true });
+    await fs.mkdir('.genkit/servers', { recursive: true });
     
     // Clear or rotate log files
     const logFiles = [
@@ -667,8 +812,27 @@ async function main(): Promise<void> {
       }
     }
     
+    // Clear any stale GenKit server configurations
+    try {
+      const serverConfigs = await fs.readdir('.genkit/servers');
+      for (const config of serverConfigs) {
+        if (config.endsWith('.json')) {
+          await fs.unlink(path.join('.genkit/servers', config));
+          logInfo(`Cleared stale GenKit configuration: ${config}`);
+        }
+      }
+    } catch (err) {
+      // Ignore any errors when cleaning up
+    }
+    
     // Check for available ports before starting
     await setupAvailablePorts();
+    
+    // Install missing dependencies
+    await checkDependencies();
+    
+    // Kill any conflicting processes
+    await killConflictingProcesses();
     
     // Start GenKit server
     await startGenkitServer();
@@ -676,11 +840,27 @@ async function main(): Promise<void> {
     // Start Next.js server
     await startNextjsServer();
     
+    // Monitor process health
+    await monitorProcessHealth();
+    
     // Print summary
     printSummary();
     
     logSuccess('Mystic Chatways is now running!');
     logInfo('Press Ctrl+C to stop all services.');
+    
+    // Add a warning if we're not using the default ports
+    if (ports.nextjs !== 9003 || (ports.genkitAPI && ports.genkitAPI !== 4000)) {
+      logInfo('');
+      logInfo('Note: Using non-default ports:');
+      if (ports.nextjs !== 9003) {
+        logInfo(`- Next.js running on port ${ports.nextjs} instead of default 9003`);
+      }
+      if (ports.genkitAPI && ports.genkitAPI !== 4000) {
+        logInfo(`- GenKit API running on port ${ports.genkitAPI} instead of default 4000`);
+      }
+      logInfo(`This may require adjusting environment variables if you're connecting from other applications.`);
+    }
     
   } catch (error) {
     logError(`Failed to start Mystic Chatways: ${(error as Error).message}`);

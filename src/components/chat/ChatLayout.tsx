@@ -26,15 +26,28 @@ export function ChatLayout({
   customLoadingMessage,
 }: ChatLayoutProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  // Improved scroll handling with smoother animation and consistent behavior
+  const scrollToBottom = React.useCallback(() => {
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
       if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
+        // Use smooth scrolling for better UX
+        viewport.scrollTo({
+          top: viewport.scrollHeight,
+          behavior: 'smooth'
+        });
       }
     }
-  }, [messages]);
+    // Also use the direct ref as a fallback
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  // Auto-scroll when messages change or loading state changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading, scrollToBottom]);
 
   return (
     <div className="flex flex-col h-full w-full relative overflow-hidden bg-background">
@@ -69,19 +82,24 @@ export function ChatLayout({
             ))
           )}
           
-          {/* Typing indicator */}
+          {/* Improved typing indicator */}
           {isLoading && (
             <div className="animate-fade-in">
-              <div className="rounded-lg p-4 max-w-[80%] bg-muted/30 text-muted-foreground animate-pulse-light glass-effect">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                  <span className="ml-2 text-sm">{customLoadingMessage || 'Thinking...'}</span>
+              <div className="rounded-2xl p-4 max-w-[85%] bg-primary/5 border border-primary/10 text-muted-foreground backdrop-blur-sm glass-effect">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
+                    <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                  <span className="ml-1 text-sm font-medium text-foreground/80">{customLoadingMessage || 'Generating response...'}</span>
                 </div>
               </div>
             </div>
           )}
+          
+          {/* Add ref for scrolling to bottom */}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
       

@@ -66,6 +66,19 @@ export default function ChatWindow() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentLoadingMessage, setCurrentLoadingMessage] = useState<string | null>(null);
   
+  // New reference for auto-scrolling messages
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  
+  // Chat window should scroll to bottom when new messages are added
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+  
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+  
   // Game state from the active session
   const [gameState, setGameState] = useState<ClientGameState>({
     inventory: [],
@@ -568,6 +581,7 @@ export default function ChatWindow() {
                     </div>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
             </div>
           </SidebarInset>

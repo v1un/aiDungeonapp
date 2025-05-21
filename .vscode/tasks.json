@@ -2,14 +2,64 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Start AI Dungeon App",
+			"label": "Start Mystic Chatways",
+			"type": "shell",
+			"command": "./start-app.sh",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new",
+				"focus": true,
+				"clear": true
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Compile TypeScript Launcher",
+			"type": "shell",
+			"command": "cd tools && npx tsc --outDir ../dist/tools mystic-chatways-launcher.ts",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"focus": true,
+				"clear": true
+			},
+			"group": "build",
+			"problemMatcher": ["$tsc"]
+		},
+		{
+			"label": "Start AI Dungeon App (Legacy)",
 			"type": "shell",
 			"command": "zsh -c 'npm run genkit:watch & npm run dev'",
-			"group": "start",
+			"group": "none",
 			"isBackground": true,
-			"problemMatcher": [
-				"$tsc"
-			]
+			"problemMatcher": ["$tsc"]
+		},
+		{
+			"label": "Stop All Servers",
+			"type": "shell",
+			"command": "pkill -f \"next dev\"; pkill -f \"genkit start\"",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Monitor Logs",
+			"type": "shell",
+			"command": "tail -f logs/errors.log logs/genkit.log logs/nextjs.log",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"focus": true
+			},
+			"group": "none",
+			"problemMatcher": []
 		}
 	]
 }
