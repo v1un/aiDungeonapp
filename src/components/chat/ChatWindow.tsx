@@ -314,22 +314,32 @@ export default function ChatWindow() {
         }));
       }
       
-      // Update the session in allSessions
-      const updatedSessions = allSessions.map(session =>
-        session.id === activeSessionId
-          ? {
-              ...session,
-              messages: finalMessages,
-              gameState: { 
-                ...session.gameState,
-                ...processedResult.gameStateUpdate 
-              },
-              lastPlayed: Date.now(),
-            }
-          : session
-      );
+      // Create updated session with new messages and game state
+      const updatedSession = {
+        ...(allSessions.find(s => s.id === activeSessionId) || createNewSession()),
+        messages: finalMessages,
+        gameState: {
+          ...gameState,
+          ...processedResult.gameStateUpdate
+        },
+        lastPlayed: Date.now()
+      };
       
+      // Update allSessions with the new session
+      const sessionExists = allSessions.some(s => s.id === activeSessionId);
+      const updatedSessions = sessionExists
+        ? allSessions.map(s => s.id === activeSessionId ? updatedSession : s)
+        : [...allSessions, updatedSession];
+      
+      // Update state and ensure localStorage is updated
       setAllSessions(updatedSessions);
+      
+      // Force update localStorage immediately
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSessions));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
     } catch (error) {
       console.error('Error processing message:', error);
       
