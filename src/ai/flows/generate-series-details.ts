@@ -40,7 +40,14 @@ const GenerateSeriesDetailsOutputSchema = z.object({
   ).min(3).max(5).describe("A list of 3 to 5 other notable characters crucial to the initial stages of the series."),
   initialInventory: z.array(z.string()).optional().describe("A list of 2-3 thematic starting items for the main character, directly relevant to their situation at the very beginning of the series. e.g., ['Tattered Clothes', 'A Mysterious Locket', 'Empty Water Canteen']. If none, can be an empty array or omit.").default([]),
   startingLocation: z.string().optional().describe("The specific, named location where the story or player interaction begins, from the main character's perspective at the series' outset. e.g., 'A Dusty Alley in the Lower District of Lugnica', 'Inside the Millennium Falcon Cockpit', 'The Forbidden Forest Edge'. Default to 'An Unfamiliar Place' if truly ambiguous for the series start.").default("An Unfamiliar Place"),
-  initialQuest: QuestSchema.omit({ id: true, status: true }).describe("An initial main quest. This quest must be an *immediate* challenge or goal for the main character, directly stemming from their `startingLocation` and initial predicament as described in `initialPromptForPlayer`. It should guide the player's very first actions."),
+  initialQuest: z.object({
+    title: z.string().describe('The title of the generated quest.'),
+    description: z.string().describe('A detailed description of the generated quest from the main character\'s perspective.'),
+    objectives: z.array(z.string()).min(2).max(4).describe('A list of 2-4 clear, actionable objectives for the quest.'),
+    rewards: z.array(z.string()).min(1).max(3).describe('A list of 1-3 thematic rewards for completing the quest (e.g., item, information, new contact).'),
+    id: z.string().describe("A unique identifier for the quest.").default(() => `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`),
+    status: z.enum(['active', 'completed', 'failed']).describe("The current status of the quest.").default('active')
+  }).describe("An initial main quest. This quest must be an *immediate* challenge or goal for the main character, directly stemming from their `startingLocation` and initial predicament as described in `initialPromptForPlayer`. It should guide the player's very first actions."),
   initialPromptForPlayer: z.string().describe("A compelling, direct question or immediate choice to present to the player to start their interaction. This prompt should seamlessly flow from the `startingLocation` and the `initialQuest` description, putting the player in the MC's shoes. e.g., 'The alley is dark, and the thugs are closing in on the silver-haired girl. What do you shout, or what is your first move?' or 'The escape pod has crashed. Alarms are blaring. Your first priority is...? What do you do?' Use markdown for emphasis and atmosphere.")
 }).describe("Comprehensive details generated for a fictional series to set up an RPG-like experience.");
 export type GenerateSeriesDetailsOutput = z.infer<typeof GenerateSeriesDetailsOutputSchema>;
@@ -51,9 +58,9 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
   const fullOutput: SeriesDetailsOutput = { ...output };
   if (output.initialQuest) {
     fullOutput.initialQuest = {
-        ...(output.initialQuest as Omit<Quest, 'id' | 'status'>), // Cast to ensure base properties
+        ...output.initialQuest, // Base properties
         id: `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        status: 'active',
+        status: 'active' as const,
     };
   }
   return fullOutput;

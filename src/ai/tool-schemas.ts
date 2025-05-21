@@ -18,4 +18,16 @@ export const RetrieveLoreInfoOutputSchema = z.object({
 });
 export type RetrieveLoreInfoOutput = z.infer<typeof RetrieveLoreInfoOutputSchema>;
 
-// Add other tool schemas here as needed
+// Add NPC to Lorebook schemas
+export const AddNpcToLorebookInputSchema = z.object({
+  npcName: z.string().describe("The name of the NPC to add to the lorebook."),
+  npcDescription: z.string().describe("A detailed description of the NPC to add to the lorebook."),
+  category: z.string().describe("The category this NPC belongs to in the lorebook (e.g., 'Key Characters & NPCs', 'Allies', 'Antagonists')."),
+});
+export type AddNpcToLorebookInput = z.infer<typeof AddNpcToLorebookInputSchema>;
+
+export const AddNpcToLorebookOutputSchema = z.object({
+  success: z.boolean().describe("Whether the NPC was successfully added to the lorebook."),
+  message: z.string().describe("A message describing the result of the operation."),
+});
+export type AddNpcToLorebookOutput = z.infer<typeof AddNpcToLorebookOutputSchema>;

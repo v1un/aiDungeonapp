@@ -81,7 +81,67 @@ export const retrieveLoreInfoTool = ai.defineTool(
   retrieveLoreInfoImplementation
 );
 
+// Schema for adding an NPC to the lorebook
+const AddNpcToLorebookInputSchema = z.object({
+  npcName: z.string().describe("The name of the NPC to add to the lorebook."),
+  npcDescription: z.string().describe("A detailed description of the NPC to add to the lorebook."),
+  category: z.string().describe("The category this NPC belongs to in the lorebook (e.g., 'Key Characters & NPCs', 'Allies', 'Antagonists')."),
+});
+type AddNpcToLorebookInput = z.infer<typeof AddNpcToLorebookInputSchema>;
+
+const AddNpcToLorebookOutputSchema = z.object({
+  success: z.boolean().describe("Whether the NPC was successfully added to the lorebook."),
+  message: z.string().describe("A message describing the result of the operation."),
+});
+type AddNpcToLorebookOutput = z.infer<typeof AddNpcToLorebookOutputSchema>;
+
+// Implementation function for adding an NPC to the lorebook
+async function addNpcToLorebookImplementation(input: AddNpcToLorebookInput): Promise<AddNpcToLorebookOutput> {
+  const gameState = await getCurrentGameState();
+  if (!gameState || !gameState.seriesDetails || !gameState.seriesDetails.lorebook) {
+    return { success: false, message: "No lorebook has been established for the current series." };
+  }
+
+  // Check if the NPC already exists in the lorebook
+  const existingNpc = gameState.seriesDetails.lorebook.entries.find(
+    entry => entry.name.toLowerCase() === input.npcName.toLowerCase()
+  );
+
+  if (existingNpc) {
+    // Update the existing NPC entry
+    existingNpc.description = input.npcDescription;
+    existingNpc.category = input.category;
+    return { 
+      success: true, 
+      message: `Updated existing NPC "${input.npcName}" in the lorebook.` 
+    };
+  } else {
+    // Add the new NPC to the lorebook
+    gameState.seriesDetails.lorebook.entries.push({
+      name: input.npcName,
+      description: input.npcDescription,
+      category: input.category,
+    });
+    return { 
+      success: true, 
+      message: `Added new NPC "${input.npcName}" to the lorebook under category "${input.category}".` 
+    };
+  }
+}
+
+// Create the tool for adding NPCs to the lorebook
+export const addNpcToLorebookTool = ai.defineTool(
+  {
+    name: 'addNpcToLorebookTool',
+    description: 'Adds a new NPC to the lorebook or updates an existing one. This ensures the NPC becomes part of the world knowledge and can be referenced in future interactions.',
+    inputSchema: AddNpcToLorebookInputSchema,
+    outputSchema: AddNpcToLorebookOutputSchema,
+  },
+  addNpcToLorebookImplementation
+);
+
 // Export all tools from this file
 export const loreTools = {
-  retrieveLoreInfoTool
+  retrieveLoreInfoTool,
+  addNpcToLorebookTool
 };

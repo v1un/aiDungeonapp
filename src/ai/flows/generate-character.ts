@@ -17,6 +17,16 @@ const GenerateCharacterInputSchema = z.object({
     .describe(
       'A brief description of the character concept the player has in mind.'
     ),
+  seriesTitle: z
+    .string()
+    .describe(
+      'The title of the fictional series the character belongs to.'
+    ),
+  worldContext: z
+    .string()
+    .describe(
+      'A summary of the world/universe the character exists within.'
+    ),
 });
 export type GenerateCharacterInput = z.infer<typeof GenerateCharacterInputSchema>;
 
@@ -49,16 +59,26 @@ const prompt = ai.definePrompt({
   name: 'generateCharacterPrompt',
   input: {schema: GenerateCharacterInputSchema},
   output: {schema: GenerateCharacterOutputSchema},
-  prompt: `You are a fantasy RPG character generation expert.
+  prompt: `You are a character creation expert for the fictional universe of "{{{seriesTitle}}}". 
 
-You will generate a character based on the player's concept. The character should have a unique name, a detailed backstory, and appropriate stats and skills.
+You will generate a character based on the player's concept that fits naturally within this universe. 
 
+Series: {{{seriesTitle}}}
+World Context: {{{worldContext}}}
 Player Concept: {{{characterConcept}}}
 
-Ensure that the backstory is engaging and provides a good starting point for the character's adventure.
+Your task is to create a character that:
+1. Has a name that stylistically matches naming conventions in {{{seriesTitle}}}
+2. Has a detailed backstory that connects to the existing lore of {{{seriesTitle}}}
+3. Has stats and abilities that make sense within this fictional universe's rules and systems
+4. Would believably exist in this world and interact with canonical characters
 
-Stats should be numbers.
-Skills should be strings.`, // Backstory should be a string.
+Ensure that the backstory is engaging, ties into existing world elements from {{{seriesTitle}}}, and provides a good starting point for the character's adventure.
+
+Stats should be numbers from 1-10 that reflect the character's capabilities relative to others in {{{seriesTitle}}}.
+Skills should be abilities or talents that would be recognized and relevant in the world of {{{seriesTitle}}}.
+
+Make sure the character feels like they truly belong in this fictional universe by incorporating setting-specific terminology, cultural references, and thematic elements from {{{seriesTitle}}}.`, // Backstory should be a string.
 });
 
 const generateCharacterFlow = ai.defineFlow(

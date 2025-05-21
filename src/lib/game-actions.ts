@@ -41,12 +41,8 @@ export async function processPlayerInput(playerInput: string, chatHistory: Messa
       currentGameState.currentLocation = seriesDetails.startingLocation || 'An Unknown Place';
       currentGameState.activeQuests = [];
       if (seriesDetails.initialQuest) {
-        // Ensure the initialQuest is fully formed Quest object
-        currentGameState.activeQuests.push({
-            id: seriesDetails.initialQuest.id || `quest-init-${Date.now()}`, // Ensure ID
-            status: seriesDetails.initialQuest.status || 'active', // Ensure status
-            ...seriesDetails.initialQuest
-        } as Quest);
+        // Add the initialQuest to active quests
+        currentGameState.activeQuests.push(seriesDetails.initialQuest);
       }
       
       gameStateUpdate.seriesDetails = seriesDetails;
