@@ -87,6 +87,43 @@ export function getCachedSeriesNames(): string[] {
 }
 
 /**
+ * Delete a specific cached series by its name
+ */
+export function deleteCachedSeries(seriesName: string): void {
+  if (typeof window === 'undefined') return; // Server-side guard
+
+  try {
+    const normalized = seriesName.toLowerCase().trim();
+    const cacheKey = `${CACHE_KEY_PREFIX}${normalized}`;
+    localStorage.removeItem(cacheKey);
+  } catch (error) {
+    console.error('Failed to delete cached series:', error);
+    // Fail silently
+  }
+}
+
+/**
+ * Clear all cached series data
+ */
+export function clearAllCachedSeries(): void {
+  if (typeof window === 'undefined') return; // Server-side guard
+
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(CACHE_KEY_PREFIX)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  } catch (error) {
+    console.error('Failed to clear all cached series:', error);
+    // Fail silently
+  }
+}
+
+/**
  * Clear expired cache entries
  */
 export function cleanupExpiredCache(): void {

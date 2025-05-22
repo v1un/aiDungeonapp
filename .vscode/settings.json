@@ -13,5 +13,6 @@
     },
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit"
-    }
+    },
+    "zencoder.enableRepoIndexing": true
 }
