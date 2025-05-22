@@ -108,15 +108,34 @@ export async function processPlayerInput(
         relationships: seriesDetails.relationships ? Object.fromEntries(
           Object.entries(seriesDetails.relationships).map(([key, relations]) => [
             key,
-            relations.map(rel => ({
-              ...rel,
-              // Ensure the type is one of the allowed values, default to 'unknown' if not
-              type: ['ally', 'enemy', 'family', 'friend', 'rival', 'mentor', 'student', 
-                    'lover', 'acquaintance', 'business', 'political', 'unknown'].includes(rel.type) 
-                    ? rel.type as "unknown" | "ally" | "enemy" | "family" | "friend" | "rival" | 
-                      "mentor" | "student" | "lover" | "acquaintance" | "business" | "political"
-                    : 'unknown'
-            }))
+            // Check if relations is an array before trying to map over it
+            Array.isArray(relations) ? relations.map(rel => {
+              // Check if this is a Relationship object or a nested structure
+              if ('characterId' in rel && !('relationships' in rel)) {
+                return {
+                  description: rel.description || "Unknown relationship",
+                  type: ['ally', 'enemy', 'family', 'friend', 'rival', 'mentor', 'student', 
+                        'lover', 'acquaintance', 'business', 'political', 'unknown'].includes(rel.type) 
+                        ? rel.type as "unknown" | "ally" | "enemy" | "family" | "friend" | "rival" | 
+                          "mentor" | "student" | "lover" | "acquaintance" | "business" | "political"
+                        : 'unknown',
+                  characterId: rel.characterId || "",
+                  characterName: rel.characterName || "Unknown Character",
+                  intensity: rel.intensity || 5,
+                  history: rel.history || []
+                };
+              } else {
+                // Handle the case where rel has a different structure
+                return {
+                  description: "Unknown relationship",
+                  type: 'unknown' as "unknown",
+                  characterId: 'characterId' in rel ? rel.characterId : "",
+                  characterName: "Unknown Character",
+                  intensity: 5,
+                  history: []
+                };
+              }
+            }) : []
           ])
         ) : undefined,
         // Fix worldMemory structure to match the expected type

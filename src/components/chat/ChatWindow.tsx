@@ -1,22 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { GameSession, ClientGameState, Message, ProcessedPlayerInput, SeriesDetails } from '@/types';
+// Ensure type imports are not duplicated and are comprehensive
+import type { GameSession, ClientGameState, Message, ProcessedPlayerInput, SeriesDetails, Quest } from '@/types';
 // @ts-expect-error UUID library doesn't have proper TypeScript types but works correctly
 import { v4 as uuidv4 } from 'uuid';
-import { useRouter } from 'next/navigation'; // Added for hotkey navigation
-import { ChatLayout } from './ChatLayout';
 import { processPlayerInput } from '@/lib/game-actions';
-import { useToast } from '@/hooks/use-toast';
-// GameSidebar import removed
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"; // Sidebar and SidebarContent removed from this import
-import { ConnectionStatus } from "@/components/status/ConnectionStatus";
-import CachedSeriesPicker from "@/components/status/CachedSeriesPicker"; // Added for error handling
-// GameSidebar import removed below
-import { Settings, ChevronDown, PlusCircle, Check, Edit3, Trash2, Sparkles, AlertTriangle } from 'lucide-react';
-import Link from 'next/link';
+// Removed duplicate type imports that were here
+
+// Import necessary UI components - assuming shadcn/ui structure, adjust if different
 import { Button } from '@/components/ui/button';
-import { 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -24,14 +20,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
+import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -41,21 +37,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { GameHUD } from '@/components/hud/GameHUD';
-import { CharacterScreen } from '@/components/screens/CharacterScreen';
-import { QuestLogScreen } from '@/components/screens/QuestLogScreen';
+import { 
+  ChevronDown, Edit3, Trash2, PlusCircle, Settings, Sparkles, Check, AlertTriangle 
+} from 'lucide-react'; // Assuming lucide-react for icons
 
-// Constants
+import Link from 'next/link'; // For navigation links
+
+// Import other custom components
+import InitialSetupScreen from '@/components/screens/InitialSetupScreen'; // Corrected import for default export
+import { generateSeriesDetails } from '@/ai/flows/generate-series-details'; // type GenerateSeriesDetailsOutput removed as it's not directly used here
+import { useRouter } from 'next/navigation';
+import { ChatLayout } from './ChatLayout';
+import { useToast } from '@/hooks/use-toast';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { ConnectionStatus } from "@/components/status/ConnectionStatus";
+import { GameHUD } from '@/components/hud/GameHUD'; // Corrected to named import
+import { CharacterScreen } from '@/components/screens/CharacterScreen'; // Corrected to named import
+import { QuestLogScreen } from '@/components/screens/QuestLogScreen'; // Corrected to named import
+
+
+// Constants - ensure these are defined or imported correctly
 const DEFAULT_SESSION_ID = 'game-session-';
 const LOCAL_STORAGE_KEY = 'mysticChatways_gameSessions';
 
-// Initial message shown to the user
 const initialAiWelcomeMessage: Message = {
   id: 'welcome-message',
   sender: 'ai',
-  text: 'Welcome to Mystic Chatways! Enter the name of a fictional series (e.g., TV show, book, movie, game) to explore, or choose an existing game from the menu.',
+  text: 'Welcome to Mystic Chatways! Please set up your new adventure or select an existing one.',
   timestamp: Date.now(),
 };
 
@@ -70,7 +78,8 @@ export default function ChatWindow() {
   // Screen visibility state
   const [isCharacterScreenOpen, setIsCharacterScreenOpen] = useState(false);
   const [isQuestLogScreenOpen, setIsQuestLogScreenOpen] = useState(false);
-  
+  const [needsInitialSetup, setNeedsInitialSetup] = useState(false); // New state for initial setup
+
   // Message-related state
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -80,7 +89,8 @@ export default function ChatWindow() {
   // API error handling state
   const [showApiErrorDialog, setShowApiErrorDialog] = useState(false);
   const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null);
-  
+  // CachedSeriesPicker related state removed
+
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   
   const scrollToBottom = useCallback(() => {
@@ -140,6 +150,8 @@ export default function ChatWindow() {
           setActiveSessionId(mostRecentSession.id);
           setMessages(mostRecentSession.messages);
           setGameState(mostRecentSession.gameState);
+          // Check if this session needs setup
+          setNeedsInitialSetup(!mostRecentSession.gameState?.seriesDetails);
           
           if (mostRecentSession.gameState?.seriesDetails) {
             syncSeriesDetailsToLorebook(mostRecentSession.gameState.seriesDetails);
@@ -150,6 +162,7 @@ export default function ChatWindow() {
         setAllSessions([defaultSession]);
         setActiveSessionId(defaultSession.id);
         setMessages(defaultSession.messages);
+        setNeedsInitialSetup(true); // New default session needs setup
       }
     } catch (error) {
       console.error('Error loading game sessions:', error);
@@ -157,6 +170,7 @@ export default function ChatWindow() {
       setAllSessions([fallbackSession]);
       setActiveSessionId(fallbackSession.id);
       setMessages(fallbackSession.messages);
+      setNeedsInitialSetup(true); // New fallback session needs setup
     } finally {
       setIsInitialLoadComplete(true);
     }
@@ -185,6 +199,7 @@ export default function ChatWindow() {
       setActiveSessionId(sessionId);
       setMessages(selectedSession.messages);
       setGameState(selectedSession.gameState);
+      setNeedsInitialSetup(!selectedSession.gameState?.seriesDetails); // Check if selected session needs setup
       
       // Sync series details with lorebook - explicitly call here for immediate update
       syncSeriesDetailsToLorebook(selectedSession.gameState?.seriesDetails);
@@ -197,6 +212,7 @@ export default function ChatWindow() {
     setActiveSessionId(newSession.id);
     setMessages(newSession.messages);
     setGameState(newSession.gameState);
+    setNeedsInitialSetup(true); // A new game always needs initial setup
     
     // Clear lorebook data when starting a new game
     syncSeriesDetailsToLorebook(undefined);
@@ -249,6 +265,7 @@ export default function ChatWindow() {
           userDisplayName: undefined, seriesDetails: undefined,
         };
         setGameState(newGameState);
+        setNeedsInitialSetup(!newGameState.seriesDetails); // Check if new active session needs setup
         
         // Sync the new active session's series details to lorebook
         syncSeriesDetailsToLorebook(newGameState.seriesDetails);
@@ -258,6 +275,7 @@ export default function ChatWindow() {
         setMessages(newSession.messages);
         setGameState(newSession.gameState);
         setAllSessions([newSession]);
+        setNeedsInitialSetup(true); // The very first session needs setup
         
         // Clear lorebook data if the last session is deleted
         syncSeriesDetailsToLorebook(undefined);
@@ -332,7 +350,8 @@ export default function ChatWindow() {
         
         // Set API error message and show dialog
         setApiErrorMessage(
-          "The AI service is currently experiencing issues. You can choose from previously generated worlds or try again later."
+          // "The AI service is currently experiencing issues. You can choose from previously generated worlds or try again later."
+          "The AI service is currently experiencing issues. Please try again later or check your connection."
         );
         setShowApiErrorDialog(true);
       }
@@ -380,6 +399,7 @@ export default function ChatWindow() {
       const currentSession = allSessions.find(s => s.id === activeSessionId);
       if (currentSession) {
         syncSeriesDetailsToLorebook(currentSession.gameState.seriesDetails);
+        setNeedsInitialSetup(!currentSession.gameState?.seriesDetails); // Re-check setup need on active session change
       }
     }
   }, [activeSessionId, allSessions, syncSeriesDetailsToLorebook]);
@@ -432,58 +452,59 @@ export default function ChatWindow() {
     };
   }, [isCharacterScreenOpen, isQuestLogScreenOpen, router]);
 
-  const handleCachedSeriesSelect = (seriesName: string): void => {
-    if (!activeSessionId || !seriesName.trim()) return;
-    
-    // Close the API error dialog
-    setShowApiErrorDialog(false);
-    
-    // Create a user message indicating they selected a cached series
-    const userMessage: Message = {
-      id: uuidv4(),
-      sender: 'player',
-      text: seriesName,
-      timestamp: Date.now(),
+  // handleCachedSeriesSelect removed as CachedSeriesPicker is no longer used here.
+  // InitialSetupScreen will handle its own logic for series selection/generation.
+
+  const handleInitialSetupComplete = (seriesDetails: SeriesDetails) => {
+    if (!activeSessionId) return;
+
+    const updatedGameState: ClientGameState = {
+      ...gameState,
+      seriesDetails: seriesDetails,
+      inventory: seriesDetails.initialInventory || [],
+      currentLocation: seriesDetails.startingLocation || "Unknown Location",
+      activeQuests: seriesDetails.initialQuest ? [seriesDetails.initialQuest] : [],
     };
-    
-    // Create an AI response acknowledging the selection
-    const aiMessage: Message = {
+    setGameState(updatedGameState);
+
+    const welcomeMessage: Message = {
       id: uuidv4(),
       sender: 'ai',
-      text: `Great choice! Welcome to the world of ${seriesName}. I'm loading the adventure details from our cached data. What would you like to do first in this world?`,
+      text: seriesDetails.initialPromptForPlayer || `Welcome to ${seriesDetails.seriesTitle}! Your adventure begins. What would you like to do?`,
       timestamp: Date.now(),
     };
-    
-    // Update messages with both the user selection and AI response
-    const updatedMessages = [...messages, userMessage, aiMessage];
+    const updatedMessages = [welcomeMessage]; 
     setMessages(updatedMessages);
-    
-    // Update the current session with the new messages
-    const currentSession = allSessions.find(s => s.id === activeSessionId);
-    if (currentSession) {
-      const updatedSession = {
-        ...currentSession,
-        messages: updatedMessages,
-        lastPlayed: Date.now()
-      };
-      
-      const updatedSessions = allSessions.map(s => 
-        s.id === activeSessionId ? updatedSession : s
-      );
-      setAllSessions(updatedSessions);
-      
-      // Save to localStorage
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSessions));
-      } catch (error) {
-        console.error('Error saving updated session:', error);
-      }
+
+    const currentSessionDetails = allSessions.find(s => s.id === activeSessionId);
+    if (!currentSessionDetails) {
+      console.error("Active session not found during setup completion");
+      return;
     }
+
+    const updatedSession: GameSession = { 
+      ...currentSessionDetails,
+      name: seriesDetails.seriesTitle, 
+      messages: updatedMessages,
+      gameState: updatedGameState,
+      lastPlayed: Date.now()
+    };
+
+    const updatedSessions = allSessions.map(s => s.id === activeSessionId ? updatedSession : s);
+    setAllSessions(updatedSessions);
     
-    // Show a success toast
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSessions));
+    } catch (error) {
+      console.error('Error saving updated session after setup:', error);
+    }
+
+    syncSeriesDetailsToLorebook(seriesDetails);
+    setNeedsInitialSetup(false); 
+
     toast({
-      title: "Series Selected",
-      description: `Successfully loaded ${seriesName} from cache.`,
+      title: "World Ready!",
+      description: `Successfully generated and loaded ${seriesDetails.seriesTitle}.`,
     });
   };
   
@@ -579,14 +600,33 @@ export default function ChatWindow() {
               
               <div className="flex-1 flex flex-col min-h-0">
                 {isInitialLoadComplete && activeSessionId ? (
-                  <ChatLayout
-                    messages={messages}
-                    inputValue={inputValue}
-                    onInputChange={handleInputChange}
-                    onSendMessage={handleSendMessage}
-                    isLoading={isLoading}
-                    customLoadingMessage={currentLoadingMessage || undefined}
-                  />
+                  needsInitialSetup ? (
+                    <InitialSetupScreen 
+                      onSetupComplete={handleInitialSetupComplete} 
+                      onGenerateSeries={async (prompt: string): Promise<SeriesDetails | null> => {
+                        try {
+                          const details = await generateSeriesDetails({ seriesName: prompt, useCache: true });
+                          return details as SeriesDetails; 
+                        } catch (error) {
+                          console.error("Error generating series details in ChatWindow:", error);
+                          if (error instanceof Error) {
+                            // Pass the error message to be displayed by InitialSetupScreen
+                            throw new Error(error.message || "Failed to generate series details due to an unknown error.");
+                          }
+                          throw new Error("Failed to generate series details.");
+                        }
+                      }}
+                    />
+                  ) : (
+                    <ChatLayout
+                      messages={messages}
+                      inputValue={inputValue}
+                      onInputChange={handleInputChange}
+                      onSendMessage={handleSendMessage}
+                      isLoading={isLoading}
+                      customLoadingMessage={currentLoadingMessage || undefined}
+                    />
+                  )
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-center animate-pulse-light">
@@ -676,7 +716,7 @@ export default function ChatWindow() {
           </DialogHeader>
           <div className="p-1">
             <p className="mb-4 text-sm text-muted-foreground">{apiErrorMessage}</p>
-            <CachedSeriesPicker onSelect={handleCachedSeriesSelect} />
+            {/* CachedSeriesPicker removed from here */}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowApiErrorDialog(false)}>

@@ -1,24 +1,134 @@
 'use server';
 /**
- * @fileOverview Generates details for a fictional series, including an initial quest and a structured lorebook.
- *
- * - generateSeriesDetails - A function that generates details about a series.
- * - GenerateSeriesDetailsInput - The input type for the generateSeriesDetails function.
- * - GenerateSeriesDetailsOutput - The return type for the generateSeriesDetails function.
+ * @fileOverview Generates details for a fictional series in multiple parts for better reliability and caching.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { LorebookSchema } from '@/types';
-// This import is used in the client component through a dynamic import
-// So it doesn't affect server-side rendering
+
 const seriesCachePath = '@/lib/series-cache';
 
 const GenerateSeriesDetailsInputSchema = z.object({
   seriesName: z.string().describe('The name of the fictional series (e.g., "Re:Zero", "Star Wars", "Harry Potter").'),
   useCache: z.boolean().optional().describe('Whether to use cached data as a fallback. Default is true.').default(true),
+  parts: z.array(z.enum(['basic', 'lorebook', 'characters', 'quest', 'worldMemory'])).optional().describe('Which parts to generate. If not specified, generates all parts.')
 });
 export type GenerateSeriesDetailsInput = z.infer<typeof GenerateSeriesDetailsInputSchema>;
+
+// Schema for basic series information
+const BasicSeriesInfoSchema = z.object({
+  seriesTitle: z.string().describe("The canonical, official title of the series."),
+  mainCharacter: z.object({
+    name: z.string().describe("The full name of the primary protagonist."),
+    description: z.string().describe("A detailed description of the main character (2-3 sentences), focusing on their personality, core motivations, iconic abilities/traits relevant at the series' start, and perhaps a key internal conflict they face early on. Use markdown for emphasis (e.g., **bold** for names or key traits, *italics* for thoughts or nuances)."),
+    stats: z.object({
+      strength: z.string().describe("A thematic or descriptive value for the character's physical strength (e.g., 'Average', 'Overwhelmingly Powerful', 'Weak but Resilient'). Be creative and true to the series."),
+      dexterity: z.string().describe("A thematic or descriptive value for the character's agility, reflexes, or nimbleness."),
+      intelligence: z.string().describe("A thematic or descriptive value for the character's intellect, knowledge, or cunning."),
+      magicPower: z.string().optional().describe("A thematic or descriptive value for magical aptitude, if applicable. Use 'N/A' if not, or describe its nature (e.g., 'Untapped Potential', 'Master of Elemental Magic')."),
+      luck: z.string().optional().describe("A thematic or descriptive value for the character's fortune or typical luck (e.g., 'Cursed', 'Surprisingly Fortunate', 'Average')."),
+      specialAbility: z.string().optional().describe("A concise description of a notable special ability or unique trait pivotal to the character, especially early in the series (e.g., 'Return by Death - Resets time upon death', 'Force Sensitivity - Untrained').")
+    }).describe("Key thematic stats or attributes. These should be fitting and descriptive, reflecting the character's portrayal at the beginning of the series."),
+    memoryEntries: z.array(
+      z.object({
+        content: z.string().describe("Memory content - what happened or what was learned"),
+        timestamp: z.number().describe("When this memory was created (Unix timestamp)"),
+        importance: z.number().min(1).max(10).describe("How important this memory is (1-10)")
+      })
+    ).optional().describe("Important memories related to the main character")
+  }).describe("Detailed information about the main protagonist."),
+  initialInventory: z.array(z.string()).optional().describe("A list of 2-3 thematic starting items for the main character, directly relevant to their situation at the very beginning of the series.").default([]),
+  startingLocation: z.string().optional().describe("The specific, named location where the story or player interaction begins, from the main character's perspective at the series' outset.").default("An Unfamiliar Place")
+});
+
+// Schema for character network
+const CharacterNetworkSchema = z.object({
+  otherCharacters: z.array(
+    z.object({
+      name: z.string().describe("The full name of an important supporting character, antagonist, or key figure present or relevant early in the series."),
+      description: z.string().describe("A brief description (1-2 sentences) of this character, their relationship to the main character (if any), their primary goal/role at the series' start, and a defining trait. Use markdown for emphasis."),
+      id: z.string().optional().describe("Unique identifier for this character - system generated"),
+      isPermanent: z.boolean().optional().describe("Whether this is a permanent character in the world").default(true),
+      firstEncountered: z.number().optional().describe("When the player first met this character (Unix timestamp)"),
+      lastInteraction: z.number().optional().describe("When the player last interacted with this character (Unix timestamp)"),
+      memoryEntries: z.array(
+        z.object({
+          content: z.string().describe("Memory content - what happened or what was learned"),
+          timestamp: z.number().describe("When this memory was created (Unix timestamp)"),
+          importance: z.number().min(1).max(10).describe("How important this memory is (1-10)")
+        })
+      ).optional().describe("Important memories related to this character")
+    })
+  ).min(3).max(5).describe("A list of 3 to 5 other notable characters crucial to the initial stages of the series."),
+  relationships: z.object({
+    main: z.array(
+      z.object({
+        characterId: z.string().describe("ID of the character this relationship is with"),
+        characterName: z.string().describe("Name of the character this relationship is with"),
+        type: z.string().describe("Type of relationship (ally, enemy, family, mentor, student, lover, business, acquaintance)"),
+        intensity: z.number().min(1).max(10).describe("Intensity of the relationship (1-10)"),
+        description: z.string().describe("Description of the relationship"),
+        history: z.array(
+          z.object({
+            event: z.string().describe("Description of an event that affected this relationship"),
+            impact: z.number().min(-5).max(5).describe("How this event affected the relationship (-5 to +5)"),
+            timestamp: z.number().describe("When this event occurred (Unix timestamp)")
+          })
+        ).describe("History of events that shaped this relationship")
+      })
+    ).describe("Relationships between the main character and other characters"),
+    additionalCharacters: z.array(
+      z.object({
+        characterId: z.string().describe("The character who has these relationships"),
+        relationships: z.array(
+          z.object({
+            characterId: z.string().describe("ID of the character this relationship is with"),
+            characterName: z.string().describe("Name of the character this relationship is with"),
+            type: z.string().describe("Type of relationship"),
+            intensity: z.number().min(1).max(10).describe("Intensity of the relationship"),
+            description: z.string().describe("Description of the relationship"),
+            history: z.array(
+              z.object({
+                event: z.string().describe("Description of an event that affected this relationship"),
+                impact: z.number().min(-5).max(5).describe("How this event affected the relationship"),
+                timestamp: z.number().describe("When this event occurred")
+              })
+            ).describe("History of events that shaped this relationship")
+          })
+        ).describe("All relationships for this character")
+      })
+    ).optional().describe("Relationships between additional characters")
+  }).optional().describe("Character relationship network")
+});
+
+// Schema for quest and interaction
+const QuestInteractionSchema = z.object({
+  initialQuest: z.object({
+    title: z.string().describe('The title of the generated quest.'),
+    description: z.string().describe('A detailed description of the generated quest from the main character\'s perspective.'),
+    objectives: z.array(z.string()).min(2).max(4).describe('A list of 2-4 clear, actionable objectives for the quest.'),
+    rewards: z.array(z.string()).min(1).max(3).describe('A list of 1-3 thematic rewards for completing the quest (e.g., item, information, new contact).'),
+    id: z.string().describe("A unique identifier for the quest.").default(() => `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`),
+    status: z.enum(['active', 'completed', 'failed']).describe("The current status of the quest.").default('active')
+  }).describe("An initial main quest. This quest must be an *immediate* challenge or goal for the main character, directly stemming from their `startingLocation` and initial predicament."),
+  initialPromptForPlayer: z.string().describe("A compelling, direct question or immediate choice to present to the player to start their interaction. This prompt should seamlessly flow from the `startingLocation` and the `initialQuest` description, putting the player in the MC's shoes.")
+});
+
+// Schema for world memory
+const WorldMemorySchema = z.object({
+  worldMemory: z.object({
+    globalEvents: z.array(
+      z.object({
+        content: z.string().describe("Description of a world event"),
+        timestamp: z.number().describe("When this event occurred (Unix timestamp)"),
+        characters: z.array(z.string()).describe("Character IDs involved"),
+        location: z.string().describe("Where this event occurred"),
+        importance: z.number().min(1).max(10).describe("How important this event is (1-10)")
+      })
+    ).optional()
+  }).optional().describe("Collection of world-level memories and events")
+});
 
 const GenerateSeriesDetailsOutputSchema = z.object({
   seriesTitle: z.string().describe("The canonical, official title of the series."),
@@ -59,6 +169,45 @@ const GenerateSeriesDetailsOutputSchema = z.object({
       ).optional().describe("Important memories related to this character")
     })
   ).min(3).max(5).describe("A list of 3 to 5 other notable characters crucial to the initial stages of the series."),
+  relationships: z.object({
+    main: z.array(
+      z.object({
+        characterId: z.string().describe("ID of the character this relationship is with"),
+        characterName: z.string().describe("Name of the character this relationship is with"),
+        type: z.string().describe("Type of relationship (ally, enemy, family, mentor, student, lover, business, acquaintance)"),
+        intensity: z.number().min(1).max(10).describe("Intensity of the relationship (1-10)"),
+        description: z.string().describe("Description of the relationship"),
+        history: z.array(
+          z.object({
+            event: z.string().describe("Description of an event that affected this relationship"),
+            impact: z.number().min(-5).max(5).describe("How this event affected the relationship (-5 to +5)"),
+            timestamp: z.number().describe("When this event occurred (Unix timestamp)")
+          })
+        ).describe("History of events that shaped this relationship")
+      })
+    ).describe("Relationships between the main character and other characters"),
+    additionalCharacters: z.array(
+      z.object({
+        characterId: z.string().describe("The character who has these relationships"),
+        relationships: z.array(
+          z.object({
+            characterId: z.string().describe("ID of the character this relationship is with"),
+            characterName: z.string().describe("Name of the character this relationship is with"),
+            type: z.string().describe("Type of relationship"),
+            intensity: z.number().min(1).max(10).describe("Intensity of the relationship"),
+            description: z.string().describe("Description of the relationship"),
+            history: z.array(
+              z.object({
+                event: z.string().describe("Description of an event that affected this relationship"),
+                impact: z.number().min(-5).max(5).describe("How this event affected the relationship"),
+                timestamp: z.number().describe("When this event occurred")
+              })
+            ).describe("History of events that shaped this relationship")
+          })
+        ).describe("All relationships for this character")
+      })
+    ).optional().describe("Relationships between additional characters")
+  }).optional().describe("Character relationship network"),
   initialInventory: z.array(z.string()).optional().describe("A list of 2-3 thematic starting items for the main character, directly relevant to their situation at the very beginning of the series. e.g., ['Tattered Clothes', 'A Mysterious Locket', 'Empty Water Canteen']. If none, can be an empty array or omit.").default([]),
   startingLocation: z.string().optional().describe("The specific, named location where the story or player interaction begins, from the main character's perspective at the series' outset. e.g., 'A Dusty Alley in the Lower District of Lugnica', 'Inside the Millennium Falcon Cockpit', 'The Forbidden Forest Edge'. Default to 'An Unfamiliar Place' if truly ambiguous for the series start.").default("An Unfamiliar Place"),
   initialQuest: z.object({
@@ -70,22 +219,6 @@ const GenerateSeriesDetailsOutputSchema = z.object({
     status: z.enum(['active', 'completed', 'failed']).describe("The current status of the quest.").default('active')
   }).describe("An initial main quest. This quest must be an *immediate* challenge or goal for the main character, directly stemming from their `startingLocation` and initial predicament as described in `initialPromptForPlayer`. It should guide the player's very first actions."),
   initialPromptForPlayer: z.string().describe("A compelling, direct question or immediate choice to present to the player to start their interaction. This prompt should seamlessly flow from the `startingLocation` and the `initialQuest` description, putting the player in the MC's shoes. e.g., 'The alley is dark, and the thugs are closing in on the silver-haired girl. What do you shout, or what is your first move?' or 'The escape pod has crashed. Alarms are blaring. Your first priority is...? What do you do?' Use markdown for emphasis and atmosphere."),
-  relationships: z.record(z.string(), z.array(
-    z.object({
-      characterId: z.string().describe("Unique identifier for the related character"),
-      characterName: z.string().describe("Name of the character in this relationship"),
-      type: z.string().describe("Type of relationship between the characters"),
-      intensity: z.number().min(1).max(10).describe("Strength of the relationship from 1 (weak) to 10 (strong)"),
-      description: z.string().describe("Brief description of the relationship history and dynamics"),
-      history: z.array(
-        z.object({
-          event: z.string().describe("A significant interaction or event between the characters"),
-          impact: z.number().min(-5).max(5).describe("Impact on relationship: negative (-5 to -1), neutral (0), positive (1 to 5)"),
-          timestamp: z.number().describe("When this event occurred (Unix timestamp)")
-        })
-      ).optional()
-    })
-  )).optional().describe("Map of character IDs to their relationships with other characters"),
   worldMemory: z.object({
     globalEvents: z.array(
       z.object({
@@ -100,151 +233,367 @@ const GenerateSeriesDetailsOutputSchema = z.object({
 }).describe("Comprehensive details generated for a fictional series to set up an RPG-like experience.");
 export type GenerateSeriesDetailsOutput = z.infer<typeof GenerateSeriesDetailsOutputSchema>;
 
-export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): Promise<SeriesDetailsOutput> {
-  // Maximum number of retry attempts for API errors
-  const MAX_RETRIES = 2;
-  let lastError: Error | null = null;
-  const useCache = input.useCache !== false; // Default to true if not specified
+// Individual generation functions
+export async function generateBasicSeriesInfo(input: Pick<GenerateSeriesDetailsInput, 'seriesName' | 'useCache'>): Promise<z.infer<typeof BasicSeriesInfoSchema>> {
+  const cacheKey = `${input.seriesName}-basic`;
   
-  // Retry logic for handling transient API errors
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  if (input.useCache && typeof window !== 'undefined') {
     try {
-      const output = await generateSeriesDetailsFlow(input);
-      
-      // Ensure the initialQuest, if present, gets a system-generated ID and status
-      const fullOutput: SeriesDetailsOutput = { ...output };
-      if (output.initialQuest) {
-        fullOutput.initialQuest = {
-          ...output.initialQuest, // Base properties
-          id: `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-          status: 'active' as const,
-        };
-      }
-      
-      // Enhance other characters with IDs and initialize relationship structures
-      if (output.otherCharacters && output.otherCharacters.length > 0) {
-        // Initialize relationships structure first
-        fullOutput.relationships = {};
-        fullOutput.relationships['main'] = [];
-        
-        // Process each character and generate their IDs and details
-        fullOutput.otherCharacters = output.otherCharacters.map((character, index) => {
-          // Generate a unique ID for each character
-          const characterId = `char-${Date.now()}-${Math.random().toString(36).substring(2, 5)}-${index}`;
-          
-          // Initialize this character's relationship array in the relationships map
-          fullOutput.relationships![characterId] = [];
-          
-          // Return the enhanced character object
-          return {
-            ...character,
-            id: characterId,
-            isPermanent: true,
-            firstEncountered: Date.now(),
-            lastInteraction: Date.now(),
-            memoryEntries: [{
-              content: `Initial appearance in the story. ${character.description}`,
-              timestamp: Date.now(),
-              importance: 8 // High importance as this is the character's defining moment
-            }]
-          };
-        });
-        
-        // Now that all characters have IDs, build the relationship networks
-        fullOutput.otherCharacters.forEach(character => {
-          if (!character.id) return; // Skip if somehow ID is missing
-          
-          // Create relationship between main character and this character
-          const mainToCharRelationship = {
-            characterId: character.id,
-            characterName: character.name,
-            type: determineInitialRelationshipType(character.description),
-            intensity: determineInitialRelationshipIntensity(character.description),
-            description: generateInitialRelationshipDescription(fullOutput.mainCharacter.name, character.name, character.description),
-            history: [{
-              event: "Initial encounter based on narrative setup",
-              impact: 0, // Neutral initial impact
-              timestamp: Date.now()
-            }]
-          };
-          
-          fullOutput.relationships!['main'].push(mainToCharRelationship);
-          
-          // Create reverse relationship
-          const characterToMainRelationship = {
-            characterId: 'main',
-            characterName: fullOutput.mainCharacter.name,
-            type: mainToCharRelationship.type,
-            intensity: mainToCharRelationship.intensity,
-            description: generateInitialRelationshipDescription(character.name, fullOutput.mainCharacter.name, character.description),
-            history: [{
-              event: "Initial encounter based on narrative setup",
-              impact: 0,
-              timestamp: Date.now()
-            }]
-          };
-          
-          fullOutput.relationships![character.id].push(characterToMainRelationship);
-        });
-      }
-      
-      // Cache the successful result if we're on the client side
-      if (typeof window !== 'undefined') {
-        // We need to dynamically import the cache module since it's a client-side module
-        try {
-          const { cacheSeriesDetails } = await import(seriesCachePath);
-          cacheSeriesDetails(input.seriesName, fullOutput);
-        } catch (cacheError) {
-          console.error('Failed to cache series details:', cacheError);
-          // Continue even if caching fails
-        }
-      }
-      
-      return fullOutput;
+      const { getCachedSeriesDetails } = await import(seriesCachePath);
+      const cachedData = getCachedSeriesDetails(cacheKey);
+      if (cachedData) return cachedData;
+    } catch (error) {
+      console.warn('Failed to check cache for basic info:', error);
+    }
+  }
+
+  const result = await generateBasicSeriesInfoFlow({ seriesName: input.seriesName });
+  
+  if (typeof window !== 'undefined') {
+    try {
+      const { cacheSeriesDetails } = await import(seriesCachePath);
+      cacheSeriesDetails(cacheKey, result);
+    } catch (error) {
+      console.warn('Failed to cache basic info:', error);
+    }
+  }
+  
+  return result;
+}
+
+export async function generateLorebook(input: Pick<GenerateSeriesDetailsInput, 'seriesName' | 'useCache'>): Promise<{ lorebook: z.infer<typeof LorebookSchema> }> {
+  const cacheKey = `${input.seriesName}-lorebook`;
+  
+  if (input.useCache && typeof window !== 'undefined') {
+    try {
+      const { getCachedSeriesDetails } = await import(seriesCachePath);
+      const cachedData = getCachedSeriesDetails(cacheKey);
+      if (cachedData) return cachedData;
+    } catch (error) {
+      console.warn('Failed to check cache for lorebook:', error);
+    }
+  }
+
+  const result = await generateLorebookFlow({ seriesName: input.seriesName });
+  
+  if (typeof window !== 'undefined') {
+    try {
+      const { cacheSeriesDetails } = await import(seriesCachePath);
+      cacheSeriesDetails(cacheKey, result);
+    } catch (error) {
+      console.warn('Failed to cache lorebook:', error);
+    }
+  }
+  
+  return result;
+}
+
+export async function generateCharacterNetwork(
+  input: Pick<GenerateSeriesDetailsInput, 'seriesName' | 'useCache'>,
+  mainCharacterName: string
+): Promise<z.infer<typeof CharacterNetworkSchema>> {
+  const cacheKey = `${input.seriesName}-characters`;
+  
+  if (input.useCache && typeof window !== 'undefined') {
+    try {
+      const { getCachedSeriesDetails } = await import(seriesCachePath);
+      const cachedData = getCachedSeriesDetails(cacheKey);
+      if (cachedData) return cachedData;
+    } catch (error) {
+      console.warn('Failed to check cache for characters:', error);
+    }
+  }
+
+  const result = await generateCharacterNetworkFlow({ 
+    seriesName: input.seriesName,
+    mainCharacterName 
+  });
+  
+  // Process characters with IDs and relationships
+  const processedResult = processCharacterNetwork(result, mainCharacterName);
+  
+  if (typeof window !== 'undefined') {
+    try {
+      const { cacheSeriesDetails } = await import(seriesCachePath);
+      cacheSeriesDetails(cacheKey, processedResult);
+    } catch (error) {
+      console.warn('Failed to cache characters:', error);
+    }
+  }
+  
+  return processedResult;
+}
+
+export async function generateQuestInteraction(
+  input: Pick<GenerateSeriesDetailsInput, 'seriesName' | 'useCache'>,
+  context: { mainCharacterName: string; startingLocation: string }
+): Promise<z.infer<typeof QuestInteractionSchema>> {
+  const cacheKey = `${input.seriesName}-quest`;
+  
+  if (input.useCache && typeof window !== 'undefined') {
+    try {
+      const { getCachedSeriesDetails } = await import(seriesCachePath);
+      const cachedData = getCachedSeriesDetails(cacheKey);
+      if (cachedData) return cachedData;
+    } catch (error) {
+      console.warn('Failed to check cache for quest:', error);
+    }
+  }
+
+  const result = await generateQuestInteractionFlow({ 
+    seriesName: input.seriesName,
+    ...context 
+  });
+  
+  // Add system-generated quest ID and status
+  const processedResult = {
+    ...result,
+    initialQuest: {
+      ...result.initialQuest,
+      id: `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      status: 'active' as const
+    }
+  };
+  
+  if (typeof window !== 'undefined') {
+    try {
+      const { cacheSeriesDetails } = await import(seriesCachePath);
+      cacheSeriesDetails(cacheKey, processedResult);
+    } catch (error) {
+      console.warn('Failed to cache quest:', error);
+    }
+  }
+  
+  return processedResult;
+}
+
+export async function generateWorldMemory(
+  input: Pick<GenerateSeriesDetailsInput, 'seriesName' | 'useCache'>,
+  characterIds: string[]
+): Promise<z.infer<typeof WorldMemorySchema>> {
+  const cacheKey = `${input.seriesName}-worldmemory`;
+  
+  if (input.useCache && typeof window !== 'undefined') {
+    try {
+      const { getCachedSeriesDetails } = await import(seriesCachePath);
+      const cachedData = getCachedSeriesDetails(cacheKey);
+      if (cachedData) return cachedData;
+    } catch (error) {
+      console.warn('Failed to check cache for world memory:', error);
+    }
+  }
+
+  const result = await generateWorldMemoryFlow({ 
+    seriesName: input.seriesName,
+    characterIds 
+  });
+  
+  if (typeof window !== 'undefined') {
+    try {
+      const { cacheSeriesDetails } = await import(seriesCachePath);
+      cacheSeriesDetails(cacheKey, result);
+    } catch (error) {
+      console.warn('Failed to cache world memory:', error);
+    }
+  }
+  
+  return result;
+}
+
+// Main generation function that orchestrates all parts
+export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): Promise<GenerateSeriesDetailsOutput> {
+  const MAX_RETRIES = 3;
+  const partsToGenerate = input.parts || ['basic', 'lorebook', 'characters', 'quest', 'worldMemory'];
+  
+  try {
+    console.log(`Generating series details for "${input.seriesName}" in ${partsToGenerate.length} parts`);
+    
+    // Generate basic info first (required for other parts)
+    const basicInfo = await retryOperation(
+      () => generateBasicSeriesInfo(input),
+      MAX_RETRIES,
+      'basic series info'
+    );
+    
+    // Generate other parts in parallel where possible
+    const promises: Promise<any>[] = [];
+    
+    if (partsToGenerate.includes('lorebook')) {
+      promises.push(
+        retryOperation(
+          () => generateLorebook(input),
+          MAX_RETRIES,
+          'lorebook'
+        )
+      );
+    } else {
+      promises.push(Promise.resolve(null));
+    }
+    
+    if (partsToGenerate.includes('characters')) {
+      promises.push(
+        retryOperation(
+          () => generateCharacterNetwork(input, basicInfo.mainCharacter.name),
+          MAX_RETRIES,
+          'character network'
+        )
+      );
+    } else {
+      promises.push(Promise.resolve(null));
+    }
+    
+    const [lorebookResult, characterNetworkResult] = await Promise.all(promises);
+    
+    // Generate quest after we have character and location info
+    let questResult;
+    if (partsToGenerate.includes('quest')) {
+      questResult = await retryOperation(
+        () => generateQuestInteraction(input, {
+          mainCharacterName: basicInfo.mainCharacter.name,
+          startingLocation: basicInfo.startingLocation
+        }),
+        MAX_RETRIES,
+        'quest and interaction'
+      );
+    }
+    
+    // Generate world memory after we have character IDs
+    let worldMemoryResult;
+    if (partsToGenerate.includes('worldMemory') && characterNetworkResult) {
+      const characterIds = characterNetworkResult.otherCharacters?.map((char: any) => char.id).filter(Boolean) || [];
+      worldMemoryResult = await retryOperation(
+        () => generateWorldMemory(input, characterIds),
+        MAX_RETRIES,
+        'world memory'
+      );
+    }
+    
+    // Combine all results
+    const fullOutput: GenerateSeriesDetailsOutput = {
+      ...basicInfo,
+      lorebook: lorebookResult?.lorebook || { overallSummary: '', entries: [] },
+      otherCharacters: characterNetworkResult?.otherCharacters || [],
+      relationships: characterNetworkResult?.relationships || { main: [], additionalCharacters: [] },
+      initialQuest: questResult?.initialQuest || {
+        title: 'Default Quest',
+        description: 'A default quest description',
+        objectives: ['Explore the area'],
+        rewards: ['Experience'],
+        id: `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        status: 'active' as const
+      },
+      initialPromptForPlayer: questResult?.initialPromptForPlayer || 'What do you do?',
+      worldMemory: worldMemoryResult?.worldMemory
+    };
+    
+    console.log(`Successfully generated series details for "${input.seriesName}" in parts`);
+    return fullOutput;
+    
+  } catch (error) {
+    console.error(`Failed to generate series details for "${input.seriesName}":`, error);
+    throw new Error(`Failed to generate series details: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Helper function for retry logic
+async function retryOperation<T>(
+  operation: () => Promise<T>,
+  maxRetries: number,
+  operationName: string
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
     } catch (error) {
       lastError = error as Error;
-      console.error(`Series details generation attempt ${attempt + 1}/${MAX_RETRIES + 1} failed:`, error);
+      console.error(`${operationName} generation attempt ${attempt + 1}/${maxRetries + 1} failed:`, error);
       
-      // Check if this is a server error (5xx) from Google AI API which might be temporary
       const isTransientError = error instanceof Error && 
         (error.message.includes('500 Internal Server Error') || 
          error.message.includes('503 Service Unavailable') ||
-         error.message.includes('429 Too Many Requests'));
+         error.message.includes('502 Bad Gateway') ||
+         error.message.includes('504 Gateway Timeout') ||
+         error.message.includes('429 Too Many Requests') ||
+         error.message.includes('An internal error has occurred'));
       
-      // If it's the last attempt or not a transient error, don't retry
-      if (attempt === MAX_RETRIES || !isTransientError) {
+      if (attempt === maxRetries || !isTransientError) {
         break;
       }
       
-      // Wait with exponential backoff before retrying
-      const backoffMs = Math.min(1000 * Math.pow(2, attempt), 10000);
-      console.log(`Retrying in ${backoffMs}ms...`);
+      const backoffMs = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 1000, 15000);
+      console.log(`Retrying ${operationName} in ${backoffMs.toFixed(0)}ms...`);
       await new Promise(resolve => setTimeout(resolve, backoffMs));
     }
   }
   
-  // If all attempts failed and we're allowed to use cache, try to get from cache
-  if (useCache && typeof window !== 'undefined') {
-    try {
-      const { getCachedSeriesDetails } = await import(seriesCachePath);
-      const cachedDetails = getCachedSeriesDetails(input.seriesName);
-      
-      if (cachedDetails) {
-        console.log(`Using cached series details for "${input.seriesName}" as fallback`);
-        return cachedDetails as SeriesDetailsOutput;
-      }
-    } catch (cacheError) {
-      console.error('Failed to retrieve cached series details:', cacheError);
-      // Continue to error if cache retrieval fails
-    }
-  }
-  
-  // If we get here, all attempts failed and there was no cache available
-  throw new Error(`Failed to generate series details after ${MAX_RETRIES + 1} attempts: ${lastError?.message || 'Unknown error'}`);
+  throw new Error(`Failed to generate ${operationName} after ${maxRetries + 1} attempts: ${lastError?.message || 'Unknown error'}`);
 }
 
-// Type alias for the output of the flow before system modifications (like adding quest ID/status)
-type SeriesDetailsOutput = z.infer<typeof GenerateSeriesDetailsOutputSchema>;
+// Helper function to process character network
+function processCharacterNetwork(
+  result: z.infer<typeof CharacterNetworkSchema>,
+  mainCharacterName: string
+): z.infer<typeof CharacterNetworkSchema> {
+  if (!result.otherCharacters?.length) return result;
+  
+  // Process characters with IDs and memory entries
+  const processedCharacters = result.otherCharacters.map((character, index) => {
+    const characterId = `char-${Date.now()}-${Math.random().toString(36).substring(2, 5)}-${index}`;
+    
+    return {
+      ...character,
+      id: characterId,
+      isPermanent: true,
+      firstEncountered: Date.now(),
+      lastInteraction: Date.now(),
+      memoryEntries: [{
+        content: `Initial appearance in the story. ${character.description}`,
+        timestamp: Date.now(),
+        importance: 8
+      }]
+    };
+  });
+  
+  // Build relationships
+  const mainRelationships = processedCharacters.map(character => ({
+    characterId: character.id!,
+    characterName: character.name,
+    type: determineInitialRelationshipType(character.description),
+    intensity: determineInitialRelationshipIntensity(character.description),
+    description: generateInitialRelationshipDescription(mainCharacterName, character.name, character.description),
+    history: [{
+      event: "Initial encounter based on narrative setup",
+      impact: 0,
+      timestamp: Date.now()
+    }]
+  }));
+  
+  const additionalCharacterRelationships = processedCharacters.map(character => ({
+    characterId: character.id!,
+    relationships: [{
+      characterId: 'main',
+      characterName: mainCharacterName,
+      type: determineInitialRelationshipType(character.description),
+      intensity: determineInitialRelationshipIntensity(character.description),
+      description: generateInitialRelationshipDescription(character.name, mainCharacterName, character.description),
+      history: [{
+        event: "Initial encounter based on narrative setup",
+        impact: 0,
+        timestamp: Date.now()
+      }]
+    }]
+  }));
+  
+  return {
+    otherCharacters: processedCharacters,
+    relationships: {
+      main: mainRelationships,
+      additionalCharacters: additionalCharacterRelationships
+    }
+  };
+}
 
 // Helper functions for relationship generation
 function determineInitialRelationshipType(characterDescription: string): string {
@@ -344,93 +693,140 @@ function generateInitialRelationshipDescription(character1Name: string, characte
   }
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateSeriesDetailsPrompt',
-  input: {schema: GenerateSeriesDetailsInputSchema},
-  output: {schema: GenerateSeriesDetailsOutputSchema},
-  prompt: `You are an expert world-builder and narrative designer for immersive text-based RPGs. Your task is to generate a rich and detailed starting point for a game set in the universe of "{{seriesName}}".
+// Define individual AI flows
+const generateBasicSeriesInfoFlow = ai.defineFlow({
+  name: 'generateBasicSeriesInfoFlow',
+  inputSchema: z.object({ seriesName: z.string() }),
+  outputSchema: BasicSeriesInfoSchema,
+}, async (input) => {
+  const basicPrompt = ai.definePrompt({
+    name: 'generateBasicSeriesInfoPrompt',
+    input: { schema: z.object({ seriesName: z.string() }) },
+    output: { schema: BasicSeriesInfoSchema },
+    prompt: `Generate basic series information for "{{seriesName}}" including the main character, starting location, and initial inventory. Focus on accuracy to the canon and the very beginning of the series.
 
-Adhere strictly to the JSON output schema provided. Encourage the use of simple markdown (like **bold** for emphasis, *italics* for thoughts or nuances) in descriptive text fields.
+You must generate:
+1. Series title - the canonical name
+2. Main character with detailed description and stats
+3. Starting location where the story begins
+4. Initial inventory items (2-3 thematic items)
 
-Key Generation Guidelines:
-
-1.  **Series Title**: Provide the canonical, official title.
-2.  **Main Character**:
-    *   **Name**: The protagonist's full name.
-    *   **Description**: (2-3 sentences) Focus on personality, core motivations, iconic abilities/traits *at the series' beginning*. Mention key internal conflicts.
-    *   **Stats**: Thematic, *descriptive* stats (Strength, Dexterity, Intelligence, Magic Power, Luck, Special Ability).
-
-3.  **Lorebook**: This is crucial for immersion. Generate an extensive structured lorebook:
-    *   **Overall Summary**: (2-3 paragraphs) Provide a comprehensive description of the series' world, its primary conflicts, central themes, and significant historical context.
-    *   **Entries**: Generate 25-50 detailed \\\`LoreEntry\\\` objects, with strong emphasis on depth and variety. Each entry needs a \\\`name\\\`, a \\\`description\\\` (3-6 sentences, use markdown for formatting), and a \\\`category\\\`.
-        *   Distribute entries across these expanded categories (include at least 3-5 entries per category):
-            *   'Key Locations': (e.g., specific cities, important landmarks, mystical realms, dungeons, taverns, castles)
-            *   'Major Regions': (e.g., countries, provinces, realms, planets, dimensions)
-            *   'Important NPCs': (e.g., allies, mentors, early antagonists not covered in 'Other Characters')
-            *   'Historical Events': (e.g., past wars, founding events, prophecies, catastrophes, pivotal moments)
-            *   'Recent Events': (e.g., conflicts, political changes, disasters that have happened within the last few years)
-            *   'Magic Systems': (e.g., how magic works, magical traditions, schools of magic, restrictions)
-            *   'Technologies & Innovations': (e.g., unique technologies, scientific advancements, arcane devices)
-            *   'Factions & Organizations': (e.g., guilds, kingdoms, secret societies, religious orders, military groups)
-            *   'Political Landscape': (e.g., power structures, ruling systems, conflicts between powers)
-            *   'Creatures & Races': (e.g., non-human species, significant beasts, monsters, mythical beings)
-            *   'Cultural Notes': (e.g., customs, societal norms, beliefs, celebrations, taboos)
-            *   'Religious Systems': (e.g., deities, religious practices, spiritual beliefs)
-            *   'Important Items & Artifacts': (e.g., legendary weapons, key plot devices, magical items)
-            *   'Natural Features': (e.g., geographic features, ecosystems, weather phenomena)
-            *   'Legends & Myths': (e.g., in-world stories, folklore, prophecies) 
-        *   Create entries with rich details that can be woven into gameplay narratives and player interactions.
-        *   Include specific information that can be directly referenced in gameplay situations.
-
-4.  **Other Characters**: (3-5 characters) For each:
-    *   **Name**: Full name.
-    *   **Description**: (1-2 sentences) Relationship to MC, initial role/goal, defining trait.
-
-5.  **Initial Inventory**: (2-3 items) Thematic items the MC would have at the *very beginning*.
-
-6.  **Starting Location**: Specific, descriptive location where the MC finds themselves *immediately*.
-
-7.  **Initial Quest**:
-    *   **Title**: Captivating and relevant.
-    *   **Description**: (From MC's POV) Set the scene based on \\\`startingLocation\\\`. What is the *immediate* problem, goal, or mystery facing the MC? This should lead directly into the \\\`initialPromptForPlayer\\\`.
-    *   **Objectives**: 2-3 clear, actionable first steps the MC needs to take.
-    *   **Rewards**: Thematic, initial rewards (can be information, a small item, safety, etc.).
-    This quest MUST be the player's first major goal, directly tied to the initial situation.
-
-8.  **Initial Prompt for Player**: A direct, engaging question or choice for the player to start their interaction. This prompt MUST seamlessly flow from the \\\`startingLocation\\\` and the \\\`initialQuest\\\` description, putting the player in the MC's shoes at that very moment. (e.g., 'The alley is dark, and the thugs are closing in on the silver-haired girl. What do you shout, or what is your first move?' or 'The escape pod has crashed. Alarms are blaring. Your first priority is...? What do you do?'). Use markdown for emphasis and atmosphere.
-
-Ensure all generated content is consistent with the "{{seriesName}}" canon, particularly its initial stages. The goal is to create a deeply immersive starting point.
-`,
+Ensure all content is specific to "{{seriesName}}" and accurate to the series canon.`
+  });
+  
+  const { output } = await basicPrompt(input);
+  if (!output) {
+    throw new Error('Failed to generate basic series info');
+  }
+  return output;
 });
 
-const generateSeriesDetailsFlow = ai.defineFlow(
-  {
-    name: 'generateSeriesDetailsFlow',
-    inputSchema: GenerateSeriesDetailsInputSchema,
-    outputSchema: GenerateSeriesDetailsOutputSchema,
-  },
-  async (input) => {
-    try {
-      const {output} = await prompt(input);
-      if (!output) {
-        throw new Error("AI failed to generate series details.");
-      }
-      return output;
-    } catch (error) {
-      // Enhance error message with more context for better debugging
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const enhancedError = new Error(`Error generating series details: ${errorMessage}`);
-      
-      // Preserve the original stack trace if available
-      if (error instanceof Error && error.stack) {
-        enhancedError.stack = error.stack;
-      }
-      
-      // Log the error with the series name for debugging
-      console.error(`Failed to generate series details for "${input.seriesName}":`, enhancedError);
-      
-      throw enhancedError;
-    }
+const generateLorebookFlow = ai.defineFlow({
+  name: 'generateLorebookFlow',
+  inputSchema: z.object({ seriesName: z.string() }),
+  outputSchema: z.object({ lorebook: LorebookSchema }),
+}, async (input) => {
+  const lorebookPrompt = ai.definePrompt({
+    name: 'generateLorebookPrompt',
+    input: { schema: z.object({ seriesName: z.string() }) },
+    output: { schema: z.object({ lorebook: LorebookSchema }) },
+    prompt: `Generate a comprehensive lorebook for "{{seriesName}}" with 25-50 detailed entries covering all aspects of the world. This is critical for immersion and must be specific to the series.
+
+The lorebook must include:
+1. An overall summary (2-3 paragraphs about the world)
+2. 25-50 entries covering: locations, characters, events, magic systems, factions, cultures, items, etc.
+
+Each entry needs a name, detailed description, and appropriate category. All content must be canon-accurate to "{{seriesName}}".`
+  });
+  
+  const { output } = await lorebookPrompt(input);
+  if (!output) {
+    throw new Error('Failed to generate lorebook');
   }
-);
+  return output;
+});
+
+const generateCharacterNetworkFlow = ai.defineFlow({
+  name: 'generateCharacterNetworkFlow',
+  inputSchema: z.object({ seriesName: z.string(), mainCharacterName: z.string() }),
+  outputSchema: CharacterNetworkSchema,
+}, async (input) => {
+  const characterPrompt = ai.definePrompt({
+    name: 'generateCharacterNetworkPrompt',
+    input: { schema: z.object({ seriesName: z.string(), mainCharacterName: z.string() }) },
+    output: { schema: CharacterNetworkSchema },
+    prompt: `Generate 3-5 important characters from "{{seriesName}}" who are relevant early in the series, along with their relationships to {{mainCharacterName}}.
+
+For each character provide:
+1. Full name and description (1-2 sentences)
+2. Their role/relationship to the main character
+3. Their defining traits and early goals
+
+Focus on characters who appear early in "{{seriesName}}" and are important to the initial story setup.`
+  });
+  
+  const { output } = await characterPrompt(input);
+  if (!output) {
+    throw new Error('Failed to generate character network');
+  }
+  return output;
+});
+
+const generateQuestInteractionFlow = ai.defineFlow({
+  name: 'generateQuestInteractionFlow',
+  inputSchema: z.object({ 
+    seriesName: z.string(), 
+    mainCharacterName: z.string(), 
+    startingLocation: z.string() 
+  }),
+  outputSchema: QuestInteractionSchema,
+}, async (input) => {
+  const questPrompt = ai.definePrompt({
+    name: 'generateQuestInteractionPrompt',
+    input: { schema: z.object({ seriesName: z.string(), mainCharacterName: z.string(), startingLocation: z.string() }) },
+    output: { schema: QuestInteractionSchema },
+    prompt: `Generate an initial quest and player prompt for "{{seriesName}}" starting at {{startingLocation}} with {{mainCharacterName}}. The quest should be immediate and engaging.
+
+Create:
+1. A compelling quest title and description from the main character's perspective
+2. 2-4 clear, actionable objectives
+3. 1-3 thematic rewards
+4. An engaging initial prompt that puts the player in the character's shoes
+
+The quest must be based on the actual opening scenario of "{{seriesName}}" and should guide the player's first actions in the story.`
+  });
+  
+  const { output } = await questPrompt(input);
+  if (!output) {
+    throw new Error('Failed to generate quest and interaction');
+  }
+  return output;
+});
+
+const generateWorldMemoryFlow = ai.defineFlow({
+  name: 'generateWorldMemoryFlow',
+  inputSchema: z.object({ seriesName: z.string(), characterIds: z.array(z.string()) }),
+  outputSchema: WorldMemorySchema,
+}, async (input) => {
+  const memoryPrompt = ai.definePrompt({
+    name: 'generateWorldMemoryPrompt',
+    input: { schema: z.object({ seriesName: z.string(), characterIds: z.array(z.string()) }) },
+    output: { schema: WorldMemorySchema },
+    prompt: `Generate world-level memories and global events for "{{seriesName}}" that involve the characters with IDs: {{characterIds}}.
+
+Create global events that:
+1. Are significant to the world of "{{seriesName}}"
+2. Involve the main characters where appropriate
+3. Set up the current state of the world
+4. Are canon-accurate to the series
+
+Each event should have a description, timestamp, involved characters, location, and importance rating.`
+  });
+  
+  const { output } = await memoryPrompt(input);
+  if (!output) {
+    throw new Error('Failed to generate world memory');
+  }
+  return output;
+});
 

@@ -2,30 +2,69 @@
 "use client";
 
 import { User, ScrollText, BookOpen } from 'lucide-react';
-// Assuming Button component is available at this path, adjust if necessary
-import { Button } from '@/components/ui/button'; 
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface NavigationIconsProps {
   onOpenCharacterScreen: () => void;
   onOpenQuestLogScreen: () => void;
-  // onOpenLorebook: () => void; // Using direct link for Lorebook
 }
 
 export function NavigationIcons({ onOpenCharacterScreen, onOpenQuestLogScreen }: NavigationIconsProps) {
   return (
-    <div className="flex items-center space-x-2">
-      <Button variant="outline" size="icon" onClick={onOpenCharacterScreen} aria-label="Character Screen">
-        <User className="h-5 w-5" />
-      </Button>
-      <Button variant="outline" size="icon" onClick={onOpenQuestLogScreen} aria-label="Quest Log">
-        <ScrollText className="h-5 w-5" />
-      </Button>
-      <Button variant="outline" size="icon" asChild aria-label="Lorebook">
-        <Link href="/lorebook">
-          <BookOpen className="h-5 w-5" />
-        </Link>
-      </Button>
-    </div>
+    <TooltipProvider>
+      <div className="flex items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={onOpenCharacterScreen} 
+              className="h-9 w-9 border-amber-800/70 bg-stone-800 hover:bg-amber-900/50 hover:text-amber-200"
+            >
+              <User className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Character</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={onOpenQuestLogScreen}
+              className="h-9 w-9 border-amber-800/70 bg-stone-800 hover:bg-amber-900/50 hover:text-amber-200"
+            >
+              <ScrollText className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Quest Log</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              asChild
+              className="h-9 w-9 border-amber-800/70 bg-stone-800 hover:bg-amber-900/50 hover:text-amber-200"
+            >
+              <Link href="/lorebook">
+                <BookOpen className="h-4 w-4" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>Lorebook</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   );
 }
