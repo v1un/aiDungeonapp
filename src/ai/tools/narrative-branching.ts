@@ -8,15 +8,108 @@ import { StoryBranch, generateBranchesSchema, selectBranchSchema } from './narra
  * 
  * This tool helps the AI generate potential story branches and consequences
  * for player choices, creating a more dynamic and responsive narrative.
+ * 
+ * It includes session management to prevent memory leaks and provides
+ * efficient branch storage and retrieval.
+ * 
+ * @module narrative-branching
  */
+
+// Session metadata to track last access time
+interface SessionMetadata {
+  lastAccessed: number;
+  created: number;
+}
 
 // Session-based storage for narrative branches
 const sessionStoryBranches = new Map<string, StoryBranch[]>();
+const sessionMetadata = new Map<string, SessionMetadata>();
+
+// Configuration for session cleanup
+const SESSION_CONFIG = {
+  // Time after which inactive sessions are cleaned up (4 hours)
+  INACTIVE_TIMEOUT_MS: 4 * 60 * 60 * 1000,
+  // Maximum number of sessions to keep in memory
+  MAX_SESSIONS: 1000,
+  // How often to run cleanup (every 30 minutes)
+  CLEANUP_INTERVAL_MS: 30 * 60 * 1000,
+  // Maximum branches to keep per session
+  MAX_BRANCHES_PER_SESSION: 100
+};
+
+/**
+ * Updates the last accessed timestamp for a session
+ * @param sessionId The session ID to update
+ */
+const touchSession = (sessionId: string): void => {
+  if (!sessionMetadata.has(sessionId)) {
+    sessionMetadata.set(sessionId, {
+      lastAccessed: Date.now(),
+      created: Date.now()
+    });
+  } else {
+    const metadata = sessionMetadata.get(sessionId)!;
+    metadata.lastAccessed = Date.now();
+  }
+};
+
+/**
+ * Cleans up inactive sessions to prevent memory leaks
+ * This is called periodically and when the number of sessions exceeds the maximum
+ */
+const cleanupInactiveSessions = (): void => {
+  console.log(`Running narrative branch session cleanup. Current sessions: ${sessionMetadata.size}`);
+  const now = Date.now();
+  const sessionsToRemove: string[] = [];
+
+  // Identify sessions that have been inactive for too long
+  sessionMetadata.forEach((metadata, sessionId) => {
+    const inactiveTime = now - metadata.lastAccessed;
+    if (inactiveTime > SESSION_CONFIG.INACTIVE_TIMEOUT_MS) {
+      sessionsToRemove.push(sessionId);
+    }
+  });
+
+  // If we still have too many sessions, remove the oldest ones
+  if (sessionMetadata.size - sessionsToRemove.length > SESSION_CONFIG.MAX_SESSIONS) {
+    // Sort sessions by last accessed time (oldest first)
+    const sortedSessions = Array.from(sessionMetadata.entries())
+      .sort((a, b) => a[1].lastAccessed - b[1].lastAccessed);
+    
+    // Calculate how many more sessions need to be removed
+    const additionalRemovalCount = sessionMetadata.size - sessionsToRemove.length - SESSION_CONFIG.MAX_SESSIONS;
+    
+    // Add the oldest sessions to the removal list
+    for (let i = 0; i < additionalRemovalCount && i < sortedSessions.length; i++) {
+      if (!sessionsToRemove.includes(sortedSessions[i][0])) {
+        sessionsToRemove.push(sortedSessions[i][0]);
+      }
+    }
+  }
+
+  // Remove the identified sessions
+  for (const sessionId of sessionsToRemove) {
+    sessionStoryBranches.delete(sessionId);
+    sessionMetadata.delete(sessionId);
+  }
+
+  console.log(`Cleaned up ${sessionsToRemove.length} inactive narrative branch sessions. Remaining: ${sessionMetadata.size}`);
+};
+
+// Set up periodic cleanup
+if (typeof setInterval !== 'undefined') {
+  setInterval(cleanupInactiveSessions, SESSION_CONFIG.CLEANUP_INTERVAL_MS);
+  console.log(`Narrative branch session cleanup scheduled every ${SESSION_CONFIG.CLEANUP_INTERVAL_MS / (60 * 1000)} minutes`);
+}
 
 // Helper to get the current session ID
 const getCurrentSessionId = (): string => {
   // Use a default session ID if none is set
   const sessionId = (global as {currentSessionId?: string}).currentSessionId || 'default-session';
+  
+  // Update the session's last accessed time
+  touchSession(sessionId);
+  
   return sessionId;
 };
 
@@ -26,7 +119,17 @@ const getStoryBranches = (): StoryBranch[] => {
   if (!sessionStoryBranches.has(sessionId)) {
     sessionStoryBranches.set(sessionId, []);
   }
-  return sessionStoryBranches.get(sessionId)!;
+  
+  // Ensure we don't exceed the maximum number of branches per session
+  const branches = sessionStoryBranches.get(sessionId)!;
+  if (branches.length > SESSION_CONFIG.MAX_BRANCHES_PER_SESSION) {
+    // Sort by creation time (newest first)
+    branches.sort((a, b) => b.created - a.created);
+    // Keep only the most recent branches
+    branches.length = SESSION_CONFIG.MAX_BRANCHES_PER_SESSION;
+  }
+  
+  return branches;
 };
 
 // Function to generate narrative branches

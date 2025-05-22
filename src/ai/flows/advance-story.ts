@@ -1,33 +1,49 @@
 'use server';
 /**
  * @fileOverview AI agent for advancing the story in the text-based RPG.
- * It uses a lore retrieval tool to maintain consistency and provide details.
+ * 
+ * This module provides the core story advancement functionality for the AI Dungeon game.
+ * It uses a variety of specialized tools to maintain narrative consistency, generate
+ * branching storylines, and create a dynamic, responsive game world.
  *
- * - advanceStory - A function that handles story progression.
- * - AdvanceStoryInput - The input type for the advanceStory function.
- * - AdvanceStoryOutput - The return type for the advanceStory function.
+ * @module advanceStory
+ * @requires genkit
+ * @requires @/ai/tools
+ * 
+ * Key exports:
+ * - advanceStory - A function that handles story progression based on player input
+ * - AdvanceStoryInput - The input type for the advanceStory function
+ * - AdvanceStoryOutput - The return type for the advanceStory function
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import { retrieveLoreInfoTool, addLocationToLorebookTool, enrichLorebookTool } from '@/ai/lore-tools'; // Import from flattened lore-tools file
+import { ai, z } from '@/ai/genkit';
 import type { /* Quest as _Quest, MainCharacter as _MainCharacter */ } from '@/types';
 
-// Import our new advanced storytelling tools
-import { retrieveContextTool, updateContextTool } from '@/ai/tools/context-manager-tools';
-import { generateBranchesTool, selectBranchTool } from '@/ai/tools/narrative-branching-tools';
+// Import all tools from the centralized tools registry
 import { 
+  // Lore tools
+  retrieveLoreInfoTool,
+  addLocationToLorebookTool,
+  enrichLorebookTool,
+  
+  // Context management
+  retrieveContextTool,
+  updateContextTool,
+  
+  // Narrative branching
+  generateBranchesTool,
+  selectBranchTool,
+  
+  // World building
   generateLocationTool,
   generateEnvironmentTool,
-  retrieveLocationTool 
-} from '@/ai/tools/world-building-tools';
-
-// Import character relationship management tools
-import {
+  retrieveLocationTool,
+  
+  // Relationship management
   updateRelationshipTool,
   addCharacterMemoryTool,
   retrieveCharacterMemoriesTool
-} from '@/ai/tools/relationship-manager';
+} from '@/ai/tools';
 
 const AdvanceStoryInputSchema = z.object({
   playerInput: z.string().describe("The player's latest action or dialogue."),
@@ -139,6 +155,66 @@ Avoid simply saying "You can't do that." Instead, describe why an action might f
 `,
 });
 
+/**
+ * Error class for AI flow errors
+ * Provides structured error information for better debugging and handling
+ */
+class AIFlowError extends Error {
+  public readonly component: string;
+  public readonly severity: 'critical' | 'warning' | 'info';
+  public readonly originalError?: Error;
+
+  constructor(message: string, component: string, severity: 'critical' | 'warning' | 'info' = 'warning', originalError?: Error) {
+    super(message);
+    this.name = 'AIFlowError';
+    this.component = component;
+    this.severity = severity;
+    this.originalError = originalError;
+    
+    // Capture stack trace
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, AIFlowError);
+    }
+  }
+}
+
+/**
+ * Utility function to safely execute tool calls with proper error handling
+ * @param toolName Name of the tool being called (for logging)
+ * @param toolFn The tool function to call
+ * @param params Parameters to pass to the tool
+ * @param fallbackValue Value to return if the tool call fails
+ * @returns Result of the tool call or fallback value
+ */
+async function safeToolCall<T, R>(
+  toolName: string, 
+  toolFn: (params: T) => Promise<R>, 
+  params: T, 
+  fallbackValue: R,
+  isCritical = false
+): Promise<R> {
+  try {
+    return await toolFn(params);
+  } catch (error) {
+    const severity = isCritical ? 'critical' : 'warning';
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    console.error(`${severity.toUpperCase()} - ${toolName} failed: ${errorMessage}`);
+    
+    // Throw critical errors, return fallback for non-critical
+    if (isCritical) {
+      throw new AIFlowError(
+        `Critical tool failure: ${toolName} - ${errorMessage}`,
+        toolName,
+        'critical',
+        error instanceof Error ? error : new Error(String(error))
+      );
+    }
+    
+    return fallbackValue;
+  }
+}
+
 const advanceStoryFlow = ai.defineFlow(
   {
     name: 'advanceStoryFlow',
@@ -146,56 +222,73 @@ const advanceStoryFlow = ai.defineFlow(
     outputSchema: AdvanceStoryOutputSchema,
   },
   async (input) => {
+    // Track performance metrics
+    const startTime = Date.now();
+    const metrics = {
+      toolCalls: 0,
+      toolErrors: 0,
+      totalDuration: 0
+    };
+    
     try {
+      console.log(`Starting story advancement for input: "${input.playerInput.substring(0, 50)}..."`);
+      
       // First, try to retrieve any existing context from our context manager
-      let contextResult;
-      try {
-        contextResult = await retrieveContextTool({
+      const contextResult = await safeToolCall(
+        'retrieveContext',
+        retrieveContextTool,
+        {
           contextType: "all",
           timeframe: "recent"
-        });
-      } catch (/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-               error) {
-        console.log("Context retrieval failed or empty, proceeding without context");
-        // Continue without context if retrieval fails
-        contextResult = { context: {} };
+        },
+        { context: {} }
+      );
+      metrics.toolCalls++;
+      
+      // Log successful context retrieval
+      if (contextResult.context && Object.keys(contextResult.context).length > 0) {
+        console.log("Successfully retrieved context with keys:", Object.keys(contextResult.context).join(", "));
       }
 
       // Check if we have location details from world-building
       let locationDetails;
-      try {
-        if (input.currentLocation) {
-          locationDetails = await retrieveLocationTool({
+      if (input.currentLocation) {
+        locationDetails = await safeToolCall(
+          'retrieveLocation',
+          retrieveLocationTool,
+          {
             locationName: input.currentLocation,
             includeHidden: false
-          });
-        }
-      } catch (error) {
-        console.log("Failed to retrieve location details:", error);
-        // Continue without location details
+          },
+          undefined
+        );
+        metrics.toolCalls++;
       }
 
       // Generate narrative branches based on the player's input
-      let branches;
-      try {
-        const branchInput = {
-          currentSituation: input.chatHistorySummary,
-          playerOptions: [input.playerInput],
-          storyGenre: input.seriesTitle,
-          currentCharacters: contextResult.context?.importantNPCs || [],
-          tonePreference: contextResult.context?.tonePreference || "dramatic"
-        };
-        branches = await generateBranchesTool(branchInput);
-      } catch (error) {
-        console.log("Branch generation failed:", error);
-        // Continue without branches
-      }
+      const branchInput = {
+        currentSituation: input.chatHistorySummary,
+        playerOptions: [input.playerInput],
+        storyGenre: input.seriesTitle,
+        currentCharacters: contextResult.context?.importantNPCs || [],
+        tonePreference: contextResult.context?.tonePreference || "dramatic"
+      };
+      
+      const branches = await safeToolCall(
+        'generateBranches',
+        generateBranchesTool,
+        branchInput,
+        { branches: [] }
+      );
+      metrics.toolCalls++;
 
       // Select the appropriate branch based on player action
       let selectedBranch;
       if (branches && branches.branches && branches.branches.length > 0) {
-        try {
-          const branchSelection = await selectBranchTool({
+        const branchSelection = await safeToolCall(
+          'selectBranch',
+          selectBranchTool,
+          {
             playerAction: input.playerInput,
             relevantFactors: [
               input.currentLocation,
@@ -203,14 +296,14 @@ const advanceStoryFlow = ai.defineFlow(
               ...(contextResult.context?.worldState ? [contextResult.context.worldState] : [])
             ],
             preferTone: contextResult.context?.tonePreference
-          });
-          
-          if (branchSelection && branchSelection.selectedBranch) {
-            selectedBranch = branchSelection.selectedBranch;
-          }
-        } catch (error) {
-          console.log("Branch selection failed:", error);
-          // Continue without selected branch
+          },
+          { selectedBranch: null, needsNewBranches: false }
+        );
+        metrics.toolCalls++;
+        
+        if (branchSelection && branchSelection.selectedBranch) {
+          selectedBranch = branchSelection.selectedBranch;
+          console.log(`Selected narrative branch: "${selectedBranch.consequence.substring(0, 50)}..."`);
         }
       }
 
@@ -226,95 +319,112 @@ const advanceStoryFlow = ai.defineFlow(
       // Generate environmental details if we have location information
       let environmentDetails = "";
       if (locationDetails && locationDetails.location) {
-        try {
-          const envInput = {
-            currentLocation: input.currentLocation,
-            timeProgression: 1, // Minimal time progression
-            currentWeather: contextResult.context?.worldState?.weather || undefined,
-            currentTimeOfDay: contextResult.context?.worldState?.timeOfDay || undefined,
-            desiredMood: "immersive"
-          };
-          const environment = await generateEnvironmentTool(envInput);
-          if (environment && environment.environmentalElements) {
-            environmentDetails = environment.environmentalElements
-              .map((e: { type: string; description: string }) => `${e.type}: ${e.description}`)
-              .join("\n");
-          }
-        } catch (error) {
-          console.log("Environment generation failed:", error);
+        const envInput = {
+          currentLocation: input.currentLocation,
+          timeProgression: 1, // Minimal time progression
+          currentWeather: contextResult.context?.worldState?.weather || undefined,
+          currentTimeOfDay: contextResult.context?.worldState?.timeOfDay || undefined,
+          desiredMood: "immersive"
+        };
+        
+        const environment = await safeToolCall(
+          'generateEnvironment',
+          generateEnvironmentTool,
+          envInput,
+          { environmentalElements: [], timeHasProgressed: false }
+        );
+        metrics.toolCalls++;
+        
+        if (environment && environment.environmentalElements && environment.environmentalElements.length > 0) {
+          environmentDetails = environment.environmentalElements
+            .map((e: { type: string; description: string }) => `${e.type}: ${e.description}`)
+            .join("\n");
+          console.log(`Generated ${environment.environmentalElements.length} environmental elements`);
         }
       }
 
       // Enhanced lorebook integration for better context
       let loreInfo = "";
-      try {
-        // Extract key terms from player input
-        const playerInputTerms = input.playerInput
-          .split(/\s+/)
-          .filter(word => word.length > 3 && !['this', 'that', 'with', 'from', 'your', 'what', 'where', 'when', 'which', 'there', 'their', 'these', 'those', 'about'].includes(word.toLowerCase()));
+      
+      // Extract key terms from player input with improved NLP-like approach
+      const playerInputTerms = input.playerInput
+        .split(/\s+/)
+        .filter(word => {
+          // More sophisticated filtering - longer words and exclude common stop words
+          const cleanWord = word.toLowerCase().replace(/[.,?!;:'"()]/g, '');
+          return cleanWord.length > 3 && 
+                 !['this', 'that', 'with', 'from', 'your', 'what', 'where', 'when', 'which', 
+                   'there', 'their', 'these', 'those', 'about', 'have', 'will', 'would', 'could',
+                   'should', 'been', 'being', 'because', 'before', 'after', 'under', 'over'].includes(cleanWord);
+        });
+      
+      // Context-aware term extraction - consider current location and quest objectives
+      const contextTerms = [];
+      if (input.currentLocation) {
+        contextTerms.push(input.currentLocation);
+      }
         
-        // Context-aware term extraction - consider current location and quest objectives
-        const contextTerms = [];
-        if (input.currentLocation) {
-          contextTerms.push(input.currentLocation);
+      // Extract key terms from active quests
+      if (input.activeQuests && input.activeQuests.length > 0) {
+        const activeQuest = input.activeQuests[0]; // Focus on the most relevant quest
+        if (activeQuest.title) {
+          const questTitle = activeQuest.title.split(/\s+/).filter(w => w.length > 4);
+          contextTerms.push(...questTitle);
         }
-        
-        // Extract key terms from active quests
-        if (input.activeQuests && input.activeQuests.length > 0) {
-          const activeQuest = input.activeQuests[0]; // Focus on the most relevant quest
-          if (activeQuest.title) {
-            const questTitle = activeQuest.title.split(/\s+/).filter(w => w.length > 4);
-            contextTerms.push(...questTitle);
-          }
-        }
+      }
 
-        // Combine all potential search terms, prioritizing player input
-        const allTerms = [...playerInputTerms, ...contextTerms];
+      // Combine all potential search terms, prioritizing player input
+      const allTerms = [...playerInputTerms, ...contextTerms];
+      
+      // If we have terms to search for
+      if (allTerms.length > 0) {
+        const mainSearchResults: string[] = [];
+        const secondarySearchResults: string[] = [];
         
-        // If we have terms to search for
-        if (allTerms.length > 0) {
-          const mainSearchResults: string[] = [];
-          const secondarySearchResults: string[] = [];
+        // First try direct search with player input terms - up to 2 terms
+        for (let i = 0; i < Math.min(2, playerInputTerms.length); i++) {
+          const searchTerm = playerInputTerms[i];
           
-          // First try direct search with player input terms - up to 2 terms
-          for (let i = 0; i < Math.min(2, playerInputTerms.length); i++) {
-            const searchTerm = playerInputTerms[i];
-            try {
-              const loreResult = await retrieveLoreInfoTool({
-                searchTerm: searchTerm
-              });
-              
-              if (loreResult && loreResult.found) {
-                mainSearchResults.push(loreResult.relevantInfo);
-              }
-            } catch (err) {
-              console.log(`Error searching for term ${searchTerm}:`, err);
-            }
+          const loreResult = await safeToolCall(
+            'retrieveLoreInfo',
+            retrieveLoreInfoTool,
+            { searchTerm },
+            { found: false, relevantInfo: "" }
+          );
+          metrics.toolCalls++;
+          
+          if (loreResult && loreResult.found) {
+            mainSearchResults.push(loreResult.relevantInfo);
+            console.log(`Found lore information for term: ${searchTerm}`);
           }
-          
-          // Then try context terms if we haven't found enough main results
-          if (mainSearchResults.length < 2 && contextTerms.length > 0) {
-            for (let i = 0; i < Math.min(2, contextTerms.length); i++) {
-              const searchTerm = contextTerms[i];
-              try {
-                const loreResult = await retrieveLoreInfoTool({
-                  searchTerm: searchTerm
-                });
-                
-                if (loreResult && loreResult.found) {
-                  secondarySearchResults.push(loreResult.relevantInfo);
-                }
-              } catch (err) {
-                console.log(`Error searching for context term ${searchTerm}:`, err);
-              }
-            }
-          }
-          
-          // Combine the results, prioritizing direct search results
-          loreInfo = [...mainSearchResults, ...secondarySearchResults].join('\n\n---\n\n');
         }
-      } catch (error) {
-        console.log("Enhanced lore retrieval failed:", error);
+        
+        // Then try context terms if we haven't found enough main results
+        if (mainSearchResults.length < 2 && contextTerms.length > 0) {
+          for (let i = 0; i < Math.min(2, contextTerms.length); i++) {
+            const searchTerm = contextTerms[i];
+            
+            const loreResult = await safeToolCall(
+              'retrieveLoreInfo',
+              retrieveLoreInfoTool,
+              { searchTerm },
+              { found: false, relevantInfo: "" }
+            );
+            metrics.toolCalls++;
+            
+            if (loreResult && loreResult.found) {
+              secondarySearchResults.push(loreResult.relevantInfo);
+              console.log(`Found contextual lore information for term: ${searchTerm}`);
+            }
+          }
+        }
+        
+        // Combine the results, prioritizing direct search results
+        loreInfo = [...mainSearchResults, ...secondarySearchResults].join('\n\n---\n\n');
+        
+        if (loreInfo) {
+          console.log(`Retrieved ${mainSearchResults.length + secondarySearchResults.length} lore entries`);
+        }
       }
 
       // Prepare comprehensive context to ensure rich narrative responses
@@ -333,58 +443,131 @@ const advanceStoryFlow = ai.defineFlow(
       ].filter(Boolean).join("\n\n====================\n\n");
 
       // Process through the AI with the standard input
-      // Note: We can't easily add enhanced system instructions due to the type constraints,
-      // but we can provide context in the chat history
       const enhancedHistory = `${input.chatHistorySummary}\n\n[SYSTEM: ${additionalContext}]`;
       
-      const { output } = await prompt({
-        ...input,
-        chatHistorySummary: enhancedHistory
-      });
+      console.log("Generating AI response with enhanced context...");
+      const startAITime = Date.now();
+      
+      // This is a critical operation, so we'll use a longer timeout and more retries
+      const promptResult = await safeToolCall(
+        'advanceStoryPrompt',
+        async () => {
+          return await prompt({
+            ...input,
+            chatHistorySummary: enhancedHistory
+          });
+        },
+        null as any,
+        null as any,
+        true // Mark as critical
+      );
+      
+      const aiResponseTime = Date.now() - startAITime;
+      console.log(`AI response generated in ${aiResponseTime}ms`);
+      metrics.toolCalls++;
 
-      if (!output) {
-        throw new Error('AI failed to generate a story advancement.');
+      if (!promptResult?.output) {
+        throw new AIFlowError(
+          'AI failed to generate a story advancement.',
+          'advanceStoryPrompt',
+          'critical'
+        );
       }
 
+      const output = promptResult.output;
+
       // Update context with new information
-      try {
-        // Update world state with location if changed
-        if (output.updatedLocation) {
-          await updateContextTool({
+      console.log("Updating game context with new information...");
+      
+      // Update world state with location if changed
+      if (output.updatedLocation) {
+        await safeToolCall(
+          'updateContext-location',
+          updateContextTool,
+          {
             updateType: "worldState", 
             worldState: {
               location: output.updatedLocation
             }
-          });
-        }
-        
-        // Add the player action as an event
-        await updateContextTool({
+          },
+          { success: false, message: "Failed to update location" }
+        );
+        metrics.toolCalls++;
+        console.log(`Updated location to: ${output.updatedLocation}`);
+      }
+      
+      // Add the player action as an event
+      await safeToolCall(
+        'updateContext-event',
+        updateContextTool,
+        {
           updateType: "event",
           event: {
             description: `Actor: ${input.mainCharacter.name}, Action: ${input.playerInput}, Location: ${input.currentLocation}, Outcome: ${output.narrativeResponse.substring(0, 100)}...`,
-            importance: 1
+            importance: 5 // Increased importance for better context retention
           }
-        });
-        
-        // Process character interactions if present characters are defined
-        if (input.presentCharacters && input.presentCharacters.length > 0) {
-          await handleCharacterInteractions(
-            input.presentCharacters,
-            input.mainCharacter.name,
-            input.playerInput,
-            output.narrativeResponse,
-            input.currentLocation
-          );
-        }
-
-      } catch (error) {
-        console.log("Context update failed:", error);
+        },
+        { success: false, message: "Failed to add event" }
+      );
+      metrics.toolCalls++;
+      
+      // Process character interactions if present characters are defined
+      if (input.presentCharacters && input.presentCharacters.length > 0) {
+        await handleCharacterInteractions(
+          input.presentCharacters,
+          input.mainCharacter.name,
+          input.playerInput,
+          output.narrativeResponse,
+          input.currentLocation
+        );
       }
+
+      // Enrich the lorebook with new information from the narrative
+      await safeToolCall(
+        'enrichLorebook',
+        enrichLorebookTool,
+        {
+          contextType: "custom",
+          content: output.narrativeResponse,
+          customCategory: "narrative"
+        },
+        { message: "Failed to enrich lorebook", entriesAdded: 0, entriesUpdated: 0, categories: [] }
+      );
+      metrics.toolCalls++;
+
+      // Calculate and log performance metrics
+      metrics.totalDuration = Date.now() - startTime;
+      console.log(`Story advancement completed in ${metrics.totalDuration}ms with ${metrics.toolCalls} tool calls`);
 
       return output;
     } catch (error) {
-      console.error('Story advancement error:', error);
+      // Calculate final metrics even in error case
+      metrics.totalDuration = Date.now() - startTime;
+      
+      // Enhanced error logging with structured information
+      if (error instanceof AIFlowError) {
+        console.error(`AI Flow Error [${error.severity}] in ${error.component}: ${error.message}`);
+        if (error.originalError) {
+          console.error('Original error:', error.originalError);
+        }
+      } else {
+        console.error('Unhandled story advancement error:', error);
+      }
+      
+      // Log performance metrics even in failure case
+      console.log(`Failed story advancement took ${metrics.totalDuration}ms with ${metrics.toolCalls} tool calls`);
+      
+      // Provide a more graceful fallback for non-critical errors
+      if (error instanceof AIFlowError && error.severity !== 'critical') {
+        return {
+          narrativeResponse: `Something unexpected happened as you ${input.playerInput}. The world seems to pause momentarily, as if gathering its thoughts. (The AI encountered a temporary issue. Please try again.)`,
+          updatedLocation: undefined,
+          updatedInventory: undefined,
+          questProgress: undefined
+        };
+      }
+      
+      // Re-throw critical errors
       throw error;
     }
   }
@@ -419,39 +602,57 @@ async function handleCharacterInteractions(
           const importance = Math.abs(interactionImpact) + 3; // Scale from 3-8 based on impact
           
           // Add memory to the character
-          await addCharacterMemoryTool({
-            characterId: character.id,
-            content: `At ${location}, ${interactionSummary} This interaction was ${interactionImpact > 0 ? 'positive' : interactionImpact < 0 ? 'negative' : 'neutral'}.`,
-            importance: importance
-          });
+          await safeToolCall(
+            'addCharacterMemory',
+            addCharacterMemoryTool,
+            {
+              characterId: character.id,
+              content: `At ${location}, ${interactionSummary} This interaction was ${interactionImpact > 0 ? 'positive' : interactionImpact < 0 ? 'negative' : 'neutral'}.`,
+              importance: importance
+            },
+            { success: false, message: "Failed to add character memory" }
+          );
           
           // Also add memory for the main character
-          await addCharacterMemoryTool({
-            characterId: 'main',
-            content: `At ${location}, I interacted with ${character.name}. ${interactionSummary}`,
-            importance: importance
-          });
+          await safeToolCall(
+            'addMainCharacterMemory',
+            addCharacterMemoryTool,
+            {
+              characterId: 'main',
+              content: `At ${location}, I interacted with ${character.name}. ${interactionSummary}`,
+              importance: importance
+            },
+            { success: false, message: "Failed to add main character memory" }
+          );
           
           // For more significant interactions, update the relationship
           if (Math.abs(interactionImpact) >= 2) {
             // Retrieve previous memories to inform relationship updates
-            const previousMemories = await retrieveCharacterMemoriesTool({
-              characterId: 'main',
-              relatedToCharacterId: character.id,
-              minimumImportance: 5,
-              limit: 3
-            });
+            const previousMemories = await safeToolCall(
+              'retrieveCharacterMemories',
+              retrieveCharacterMemoriesTool,
+              {
+                characterId: 'main',
+                limit: 3
+              },
+              { memories: [], success: false, message: "Failed to retrieve memories", characterName: "" }
+            );
             
             // Update the relationship with this new interaction
-            await updateRelationshipTool({
-              characterId1: 'main',
-              characterId2: character.id,
-              type: interactionType,
-              intensity: calculateRelationshipIntensity(interactionType, interactionImpact),
-              description: generateRelationshipDescription(mainCharacterName, character.name, interactionType, interactionImpact),
-              eventDescription: interactionSummary,
-              eventImpact: interactionImpact
-            });
+            await safeToolCall(
+              'updateRelationship',
+              updateRelationshipTool,
+              {
+                characterId1: 'main',
+                characterId2: character.id,
+                type: interactionType,
+                intensity: calculateRelationshipIntensity(interactionType, interactionImpact),
+                description: generateRelationshipDescription('main', character.name, interactionType, interactionImpact),
+                eventDescription: interactionSummary,
+                eventImpact: interactionImpact
+              },
+              { success: false, message: "Failed to update relationship" }
+            );
           }
         }
       } catch (error) {
