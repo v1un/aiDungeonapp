@@ -181,13 +181,8 @@ export default function ChatWindow() {
       setMessages(selectedSession.messages);
       setGameState(selectedSession.gameState);
       
-      if (selectedSession.gameState?.seriesDetails) {
-        syncSeriesDetailsToLorebook(selectedSession.gameState.seriesDetails);
-      } else {
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('mysticChatways_seriesDetails');
-        }
-      }
+      // Sync series details with lorebook - explicitly call here for immediate update
+      syncSeriesDetailsToLorebook(selectedSession.gameState?.seriesDetails);
     }
   };
 
@@ -197,6 +192,9 @@ export default function ChatWindow() {
     setActiveSessionId(newSession.id);
     setMessages(newSession.messages);
     setGameState(newSession.gameState);
+    
+    // Clear lorebook data when starting a new game
+    syncSeriesDetailsToLorebook(undefined);
   };
 
   const openRenameDialog = (sessionId: string) => {
@@ -241,16 +239,24 @@ export default function ChatWindow() {
         const newActiveSession = allSessions.find(s => s.id !== deleteSessionId);
         setActiveSessionId(newActiveSession?.id || null);
         setMessages(newActiveSession?.messages || []);
-        setGameState(newActiveSession?.gameState || {
+        const newGameState = newActiveSession?.gameState || {
           inventory: [], currentLocation: "Not yet initialized", activeQuests: [],
           userDisplayName: undefined, seriesDetails: undefined,
-        });
+        };
+        setGameState(newGameState);
+        
+        // Sync the new active session's series details to lorebook
+        syncSeriesDetailsToLorebook(newGameState.seriesDetails);
       } else {
         const newSession = createNewSession();
         setActiveSessionId(newSession.id);
         setMessages(newSession.messages);
         setGameState(newSession.gameState);
         setAllSessions([newSession]);
+        
+        // Clear lorebook data if the last session is deleted
+        syncSeriesDetailsToLorebook(undefined);
+        
         setIsDeleteDialogOpen(false);
         setDeleteSessionId(null);
         return;
@@ -332,14 +338,26 @@ export default function ChatWindow() {
       } catch (error) {
         console.error('Error syncing series details to lorebook storage:', error);
       }
+    } else if (!seriesDetails && typeof window !== 'undefined') {
+      // If no series details provided, clear the lorebook cache
+      localStorage.removeItem('mysticChatways_seriesDetails');
     }
   }, []);
 
   useEffect(() => {
-    if (gameState.seriesDetails) {
-      syncSeriesDetailsToLorebook(gameState.seriesDetails);
+    // Sync seriesDetails to lorebook storage whenever it changes
+    syncSeriesDetailsToLorebook(gameState.seriesDetails);
+  }, [gameState.seriesDetails, syncSeriesDetailsToLorebook]);
+
+  // Make sure to sync on session change
+  useEffect(() => {
+    if (activeSessionId) {
+      const currentSession = allSessions.find(s => s.id === activeSessionId);
+      if (currentSession) {
+        syncSeriesDetailsToLorebook(currentSession.gameState.seriesDetails);
+      }
     }
-  }, [gameState.seriesDetails, syncSeriesDetailsToLorebook, activeSessionId]);
+  }, [activeSessionId, allSessions, syncSeriesDetailsToLorebook]);
 
   const currentSession = React.useMemo(() => 
     allSessions.find(s => s.id === activeSessionId) || null,

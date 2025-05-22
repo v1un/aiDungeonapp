@@ -36,47 +36,70 @@ export default function LorebookPage() {
       // First check the dedicated storage key
       let storedSeriesDetails = localStorage.getItem(SERIES_DETAILS_STORAGE_KEY);
       
-      // If not found, try to get it from active game session as a fallback
-      if (!storedSeriesDetails) {
+      if (storedSeriesDetails) {
+        try {
+          const parsedDetails: SeriesDetails = JSON.parse(storedSeriesDetails);
+          
+          // Enhanced validation for lorebook structure
+          if (parsedDetails.lorebook && 
+              typeof parsedDetails.lorebook === 'object' && 
+              'overallSummary' in parsedDetails.lorebook && 
+              'entries' in parsedDetails.lorebook &&
+              Array.isArray(parsedDetails.lorebook.entries)) {
+            setSeriesDetails(parsedDetails);
+          } else {
+            console.warn("Stored lorebook data is in an outdated or unexpected format.");
+            setError("Lorebook data seems to be in an old format. Please start a new game to generate an updated lorebook.");
+            
+            // Clear invalid lorebook data
+            localStorage.removeItem(SERIES_DETAILS_STORAGE_KEY);
+          }
+        } catch (parseError) {
+          console.error("Error parsing series details:", parseError);
+          setError("Failed to parse lorebook data. The stored data might be corrupted.");
+          
+          // Clear invalid lorebook data
+          localStorage.removeItem(SERIES_DETAILS_STORAGE_KEY);
+        }
+      } else {
+        // If not found in the dedicated key, check if we have any active game session
         const storedSessions = localStorage.getItem('mysticChatways_gameSessions');
+        
         if (storedSessions) {
           try {
             const sessions = JSON.parse(storedSessions);
-            // Get the most recent session (should be first after sorting)
+            
+            // Get the most recent session with series details
             if (sessions && Array.isArray(sessions) && sessions.length > 0) {
-              const recentSessions = [...sessions].sort((a, b) => b.lastPlayed - a.lastPlayed);
-              const mostRecentSession = recentSessions[0];
-              if (mostRecentSession.gameState?.seriesDetails) {
-                // Found series details in the game session, use these
-                storedSeriesDetails = JSON.stringify(mostRecentSession.gameState.seriesDetails);
+              const sessionsWithLorebooks = sessions.filter(
+                (s: any) => s.gameState?.seriesDetails?.lorebook
+              );
+              
+              if (sessionsWithLorebooks.length > 0) {
+                // Sort by last played to get the most recent
+                const recentSessions = [...sessionsWithLorebooks].sort((a: any, b: any) => b.lastPlayed - a.lastPlayed);
+                const mostRecentSession = recentSessions[0];
                 
-                // Also update our dedicated storage for future use
-                localStorage.setItem(SERIES_DETAILS_STORAGE_KEY, storedSeriesDetails);
-                console.log("Retrieved series details from active game session");
+                if (mostRecentSession.gameState?.seriesDetails) {
+                  // Found series details in the game session, use these
+                  setSeriesDetails(mostRecentSession.gameState.seriesDetails);
+                  
+                  // Also update our dedicated storage for future use
+                  localStorage.setItem(SERIES_DETAILS_STORAGE_KEY, JSON.stringify(mostRecentSession.gameState.seriesDetails));
+                  console.log("Retrieved series details from active game session");
+                  return;
+                }
               }
             }
+            
+            setError("No lorebook data found in any active game sessions. Please start a game to generate a lorebook.");
           } catch (sessionError) {
             console.error("Error parsing game sessions:", sessionError);
+            setError("Failed to retrieve lorebook data from game sessions.");
           }
-        }
-      }
-      
-      if (storedSeriesDetails) {
-        const parsedDetails: SeriesDetails = JSON.parse(storedSeriesDetails);
-        // Enhanced validation for lorebook structure
-        if (parsedDetails.lorebook && 
-            typeof parsedDetails.lorebook === 'object' && 
-            'overallSummary' in parsedDetails.lorebook && 
-            'entries' in parsedDetails.lorebook &&
-            Array.isArray(parsedDetails.lorebook.entries)) {
-          setSeriesDetails(parsedDetails);
         } else {
-          // Handle old format or corrupted data
-          console.warn("Stored lorebook data is in an outdated or unexpected format.");
-          setError("Lorebook data seems to be in an old format. Please restart the game with a new series to generate an updated lorebook.");
+          setError("No game sessions found. Please start a game in the chat to generate lore.");
         }
-      } else {
-        setError("No series data found. Please start a game in the chat to generate lore.");
       }
     } catch (e) {
       console.error("Error loading or parsing series details from localStorage:", e);

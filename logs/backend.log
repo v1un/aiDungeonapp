@@ -1,66 +1,29 @@
-[2025-05-22T02:04:26.735Z] [BACKEND]    - Local:        http://localhost:9003
+[2025-05-22T02:17:02.022Z] [BACKEND]    - Local:        http://localhost:9003
    - Network:      http://192.168.1.69:9003
-   - Environments: .env.local
 
-[2025-05-22T02:04:31.000Z] [BACKEND]  GET / [32m200[39m in 49ms
+[2025-05-22T02:17:06.279Z] [BACKEND]  GET / [32m200[39m in 48ms
 
-[2025-05-22T02:04:31.814Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/health in 258ms
+[2025-05-22T02:17:20.051Z] [BACKEND]  GET / [32m200[39m in 57ms
 
-[2025-05-22T02:04:31.852Z] [BACKEND]  GET /api/health [32m200[39m in 297ms
+[2025-05-22T02:17:20.500Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/health in 316ms
 
-[2025-05-22T02:04:32.053Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/genkit-health in 194ms
+[2025-05-22T02:17:20.559Z] [BACKEND]  GET /api/health [32m200[39m in 380ms
 
-[2025-05-22T02:04:32.072Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 214ms
+[2025-05-22T02:17:20.768Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/genkit-health in 205ms
 
-[2025-05-22T02:04:40.003Z] [BACKEND]  GET / [32m200[39m in 49ms
+[2025-05-22T02:17:20.790Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 228ms
 
-[2025-05-22T02:04:40.155Z] [BACKEND]  GET /api/health [32m200[39m in 21ms
+[2025-05-22T02:17:22.216Z] [BACKEND]  GET /lorebook [32m200[39m in 441ms
 
-[2025-05-22T02:04:40.222Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 16ms
+[2025-05-22T02:17:23.567Z] [BACKEND]  GET / [32m200[39m in 21ms
 
-[2025-05-22T02:04:50.391Z] [BACKEND]  GET /settings [32m200[39m in 483ms
+[2025-05-22T02:17:23.604Z] [BACKEND]  GET /api/health [32m200[39m in 17ms
 
-[2025-05-22T02:04:56.905Z] [BACKEND]  GET / [32m200[39m in 20ms
+[2025-05-22T02:17:23.607Z] [BACKEND]  GET /api/health [32m200[39m in 18ms
 
-[2025-05-22T02:04:56.956Z] [BACKEND]  GET /api/health [32m200[39m in 18ms
+[2025-05-22T02:17:23.623Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
 
-[2025-05-22T02:04:56.958Z] [BACKEND]  GET /api/health [32m200[39m in 20ms
+[2025-05-22T02:17:23.636Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
 
-[2025-05-22T02:04:56.976Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
-
-[2025-05-22T02:04:56.990Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
-
-[2025-05-22T02:05:01.052Z] [BACKEND]  GET / [32m200[39m in 49ms
-
-[2025-05-22T02:05:01.720Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
-
-[2025-05-22T02:05:01.735Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
-
-[2025-05-22T02:05:26.944Z] [BACKEND]  GET /api/health [32m200[39m in 12ms
-
-[2025-05-22T02:05:26.957Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
-
-[2025-05-22T02:05:30.032Z] [BACKEND]  GET /api/health [32m200[39m in 15ms
-
-[2025-05-22T02:05:30.054Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 16ms
-
-[2025-05-22T02:05:31.048Z] [BACKEND]  GET / [32m200[39m in 45ms
-
-[2025-05-22T02:05:31.735Z] [BACKEND]  GET /api/health [32m200[39m in 12ms
-
-[2025-05-22T02:05:31.749Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
-
-[2025-05-22T02:05:55.192Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/status in 251ms
-
-[2025-05-22T02:05:55.211Z] [BACKEND]  GET /api/status [32m200[39m in 271ms
-
-[2025-05-22T02:05:57.248Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
-
-[2025-05-22T02:05:57.260Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
-
-[2025-05-22T02:06:01.061Z] [BACKEND]  GET / [32m200[39m in 53ms
-
-[2025-05-22T02:06:01.752Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
-
-[2025-05-22T02:06:01.766Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
+[2025-05-22T02:17:36.332Z] [BACKEND]  GET / [32m200[39m in 45ms
 
