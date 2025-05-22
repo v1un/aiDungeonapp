@@ -43,7 +43,7 @@ interface Global {
 }
 
 // Set the current session ID for tools to use
-export function setCurrentToolSessionId(sessionId?: string) {
+export async function setCurrentToolSessionId(sessionId?: string) {
   (global as Global).currentSessionId = sessionId;
 }
 
