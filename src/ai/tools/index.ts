@@ -10,12 +10,6 @@ import {
   retrieveLoreInfoImplementation 
 } from './retrieve-lore-info';
 
-// Import types from tool-schemas instead
-import {
-  type RetrieveLoreInfoInput,
-  type RetrieveLoreInfoOutput
-} from '@/ai/tool-schemas';
-
 // Register the retrieve lore info tool
 export const retrieveLoreInfoTool = ai.defineTool(
   retrieveLoreInfoToolDefinition,

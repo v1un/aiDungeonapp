@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Generates details for a fictional series, including an initial quest and a structured lorebook.
@@ -10,7 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { QuestSchema, type Quest, LorebookSchema } from '@/types';
+import { LorebookSchema } from '@/types';
 
 const GenerateSeriesDetailsInputSchema = z.object({
   seriesName: z.string().describe('The name of the fictional series (e.g., "Re:Zero", "Star Wars", "Harry Potter").'),

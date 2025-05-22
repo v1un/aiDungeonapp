@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -168,7 +167,7 @@ export function GameSidebar({ seriesDetails, inventory, currentLocation, activeQ
                       <div className="text-sm font-medium">Special Ability</div>
                     </div>
                     <div className="ml-9 text-xs text-muted-foreground italic">
-                      "{stats.specialAbility}"
+                      &quot;{stats.specialAbility}&quot;
                     </div>
                   </div>
                 )}

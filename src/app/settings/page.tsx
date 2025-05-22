@@ -105,7 +105,7 @@ export default function SettingsPage() {
             placeholder="Enter your AI API Key if required"
           />
           <p className="text-xs text-muted-foreground">
-            Note: This key is stored in your browser's local storage and is not currently used to dynamically configure the backend.
+            Note: This key is stored in your browser&apos;s local storage and is not currently used to dynamically configure the backend.
             For production, API keys should be handled securely on the server.
           </p>
         </div>

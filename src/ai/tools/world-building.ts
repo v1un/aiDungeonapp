@@ -17,7 +17,7 @@ const sessionEnvironmentalElements = new Map<string, EnvironmentalElement[]>();
 // Helper to get the current session ID
 const getCurrentSessionId = (): string => {
   // Use a default session ID if none is set
-  const sessionId = (global as any).currentSessionId || 'default-session';
+  const sessionId = (global as {currentSessionId?: string}).currentSessionId || 'default-session';
   return sessionId;
 };
 
@@ -468,7 +468,7 @@ function generateTimeOfDay(current?: string, progression: number = 0.5): string 
   }
   
   // Find the current time in the sequence
-  let currentIndex = timeSequence.findIndex(time => 
+  const currentIndex = timeSequence.findIndex(time => 
     current.toLowerCase().includes(time.substring(0, 10).toLowerCase())
   );
   

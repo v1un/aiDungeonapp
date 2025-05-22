@@ -2,7 +2,6 @@
 
 import { z } from 'genkit';
 import { StoryEvent, CharacterRelationship, WorldState, retrieveContextSchema, updateContextSchema } from './context-manager-schemas';
-import { setCurrentSessionIdForTools } from '@/ai/lore-tools';
 
 /**
  * Context Manager Tool for maintaining narrative consistency
@@ -23,7 +22,7 @@ const sessionWorldStates = new Map<string, WorldState>();
 const getCurrentSessionId = (): string => {
   // Use a default session ID if none is set
   // Access the currentSessionId from the lore-tools module
-  const sessionId = (global as any).currentSessionId || 'default-session';
+  const sessionId = (global as {currentSessionId?: string}).currentSessionId || 'default-session';
   return sessionId;
 };
 
@@ -62,7 +61,12 @@ const getWorldState = (): WorldState => {
 export async function retrieveContext(input: z.infer<typeof retrieveContextSchema>) {
   const { contextType, relevantCharacters, timeframe } = input;
   
-  let result: any = {};
+  const result: {
+    events?: StoryEvent[],
+    relationships?: CharacterRelationship[],
+    worldState?: WorldState,
+    context?: Record<string, unknown>
+  } = {};
   
   if (contextType === 'events' || contextType === 'all') {
     let events = [...getStoryEvents()];

@@ -16,7 +16,7 @@ const sessionStoryBranches = new Map<string, StoryBranch[]>();
 // Helper to get the current session ID
 const getCurrentSessionId = (): string => {
   // Use a default session ID if none is set
-  const sessionId = (global as any).currentSessionId || 'default-session';
+  const sessionId = (global as {currentSessionId?: string}).currentSessionId || 'default-session';
   return sessionId;
 };
 
@@ -54,7 +54,7 @@ export async function generateBranches(input: z.infer<typeof generateBranchesSch
     const actionType = determineActionType(action);
     
     // Generate consequence based on action type, situation, and genre
-    let consequence = generateDetailedConsequence(
+    const consequence = generateDetailedConsequence(
       action, 
       actionType, 
       currentSituation, 
@@ -63,7 +63,7 @@ export async function generateBranches(input: z.infer<typeof generateBranchesSch
     );
     
     // Generate a narrative hook with deeper storytelling elements
-    let narrativeHook = generateNarrativeHook(
+    const narrativeHook = generateNarrativeHook(
       action, 
       actionType, 
       storyGenre, 
@@ -72,7 +72,7 @@ export async function generateBranches(input: z.infer<typeof generateBranchesSch
     );
     
     // Calculate probability based on multiple contextual factors
-    let probability = calculateBranchProbability(
+    const probability = calculateBranchProbability(
       action, 
       currentSituation, 
       storyGenre, 
@@ -301,7 +301,7 @@ function generateNarrativeHook(
   actionType: string, 
   genre: string, 
   tonePreference?: string,
-  characters: string[] = []
+  _characters: string[] = []
 ): string {
   // Default hooks by tone, with enhanced narrative quality
   const hooks: Record<string, string[]> = {

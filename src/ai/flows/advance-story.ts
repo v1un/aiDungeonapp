@@ -11,14 +11,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { retrieveLoreInfoTool } from '@/ai/lore-tools'; // Import from flattened lore-tools file
-import type { Quest, MainCharacter } from '@/types';
+import type { /* Quest as _Quest, MainCharacter as _MainCharacter */ } from '@/types';
 
 // Import our new advanced storytelling tools
 import { retrieveContextTool, updateContextTool } from '@/ai/tools/context-manager-tools';
 import { generateBranchesTool, selectBranchTool } from '@/ai/tools/narrative-branching-tools';
 import { 
-  generateLocationTool, 
-  generateEnvironmentTool, 
+  generateLocationTool,
+  generateEnvironmentTool,
   retrieveLocationTool 
 } from '@/ai/tools/world-building-tools';
 
@@ -127,7 +127,7 @@ const advanceStoryFlow = ai.defineFlow(
           contextType: "all",
           timeframe: "recent"
         });
-      } catch (error) {
+      } catch (_error) {
         console.log("Context retrieval failed or empty, proceeding without context");
         // Continue without context if retrieval fails
         contextResult = { context: {} };

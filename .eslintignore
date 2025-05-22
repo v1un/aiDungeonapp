@@ -1,0 +1,20 @@
+# Build artifacts
+.next/
+dist/
+out/
+build/
+
+# Dependencies
+node_modules/
+
+# Generated files
+*.generated.*
+*.d.ts
+
+# Config files
+next.config.ts
+tailwind.config.ts
+postcss.config.mjs
+
+# Third-party code
+public/

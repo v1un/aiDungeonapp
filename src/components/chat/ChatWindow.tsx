@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import type { GameSession, ClientGameState, ClientGameStateUpdate, Message, ProcessedPlayerInput } from '@/types';
-// Add type declaration for uuid module to fix TypeScript error
-// @ts-ignore
+import type { GameSession, ClientGameState, Message, ProcessedPlayerInput, SeriesDetails } from '@/types';
+// Add type declaration for uuid module with explanation as required by the linter
+// @ts-expect-error UUID library doesn't have proper TypeScript types but works correctly
 import { v4 as uuidv4 } from 'uuid';
 import { ChatLayout } from './ChatLayout';
 import { processPlayerInput } from '@/lib/game-actions';
@@ -116,6 +116,7 @@ export default function ChatWindow() {
   };
 
   // Load sessions from localStorage
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     // Skip localStorage access during SSR
     if (typeof window === 'undefined') return;
@@ -249,7 +250,7 @@ export default function ChatWindow() {
       setIsDeleteDialogOpen(false);
       return;
     }
-    const sessionToRemove = allSessions.find(s => s.id === deleteSessionId);
+    
     // If we're deleting the active session, switch to another one
     if (deleteSessionId === activeSessionId) {
       if (allSessions.length > 1) {
@@ -397,7 +398,7 @@ export default function ChatWindow() {
   };
 
   // Helper function to sync the current series details to the lorebook storage key
-  const syncSeriesDetailsToLorebook = useCallback((seriesDetails: any) => {
+  const syncSeriesDetailsToLorebook = useCallback((seriesDetails: SeriesDetails | undefined) => {
     if (seriesDetails && typeof window !== 'undefined') {
       try {
         localStorage.setItem('mysticChatways_seriesDetails', JSON.stringify(seriesDetails));
@@ -412,7 +413,7 @@ export default function ChatWindow() {
     if (gameState.seriesDetails) {
       syncSeriesDetailsToLorebook(gameState.seriesDetails);
     }
-  }, [gameState.seriesDetails, syncSeriesDetailsToLorebook]);
+  }, [gameState.seriesDetails, syncSeriesDetailsToLorebook, activeSessionId]);
 
   // Get the current session with proper dependency tracking
   const currentSession = React.useMemo(() => 

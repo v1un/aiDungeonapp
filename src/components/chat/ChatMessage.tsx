@@ -1,12 +1,11 @@
-
 "use client";
 
 import React from 'react';
 import type { Message } from '@/types';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bot, User, Sparkles } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { User, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ChatMessageProps {

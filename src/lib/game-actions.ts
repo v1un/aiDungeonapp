@@ -1,6 +1,6 @@
 'use server';
 
-import type { Message, SeriesDetails, ProcessedPlayerInput, ClientGameStateUpdate, Quest, Lorebook } from '@/types';
+import type { Message, SeriesDetails, ProcessedPlayerInput, ClientGameStateUpdate, Quest } from '@/types';
 import { generateSeriesDetails } from '@/ai/flows/generate-series-details';
 import { advanceStory, type AdvanceStoryInput } from '@/ai/flows/advance-story'; // Updated import
 
@@ -36,19 +36,15 @@ export async function getCurrentGameState(sessionId?: string): Promise<ServerGam
   return gameStates.get(sessionId)!;
 }
 
-// Make the currentSessionId accessible globally for tool functions
 // This is a workaround for passing session context to tools
-declare global {
-  namespace NodeJS {
-    interface Global {
-      currentSessionId?: string;
-    }
-  }
+// Using interface declaration instead of namespace
+interface Global {
+  currentSessionId?: string;
 }
 
 // Set the current session ID for tools to use
 export function setCurrentToolSessionId(sessionId?: string) {
-  (global as any).currentSessionId = sessionId;
+  (global as Global).currentSessionId = sessionId;
 }
 
 /**

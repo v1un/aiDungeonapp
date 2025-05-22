@@ -40,7 +40,7 @@ async function isServiceUp(port: number): Promise<boolean> {
     
     clearTimeout(timeoutId);
     return response.ok;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -71,7 +71,16 @@ export async function GET(request: Request) {
     const genkitUp = await isServiceUp(genkitPort);
     
     // Basic status response
-    const statusResponse: any = {
+    const statusResponse: {
+      application: {
+        name: string;
+        version: string;
+        environment: string;
+        uptime: string;
+      };
+      services?: Record<string, unknown>;
+      [key: string]: unknown;
+    } = {
       application: {
         name: 'Mystic Chatways',
         version,
