@@ -127,7 +127,8 @@ const advanceStoryFlow = ai.defineFlow(
           contextType: "all",
           timeframe: "recent"
         });
-      } catch (_error) {
+      } catch (/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+               error) {
         console.log("Context retrieval failed or empty, proceeding without context");
         // Continue without context if retrieval fails
         contextResult = { context: {} };

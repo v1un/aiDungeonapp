@@ -40,7 +40,8 @@ async function isServiceUp(port: number): Promise<boolean> {
     
     clearTimeout(timeoutId);
     return response.ok;
-  } catch (_error) {
+  } catch (/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+           error) {
     return false;
   }
 }

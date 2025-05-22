@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ScrollText, Target, Star, Info } from 'lucide-react'; // Added Info for status
+import { ScrollText, Target, Star } from 'lucide-react';
 
 interface QuestLogScreenProps {
   gameState: ClientGameState;

@@ -34,7 +34,7 @@ export default function LorebookPage() {
   useEffect(() => {
     try {
       // First check the dedicated storage key
-      let storedSeriesDetails = localStorage.getItem(SERIES_DETAILS_STORAGE_KEY);
+      const storedSeriesDetails = localStorage.getItem(SERIES_DETAILS_STORAGE_KEY);
       
       if (storedSeriesDetails) {
         try {
@@ -72,12 +72,14 @@ export default function LorebookPage() {
             // Get the most recent session with series details
             if (sessions && Array.isArray(sessions) && sessions.length > 0) {
               const sessionsWithLorebooks = sessions.filter(
-                (s: any) => s.gameState?.seriesDetails?.lorebook
+                (s: {gameState?: {seriesDetails?: {lorebook?: object}}}) => s.gameState?.seriesDetails?.lorebook
               );
               
               if (sessionsWithLorebooks.length > 0) {
                 // Sort by last played to get the most recent
-                const recentSessions = [...sessionsWithLorebooks].sort((a: any, b: any) => b.lastPlayed - a.lastPlayed);
+                const recentSessions = [...sessionsWithLorebooks].sort(
+                  (a: {lastPlayed: number}, b: {lastPlayed: number}) => b.lastPlayed - a.lastPlayed
+                );
                 const mostRecentSession = recentSessions[0];
                 
                 if (mostRecentSession.gameState?.seriesDetails) {
