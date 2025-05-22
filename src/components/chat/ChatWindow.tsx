@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { GameSession, ClientGameState, Message, ProcessedPlayerInput, SeriesDetails } from '@/types';
-// Add type declaration for uuid module with explanation as required by the linter
 // @ts-expect-error UUID library doesn't have proper TypeScript types but works correctly
 import { v4 as uuidv4 } from 'uuid';
+import { useRouter } from 'next/navigation'; // Added for hotkey navigation
 import { ChatLayout } from './ChatLayout';
 import { processPlayerInput } from '@/lib/game-actions';
 import { useToast } from '@/hooks/use-toast';
-import { SidebarProvider, Sidebar, SidebarContent, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+// GameSidebar import removed
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"; // Sidebar and SidebarContent removed from this import
 import { ConnectionStatus } from "@/components/status/ConnectionStatus";
-import { GameSidebar } from '@/components/rpg/GameSidebar';
+// GameSidebar import removed below
 import { Settings, ChevronDown, PlusCircle, Check, Edit3, Trash2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { GameHUD } from '@/components/hud/GameHUD';
+import { CharacterScreen } from '@/components/screens/CharacterScreen';
+import { QuestLogScreen } from '@/components/screens/QuestLogScreen';
 
 // Constants
 const DEFAULT_SESSION_ID = 'game-session-';
@@ -55,10 +59,16 @@ const initialAiWelcomeMessage: Message = {
 };
 
 export default function ChatWindow() {
+  const router = useRouter(); // For hotkey navigation
+
   // State for all game sessions and the active session
   const [allSessions, setAllSessions] = useState<GameSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+
+  // Screen visibility state
+  const [isCharacterScreenOpen, setIsCharacterScreenOpen] = useState(false);
+  const [isQuestLogScreenOpen, setIsQuestLogScreenOpen] = useState(false);
   
   // Message-related state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -66,20 +76,16 @@ export default function ChatWindow() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentLoadingMessage, setCurrentLoadingMessage] = useState<string | null>(null);
   
-  // New reference for auto-scrolling messages
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   
-  // Chat window should scroll to bottom when new messages are added
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
   
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
   
-  // Game state from the active session
   const [gameState, setGameState] = useState<ClientGameState>({
     inventory: [],
     currentLocation: "Not yet initialized",
@@ -88,7 +94,6 @@ export default function ChatWindow() {
     seriesDetails: undefined,
   });
   
-  // Dialog state
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [renameSessionId, setRenameSessionId] = useState<string | null>(null);
   const [renameInputValue, setRenameInputValue] = useState('');
@@ -97,7 +102,6 @@ export default function ChatWindow() {
   
   const { toast } = useToast();
   
-  // Create a new game session
   const createNewSession = (idSuffix: string | number = Date.now()): GameSession => {
     const uniqueId = `${DEFAULT_SESSION_ID}${idSuffix}-${Math.random().toString(36).substring(2, 7)}`;
     return {
@@ -115,10 +119,8 @@ export default function ChatWindow() {
     };
   };
 
-  // Load sessions from localStorage
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Skip localStorage access during SSR
     if (typeof window === 'undefined') return;
     
     try {
@@ -128,20 +130,17 @@ export default function ChatWindow() {
         const sessions: GameSession[] = JSON.parse(storedSessions);
         setAllSessions(sessions.sort((a, b) => b.lastPlayed - a.lastPlayed));
         
-        // Set active session to the most recently played
         if (sessions.length > 0 && !activeSessionId) {
           const mostRecentSession = sessions[0];
           setActiveSessionId(mostRecentSession.id);
           setMessages(mostRecentSession.messages);
           setGameState(mostRecentSession.gameState);
           
-          // Sync series details to lorebook storage
           if (mostRecentSession.gameState?.seriesDetails) {
             syncSeriesDetailsToLorebook(mostRecentSession.gameState.seriesDetails);
           }
         }
       } else {
-        // Create a default session if none exists
         const defaultSession = createNewSession('default');
         setAllSessions([defaultSession]);
         setActiveSessionId(defaultSession.id);
@@ -149,8 +148,6 @@ export default function ChatWindow() {
       }
     } catch (error) {
       console.error('Error loading game sessions:', error);
-      
-      // Fallback to a new session if load fails
       const fallbackSession = createNewSession('fallback');
       setAllSessions([fallbackSession]);
       setActiveSessionId(fallbackSession.id);
@@ -160,10 +157,8 @@ export default function ChatWindow() {
     }
   }, []);
 
-  // Save sessions to localStorage when they change
   useEffect(() => {
     if (typeof window === 'undefined' || allSessions.length === 0) return;
-    
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allSessions));
     } catch (error) {
@@ -171,7 +166,6 @@ export default function ChatWindow() {
     }
   }, [allSessions]);
 
-  // Handler for selecting a session
   const handleSelectSession = (sessionId: string) => {
     setAllSessions(prevSessions =>
       prevSessions.map(session =>
@@ -187,11 +181,9 @@ export default function ChatWindow() {
       setMessages(selectedSession.messages);
       setGameState(selectedSession.gameState);
       
-      // Sync series details to lorebook storage when switching sessions
       if (selectedSession.gameState?.seriesDetails) {
         syncSeriesDetailsToLorebook(selectedSession.gameState.seriesDetails);
       } else {
-        // Clear lorebook storage if session has no series details
         if (typeof window !== 'undefined') {
           localStorage.removeItem('mysticChatways_seriesDetails');
         }
@@ -199,7 +191,6 @@ export default function ChatWindow() {
     }
   };
 
-  // Handler for starting a new game
   const handleStartNewGame = () => {
     const newSession = createNewSession();
     setAllSessions(prev => [newSession, ...prev].sort((a, b) => b.lastPlayed - a.lastPlayed));
@@ -208,7 +199,6 @@ export default function ChatWindow() {
     setGameState(newSession.gameState);
   };
 
-  // Dialog handlers for renaming sessions
   const openRenameDialog = (sessionId: string) => {
     const session = allSessions.find(s => s.id === sessionId);
     if (session) {
@@ -223,9 +213,7 @@ export default function ChatWindow() {
       setIsRenameDialogOpen(false);
       return;
     }
-    
     const newName = renameInputValue.trim();
-    
     setAllSessions(prevSessions =>
       prevSessions.map(session =>
         session.id === renameSessionId
@@ -233,13 +221,11 @@ export default function ChatWindow() {
           : session
       )
     );
-    
     setIsRenameDialogOpen(false);
     setRenameSessionId(null);
     setRenameInputValue('');
   };
 
-  // Dialog handlers for deleting sessions
   const openDeleteDialog = (sessionId: string) => {
     setDeleteSessionId(sessionId);
     setIsDeleteDialogOpen(true);
@@ -250,22 +236,16 @@ export default function ChatWindow() {
       setIsDeleteDialogOpen(false);
       return;
     }
-    
-    // If we're deleting the active session, switch to another one
     if (deleteSessionId === activeSessionId) {
       if (allSessions.length > 1) {
         const newActiveSession = allSessions.find(s => s.id !== deleteSessionId);
         setActiveSessionId(newActiveSession?.id || null);
         setMessages(newActiveSession?.messages || []);
         setGameState(newActiveSession?.gameState || {
-          inventory: [],
-          currentLocation: "Not yet initialized",
-          activeQuests: [],
-          userDisplayName: undefined,
-          seriesDetails: undefined,
+          inventory: [], currentLocation: "Not yet initialized", activeQuests: [],
+          userDisplayName: undefined, seriesDetails: undefined,
         });
       } else {
-        // If this was the last session, create a new one
         const newSession = createNewSession();
         setActiveSessionId(newSession.id);
         setMessages(newSession.messages);
@@ -276,120 +256,68 @@ export default function ChatWindow() {
         return;
       }
     }
-    
-    // Remove the session
     setAllSessions(prev => prev.filter(s => s.id !== deleteSessionId));
     setIsDeleteDialogOpen(false);
     setDeleteSessionId(null);
   };
 
-  // Handlers for chat input
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
     if (!inputValue.trim() || isLoading || !activeSessionId) return;
-    
     setIsLoading(true);
     setCurrentLoadingMessage("Processing input...");
-    
     try {
-      // Create a player message
       const playerMessage: Message = {
-        id: uuidv4(),
-        sender: 'player',
-        text: inputValue,
-        timestamp: Date.now(),
+        id: uuidv4(), sender: 'player', text: inputValue, timestamp: Date.now(),
       };
-      
       const updatedMessages = [...messages, playerMessage];
       setMessages(updatedMessages);
       setInputValue('');
-      
-      // Process the player input with the session ID
       const processedResult: ProcessedPlayerInput = await processPlayerInput(
-        inputValue, 
-        messages, 
-        activeSessionId // Pass the active session ID
+        inputValue, messages, activeSessionId
       );
-      
-      // Update loading message based on the current step in processing
       setCurrentLoadingMessage("Generating response...");
-      
-      // If there's no input, exit early
       if (!processedResult) {
         setIsLoading(false);
         setCurrentLoadingMessage(null);
         return;
       }
-      
-      // Add the AI response to messages
       const aiMessage: Message = {
-        id: uuidv4(),
-        sender: 'ai',
+        id: uuidv4(), sender: 'ai',
         text: processedResult.responseText || 'I did not understand that. Could you try again?',
         timestamp: Date.now(),
       };
-      
       const finalMessages = [...updatedMessages, aiMessage];
-      
-      // Update messages state
       setMessages(finalMessages);
-      
-      // Update game state if needed
       if (processedResult.gameStateUpdate) {
-        setGameState(prevState => ({
-          ...prevState,
-          ...processedResult.gameStateUpdate
-        }));
+        setGameState(prevState => ({ ...prevState, ...processedResult.gameStateUpdate }));
       }
-      
-      // Create updated session with new messages and game state
       const updatedSession = {
         ...(allSessions.find(s => s.id === activeSessionId) || createNewSession()),
         messages: finalMessages,
-        gameState: {
-          ...gameState,
-          ...processedResult.gameStateUpdate
-        },
+        gameState: { ...gameState, ...processedResult.gameStateUpdate },
         lastPlayed: Date.now()
       };
-      
-      // Update allSessions with the new session
       const sessionExists = allSessions.some(s => s.id === activeSessionId);
       const updatedSessions = sessionExists
         ? allSessions.map(s => s.id === activeSessionId ? updatedSession : s)
         : [...allSessions, updatedSession];
-      
-      // Update state and ensure localStorage is updated
       setAllSessions(updatedSessions);
-      
-      // Force update localStorage immediately
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSessions));
-      } catch (error) {
-        console.error('Error saving to localStorage:', error);
-      }
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSessions));
     } catch (error) {
       console.error('Error processing message:', error);
-      
-      // Add an error message
       const errorMessage: Message = {
-        id: uuidv4(),
-        sender: 'ai',
+        id: uuidv4(), sender: 'ai',
         text: "I'm sorry, I encountered an error while processing your message. Please try again later.",
         timestamp: Date.now(),
       };
-      
       setMessages(prevMessages => [...prevMessages, errorMessage]);
-      
       toast({
-        title: "Error",
-        description: "Failed to process your message. Please try again.",
-        variant: "destructive",
+        title: "Error", description: "Failed to process your message. Please try again.", variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -397,7 +325,6 @@ export default function ChatWindow() {
     }
   };
 
-  // Helper function to sync the current series details to the lorebook storage key
   const syncSeriesDetailsToLorebook = useCallback((seriesDetails: SeriesDetails | undefined) => {
     if (seriesDetails && typeof window !== 'undefined') {
       try {
@@ -408,26 +335,65 @@ export default function ChatWindow() {
     }
   }, []);
 
-  // Effect to sync series details whenever the game state changes
   useEffect(() => {
     if (gameState.seriesDetails) {
       syncSeriesDetailsToLorebook(gameState.seriesDetails);
     }
   }, [gameState.seriesDetails, syncSeriesDetailsToLorebook, activeSessionId]);
 
-  // Get the current session with proper dependency tracking
   const currentSession = React.useMemo(() => 
     allSessions.find(s => s.id === activeSessionId) || null,
     [allSessions, activeSessionId]
   );
-  
-  // Derive the current session name with a fallback
   const currentSessionName = currentSession?.name || "New Game";
+
+  const openCharacterScreen = () => setIsCharacterScreenOpen(true);
+  const closeCharacterScreen = () => setIsCharacterScreenOpen(false);
+  const openQuestLogScreen = () => setIsQuestLogScreenOpen(true);
+  const closeQuestLogScreen = () => setIsQuestLogScreenOpen(false);
+
+  // Hotkey handling
+  useEffect(() => {
+    const handleHotkeyPress = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      const tagName = target.tagName.toLowerCase();
+      if (tagName === 'input' || tagName === 'textarea' || tagName === 'select' || event.metaKey || event.ctrlKey) {
+        return; // Don't trigger hotkeys if typing in an input or meta/ctrl keys are pressed
+      }
+
+      const key = event.key.toLowerCase();
+      const isAnyScreenOpen = isCharacterScreenOpen || isQuestLogScreenOpen;
+
+      switch (key) {
+        case 'c':
+          if (isQuestLogScreenOpen) return; // Other screen open, do nothing
+          setIsCharacterScreenOpen(prev => !prev);
+          break;
+        case 'j':
+          if (isCharacterScreenOpen) return; // Other screen open, do nothing
+          setIsQuestLogScreenOpen(prev => !prev);
+          break;
+        case 'l':
+          if (isAnyScreenOpen) return; // A screen is open, do nothing
+          router.push('/lorebook');
+          break;
+        default:
+          // No specific hotkey, do nothing
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleHotkeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleHotkeyPress);
+    };
+  }, [isCharacterScreenOpen, isQuestLogScreenOpen, router]);
+
 
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="relative flex h-screen w-full overflow-hidden bg-background">
-        {/* Background elements - contained within the viewport */}
+        {/* Background elements */}
         <div className="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-0">
           <div className="absolute top-[5%] -right-[10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-3xl peer-data-[state=collapsed]:opacity-30 transition-opacity duration-300"></div>
           <div className="absolute top-1/3 left-1/4 w-[70%] h-[70%] bg-secondary/3 rounded-full blur-3xl peer-data-[state=collapsed]:opacity-30 transition-opacity duration-300"></div>
@@ -435,62 +401,42 @@ export default function ChatWindow() {
           <div className="absolute bottom-1/4 right-1/6 w-[40%] h-[40%] bg-primary/3 rounded-full blur-3xl peer-data-[state=collapsed]:opacity-30 transition-opacity duration-300"></div>
         </div>
         
-        {/* Layout structure */}
         <div className="relative z-10 flex w-full h-full">
-          {/* Game sidebar with fixed width */}
-          <Sidebar 
-            side="left"
-            collapsible="icon"
-            className="group z-20 h-full"
-          >
-            <SidebarContent className="h-full">
-              <GameSidebar
-                seriesDetails={gameState.seriesDetails}
-                inventory={gameState.inventory}
-                currentLocation={gameState.currentLocation}
-                activeQuests={gameState.activeQuests}
-                userDisplayName={gameState.userDisplayName}
-              />
-            </SidebarContent>
-          </Sidebar>
+          {/* GameSidebar and its containing Sidebar component removed */}
 
-          {/* Main content area */}
-          <SidebarInset className="relative flex-1 h-full min-w-0 transition-all duration-200 ease-in-out group-data-[state=collapsed]:ml-16">
+          {/* 
+            SidebarInset still needs to be part of the layout if SidebarTrigger is used,
+            even if the actual sidebar panel is removed.
+            The 'group-data-[state=collapsed]:ml-16' would typically respond to the main sidebar's state.
+            If there's no collapsible sidebar on the left anymore, this ml-16 might be undesirable
+            or might need to be controlled by a different state if a different collapsible behavior is intended.
+            For now, per instructions, SidebarInset is kept. The ml-16 might need adjustment later if it causes layout issues without a sidebar.
+          */}
+          <SidebarInset className="relative flex-1 h-full min-w-0 transition-all duration-200 ease-in-out group-data-[state=collapsed]:ml-0"> {/* Adjusted ml-0 as there's no sidebar to collapse */}
             <div className="h-full w-full max-w-7xl mx-auto px-2 sm:px-4 flex flex-col overflow-hidden">
-              {/* Header with controls */}
               <div className="border-b border-border/40 backdrop-blur-sm bg-background/30 py-2 sm:py-3 px-3 sm:px-4 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center">
+                  {/* 
+                    SidebarTrigger is kept. It might be intended for other purposes or a future sidebar.
+                    If it was strictly for the removed GameSidebar, it might also be removed.
+                    However, instructions say to keep SidebarTrigger.
+                  */}
                   <SidebarTrigger className="md:hidden mr-2 flex-shrink-0" />
-                  <h1 
-                    key={currentSession?.id} // Force re-render when session changes
-                    className="text-sm sm:text-base font-medium truncate max-w-[120px] sm:max-w-[200px]"
-                  >
+                  <h1 key={currentSession?.id} className="text-sm sm:text-base font-medium truncate max-w-[120px] sm:max-w-[200px]">
                     {currentSessionName}
                   </h1>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Session selector */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="flex items-center gap-1 sm:gap-2 hover:bg-primary/10 hover:text-primary transition-colors"
-                      >
-                        <span className="text-xs sm:text-sm font-medium">
-                          Switch Game
-                        </span>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-1 sm:gap-2 hover:bg-primary/10 hover:text-primary transition-colors">
+                        <span className="text-xs sm:text-sm font-medium">Switch Game</span>
                         <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-50" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      align="end" 
-                      className="w-64 bg-background/80 backdrop-blur-md border-white/10 shadow-xl rounded-xl p-1 animate-fade-in"
-                    >
-                      <DropdownMenuLabel className="text-primary/90 font-medium px-3 py-2">
-                        Your Adventures
-                      </DropdownMenuLabel>
+                    <DropdownMenuContent align="end" className="w-64 bg-background/80 backdrop-blur-md border-white/10 shadow-xl rounded-xl p-1 animate-fade-in">
+                      <DropdownMenuLabel className="text-primary/90 font-medium px-3 py-2">Your Adventures</DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-white/5" />
                       <div className="max-h-[250px] overflow-y-auto styled-scrollbar py-1">
                         {allSessions.length > 0 ? allSessions.map((session) => (
@@ -503,65 +449,37 @@ export default function ChatWindow() {
                               <span className="truncate">{session.name}</span>
                             </div>
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                data-action-button="true"
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 hover:bg-primary/20 hover:text-primary rounded-full"
-                                onClick={(e) => { e.stopPropagation(); openRenameDialog(session.id); }}
-                                aria-label="Rename session"
-                              >
+                              <Button data-action-button="true" variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/20 hover:text-primary rounded-full" onClick={(e) => { e.stopPropagation(); openRenameDialog(session.id); }} aria-label="Rename session">
                                 <Edit3 size={14} />
                               </Button>
-                              <Button
-                                data-action-button="true"
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive rounded-full"
-                                onClick={(e) => { e.stopPropagation(); openDeleteDialog(session.id); }}
-                                aria-label="Delete session"
-                              >
+                              <Button data-action-button="true" variant="ghost" size="icon" className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive rounded-full" onClick={(e) => { e.stopPropagation(); openDeleteDialog(session.id); }} aria-label="Delete session">
                                 <Trash2 size={14} />
                               </Button>
                             </div>
-                            {session.id === activeSessionId && 
-                              <Check className="h-4 w-4 text-primary absolute right-2 top-1/2 -translate-y-1/2 group-hover:opacity-0" />
-                            }
+                            {session.id === activeSessionId && <Check className="h-4 w-4 text-primary absolute right-2 top-1/2 -translate-y-1/2 group-hover:opacity-0" />}
                           </DropdownMenuItem>
                         )) : (
-                          <div className="px-3 py-2 text-center text-muted-foreground text-sm">
-                            No saved games yet.
-                          </div>
+                          <div className="px-3 py-2 text-center text-muted-foreground text-sm">No saved games yet.</div>
                         )}
                       </div>
                       <DropdownMenuSeparator className="bg-white/5" />
-                      <DropdownMenuItem 
-                        onSelect={handleStartNewGame}
-                        className="rounded-lg m-1 p-2 hover:bg-primary/10 transition-colors"
-                      >
+                      <DropdownMenuItem onSelect={handleStartNewGame} className="rounded-lg m-1 p-2 hover:bg-primary/10 transition-colors">
                         <PlusCircle className="mr-2 h-4 w-4 text-primary" />
                         Start New Game
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   
-                  {/* Connection status and settings */}
                   <ConnectionStatus />
                   
                   <Link href="/settings" passHref>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      aria-label="Settings"
-                      className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
-                    >
+                    <Button variant="ghost" size="icon" aria-label="Settings" className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors">
                       <Settings size={18} />
                     </Button>
                   </Link>
                 </div>
               </div>
               
-              {/* Chat area */}
               <div className="flex-1 flex flex-col min-h-0">
                 {isInitialLoadComplete && activeSessionId ? (
                   <ChatLayout
@@ -589,24 +507,37 @@ export default function ChatWindow() {
         </div>
       </div>
 
-      {/* Rename Session Dialog */}
+      {isInitialLoadComplete && activeSessionId && gameState && (
+        <GameHUD 
+          gameState={gameState} 
+          onOpenCharacterScreen={openCharacterScreen}
+          onOpenQuestLogScreen={openQuestLogScreen}
+        />
+      )}
+
+      {isInitialLoadComplete && activeSessionId && gameState && (
+        <CharacterScreen 
+          gameState={gameState} 
+          isOpen={isCharacterScreenOpen} 
+          onClose={closeCharacterScreen} 
+        />
+      )}
+
+      {isInitialLoadComplete && activeSessionId && gameState && (
+        <QuestLogScreen 
+          gameState={gameState} 
+          isOpen={isQuestLogScreenOpen} 
+          onClose={closeQuestLogScreen} 
+        />
+      )}
+
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rename Game Session</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Rename Game Session</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="sessionName" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="sessionName"
-                value={renameInputValue}
-                onChange={(e) => setRenameInputValue(e.target.value)}
-                className="col-span-3"
-                onKeyDown={(e) => { if (e.key === 'Enter') handleRenameSession();}}
-              />
+              <Label htmlFor="sessionName" className="text-right">Name</Label>
+              <Input id="sessionName" value={renameInputValue} onChange={(e) => setRenameInputValue(e.target.value)} className="col-span-3" onKeyDown={(e) => { if (e.key === 'Enter') handleRenameSession();}} />
             </div>
           </div>
           <DialogFooter>
@@ -616,7 +547,6 @@ export default function ChatWindow() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Session Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -628,10 +558,7 @@ export default function ChatWindow() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete Session
             </AlertDialogAction>
           </AlertDialogFooter>
