@@ -4,7 +4,17 @@ This document details the AI system of Mystic Chatways, which is responsible for
 
 ## 1. Overview of Genkit Usage
 
-The core AI capabilities of Mystic Chatways are powered by **Genkit**, a generative AI toolkit from Google. The central configuration for Genkit, including plugin initialization (like Google AI) and model selection (e.g., `gemini-2.5-flash-preview`), appears to be managed in `src/ai/genkit.ts`. This file sets up the `ai` instance that is then used across various flows and tools.
+The core AI capabilities of Mystic Chatways are powered by **Genkit**, a generative AI toolkit. The central configuration for Genkit is managed in `src/ai/genkit.ts`. This file is responsible for initializing the appropriate Genkit plugins and selecting the AI model based on the chosen provider. The system now supports two primary AI provider configurations:
+
+1.  **Google AI (Cloud)**: Utilizes Google's powerful models (e.g., Gemini series like `gemini-2.5-flash-preview`) through the `@genkit-ai/googleai` Genkit plugin. This is the default provider if no specific configuration is set. This path leverages Genkit's tool-calling capabilities, allowing the AI to interact with defined tools for structured data retrieval, game state manipulation, and complex action execution.
+2.  **Local LLM (via Ollama)**: Allows for running language models locally using Ollama. The recommended and tested model for this setup is `google/gemma-3-4b-it`, accessed via the `genkitx-ollama` Genkit plugin. This option is ideal for offline use, development, or when you prefer to use local hardware resources.
+    *   **Tool-less Approach**: When this provider is active, the AI flows (`advanceStory`, `generateCharacter`, `generateNpc`, `generateQuest`, `generateSeriesDetails`, `summarizeAdventure`) switch to using specially crafted **tool-less prompts**. Instead of the AI calling specific tools for structured operations (like inventory updates or detailed quest status changes), the Gemma model is instructed to embed all relevant information—narrative progression, game state changes, character details—directly within its textual response.
+    *   **Text Parsing**: The application then parses this narrative output to extract the necessary data and update game state. This can lead to variations in how game events are represented and processed compared to the more discrete, structured events from the Google AI path. For example, inventory changes or quest updates are inferred from the narrative rather than resulting from a direct function call by the AI.
+    *   **Behavioral Differences**: Consequently, advanced tool-based features and complex context management or narrative branching tools that the Google AI path might use internally could have simplified or different behaviors in the Gemma path. The interaction will generally feel more purely narrative-driven. The precision and granularity of game state updates depend on the model's ability to follow the structured prompt format and the robustness of the parsing logic.
+
+The selection between these providers is controlled by the `AI_PROVIDER` environment variable. For detailed instructions on how to set this variable, configure Ollama, and download the necessary local models, please refer to the "Using a Local LLM (Ollama + Gemma)" section in the main `README.md` file, which also includes a summary of these behavioral differences.
+
+The `ai` instance exported by `src/ai/genkit.ts` is then used consistently across all AI flows and tools within the application, abstracting the specific provider details from the core logic of the flows.
 
 ## 2. AI Flows (`src/ai/flows/`)
 

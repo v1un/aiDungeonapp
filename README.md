@@ -75,6 +75,79 @@ You'll need to run two servers:
 
 3. Open [http://localhost:3000](http://localhost:3000) in your browser to access the application.
 
+## Using a Local LLM (Ollama + Gemma)
+
+This application can be configured to use a local Large Language Model (LLM) through Ollama, providing an alternative to cloud-based AI providers. The recommended and tested model for local use is `google/gemma-3-4b-it`.
+
+### Prerequisites
+
+- **Ollama Installed**: You must have Ollama installed on your system. You can download it from the official [Ollama download page](https://ollama.com/download).
+
+### Installing the Gemma Model
+
+Once Ollama is running, open your terminal and pull the `google/gemma-3-4b-it` model:
+
+```bash
+ollama pull google/gemma-3-4b-it
+```
+
+While other Gemma variants (e.g., `gemma:7b`) might also work with this application, `google/gemma-3-4b-it` is the one that has been specifically tested and is recommended for optimal compatibility.
+
+### Configuration
+
+To use your local Ollama-served model, you need to configure the following environment variables:
+
+1.  **`AI_PROVIDER`**:
+    *   Set `AI_PROVIDER="ollama"` to instruct the application to use your local Ollama instance.
+    *   Set `AI_PROVIDER="googleai"` (or leave this variable unset) to use the default Google AI (Gemini) provider. This will require a Gemini API key.
+
+2.  **`OLLAMA_BASE_URL`** (Optional):
+    *   This variable specifies the base URL for your Ollama API.
+    *   It defaults to `http://localhost:11434`.
+    *   If your Ollama service is running on a different host or port, you must set this variable to the correct URL.
+
+**How to Set Environment Variables:**
+
+You can set these variables by creating or editing a `.env.local` file in the root directory of the project.
+
+Example `.env.local` content for using Ollama:
+
+```env
+AI_PROVIDER="ollama"
+# OLLAMA_BASE_URL="http://customhost:11434" # Optional: Uncomment and set if your Ollama is not on localhost:11434
+```
+
+Alternatively, you can set these variables directly in your shell environment before running the application.
+
+### Running the Application with Ollama
+
+After configuring the environment variables to use Ollama:
+
+1.  Ensure your Ollama application is running and the `google/gemma-3-4b-it` model is available.
+2.  Start the GenKit AI server and the Next.js development server as described in the "Getting Started" section.
+    ```bash
+    npm run genkit:dev
+    ```
+    ```bash
+    npm run dev
+    ```
+3.  If the application was already running, **you must restart both the Genkit AI server and the Next.js server** for the environment variable changes to take effect.
+
+With these settings, the application will direct its AI requests to your local Ollama instance using the Gemma model.
+
+### Behavioral Differences with Local LLM
+
+When `AI_PROVIDER="ollama"` is used, the system employs a **tool-less approach** for interacting with the Gemma model. This is different from the Google AI (Gemini) provider, which leverages Genkit's tool-calling capabilities for more structured operations.
+
+Key differences to expect:
+
+-   **Narrative-Driven Output**: Gemma will attempt to include all information—narrative progression, game state changes (like inventory updates or quest status), and character interactions—directly within its textual responses. The application then parses this text to extract relevant details.
+-   **Structured Data Extraction**: Because the system relies on parsing text rather than receiving structured data from AI tools, the precision of updates to game elements (e.g., specific items added/removed from inventory, exact quest objective completions) might vary. The process is more interpretive.
+-   **Interaction Feel**: The interaction with the local LLM might feel more purely narrative-driven and less like the AI is using distinct "tools" or functions for specific game mechanics.
+-   **Dependence on Model and Parsing**: The quality, coherence, and accuracy of game state changes will depend significantly on the capabilities of the specific Gemma model being used and the effectiveness of the application's text parsing logic.
+
+This approach allows for flexibility and the use of local models but may result in a different gameplay experience compared to the more function-driven Google AI provider.
+
 ## Available Scripts
 
 - `npm run dev` or `yarn dev` - Start the Next.js development server

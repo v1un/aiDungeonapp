@@ -9,7 +9,31 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { LorebookSchema } from '@/types';
+import { LorebookSchema, QuestSchema, CharacterStatsSchema, LoreEntrySchema } from '@/types'; // Assuming CharacterStatsSchema is available or defined in types.ts
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config(); // For .env
+dotenv.config({ path: '.env.local', override: true }); // For .env.local
+
+// Helper function to provide default CharacterStats if not fully parsed
+const defaultCharacterStats = (): z.infer<typeof CharacterStatsSchema> => ({
+  strength: 'Average',
+  dexterity: 'Average',
+  intelligence: 'Average',
+  magicPower: 'N/A',
+  luck: 'Average',
+  specialAbility: 'None specified',
+});
+
+// Helper function to provide default Quest if not fully parsed
+const defaultInitialQuestOmitted = (): Omit<z.infer<typeof QuestSchema>, 'id' | 'status'> => ({
+  title: "Survive!",
+  description: "Figure out where you are and what to do next.",
+  objectives: ["Stay alive", "Explore your surroundings"],
+  rewards: ["Experience"],
+});
+
 
 const GenerateSeriesDetailsInputSchema = z.object({
   seriesName: z.string().describe('The name of the fictional series (e.g., "Re:Zero", "Star Wars", "Harry Potter").'),
@@ -126,12 +150,223 @@ const generateSeriesDetailsFlow = ai.defineFlow(
     inputSchema: GenerateSeriesDetailsInputSchema,
     outputSchema: GenerateSeriesDetailsOutputSchema,
   },
-  async (input) => {
-    const {output} = await prompt(input);
-    if (!output) {
-        throw new Error("AI failed to generate series details.");
+  async (input: GenerateSeriesDetailsInput): Promise<GenerateSeriesDetailsOutput> => {
+    const aiProvider = process.env.AI_PROVIDER || 'googleai';
+
+    if (aiProvider === 'ollama') {
+      const gemmaResult = await gemmaGenerateSeriesDetailsPrompt(input);
+      const textOutput = typeof gemmaResult === 'string' ? gemmaResult : (gemmaResult as any).seriesDetailsText || '';
+      
+      // Initialize with defaults
+      let output: GenerateSeriesDetailsOutput = {
+        seriesTitle: "Title (Parsing Failed)",
+        mainCharacter: {
+          name: "MC Name (Parsing Failed)",
+          description: "MC Description (Parsing Failed)",
+          stats: defaultCharacterStats(),
+        },
+        lorebook: {
+          overallSummary: "Lorebook Summary (Parsing Failed)",
+          entries: [],
+        },
+        otherCharacters: [],
+        initialInventory: ["Basic Item (Parsing Failed)"],
+        startingLocation: "An Unfamiliar Place (Parsing Failed)",
+        initialQuest: defaultInitialQuestOmitted(),
+        initialPromptForPlayer: "What do you do? (Parsing Failed)",
+      };
+
+      try {
+        // Canonical Series Title
+        const titleMatch = textOutput.match(/# Canonical Series Title\s*([\s\S]*?)(?=\n#|$)/im);
+        if (titleMatch && titleMatch[1]) output.seriesTitle = titleMatch[1].trim();
+
+        // Main Character
+        const mcNameMatch = textOutput.match(/## Name\s*([\s\S]*?)(?=\n## Description|$)/im);
+        if (mcNameMatch && mcNameMatch[1]) output.mainCharacter.name = mcNameMatch[1].trim();
+        
+        const mcDescMatch = textOutput.match(/## Description\s*([\s\S]*?)(?=\n## Thematic Stats|$)/im);
+        if (mcDescMatch && mcDescMatch[1]) output.mainCharacter.description = mcDescMatch[1].trim();
+
+        const statsBlockMatch = textOutput.match(/## Thematic Stats\s*([\s\S]*?)(?=\n# Lorebook|$)/im);
+        if (statsBlockMatch && statsBlockMatch[1]) {
+          const statsText = statsBlockMatch[1];
+          const strMatch = statsText.match(/-\s*Strength:\s*(.*)/im);
+          if (strMatch && strMatch[1]) output.mainCharacter.stats.strength = strMatch[1].trim();
+          const agiMatch = statsText.match(/-\s*Agility:\s*(.*)/im); // Map Agility to Dexterity
+          if (agiMatch && agiMatch[1]) output.mainCharacter.stats.dexterity = agiMatch[1].trim();
+          const witsMatch = statsText.match(/-\s*Wits:\s*(.*)/im);     // Map Wits to Intelligence
+          if (witsMatch && witsMatch[1]) output.mainCharacter.stats.intelligence = witsMatch[1].trim();
+          const charmMatch = statsText.match(/-\s*Charm:\s*(.*)/im);  // Map Charm to Charisma (schema has charisma, but prompt used charm for Gemma)
+                                                                    // Assuming CharacterStatsSchema has charisma. If not, this needs adjustment or schema change.
+                                                                    // For now, let's assume charisma is not in CharacterStatsSchema, so we map to an existing optional field or ignore.
+                                                                    // Let's map it to 'luck' as a placeholder if available.
+          if (charmMatch && charmMatch[1]) output.mainCharacter.stats.luck = `Charm: ${charmMatch[1].trim()}`; // Or map to a more appropriate field
+           // For magicPower, specialAbility, they are not explicitly asked in Gemma's prompt for simplicity. They'll use defaults.
+        }
+
+        // Lorebook
+        const loreSummaryMatch = textOutput.match(/## Overall Summary\s*([\s\S]*?)(?=\n## Lore Entries|$)/im);
+        if (loreSummaryMatch && loreSummaryMatch[1]) output.lorebook.overallSummary = loreSummaryMatch[1].trim();
+        
+        const loreEntriesBlockMatch = textOutput.match(/## Lore Entries\s*([\s\S]*?)(?=\n# Other Notable Characters|$)/im);
+        if (loreEntriesBlockMatch && loreEntriesBlockMatch[1]) {
+          const categoriesText = loreEntriesBlockMatch[1].split(/### Category:/im).slice(1);
+          for (const catText of categoriesText) {
+            const categoryNameMatch = catText.match(/^(.*?)\n/im);
+            if (categoryNameMatch && categoryNameMatch[1]) {
+              const category = categoryNameMatch[1].trim();
+              const entryMatches = catText.matchAll(/-\s*\*\*(.*?):\*\*\s*(.*)/gim);
+              for (const entryMatch of entryMatches) {
+                if (entryMatch[1] && entryMatch[2]) {
+                  output.lorebook.entries.push({ name: entryMatch[1].trim(), description: entryMatch[2].trim(), category });
+                }
+              }
+            }
+          }
+        }
+
+        // Other Notable Characters
+        const otherCharsBlockMatch = textOutput.match(/# Other Notable Characters\s*([\s\S]*?)(?=\n# Initial Inventory|$)/im);
+        if (otherCharsBlockMatch && otherCharsBlockMatch[1]) {
+          const charMatches = otherCharsBlockMatch[1].matchAll(/-\s*\*\*(.*?):\*\*\s*(.*)/gim);
+          for (const charMatch of charMatches) {
+            if (charMatch[1] && charMatch[2]) {
+              output.otherCharacters.push({ name: charMatch[1].trim(), description: charMatch[2].trim() });
+            }
+          }
+        }
+
+        // Initial Inventory
+        const inventoryBlockMatch = textOutput.match(/# Initial Inventory\s*([\s\S]*?)(?=\n# Starting Location|$)/im);
+        if (inventoryBlockMatch && inventoryBlockMatch[1]) {
+          output.initialInventory = inventoryBlockMatch[1]
+            .split('\n')
+            .map(item => item.replace(/-\s*/, '').trim())
+            .filter(item => item.length > 0);
+        }
+
+        // Starting Location
+        const startLocNameMatch = textOutput.match(/# Starting Location\s*## Name\s*([\s\S]*?)(?=\n## Description|$)/im);
+        if (startLocNameMatch && startLocNameMatch[1]) output.startingLocation = startLocNameMatch[1].trim();
+        // Note: The schema's startingLocation is a single string. The Gemma prompt asked for Name and Description.
+        // The description part of starting location can be naturally part of the initialPromptForPlayer.
+
+        // Initial Quest
+        const questTitleMatch = textOutput.match(/# Initial Quest\s*## Title\s*([\s\S]*?)(?=\n## Description|$)/im);
+        if (questTitleMatch && questTitleMatch[1]) output.initialQuest.title = questTitleMatch[1].trim();
+        
+        const questDescMatch = textOutput.match(/## Description\s*([\s\S]*?)(?=\n# Initial Player Prompt|$)/im);
+        if (questDescMatch && questDescMatch[1]) output.initialQuest.description = questDescMatch[1].trim();
+        // Objectives and Rewards for initialQuest are not explicitly parsed here for simplicity, uses defaults.
+
+        // Initial Player Prompt
+        const playerPromptMatch = textOutput.match(/# Initial Player Prompt\s*([\s\S]*)/im);
+        if (playerPromptMatch && playerPromptMatch[1]) output.initialPromptForPlayer = playerPromptMatch[1].trim();
+
+      } catch (parseError) {
+        console.error("Error parsing Gemma output for generateSeriesDetails:", parseError);
+        // Output will retain defaults for fields that failed to parse
+      }
+      return output;
+
+    } else {
+      // Google AI / Gemini Path (existing logic)
+      const geminiResult = await prompt(input);
+      if (!geminiResult.output) {
+          console.error("AI (Gemini) failed to generate series details. Output was null/undefined.");
+          // Return a default structure that matches GenerateSeriesDetailsOutputSchema
+           return {
+            seriesTitle: input.seriesName + " (Generation Failed)",
+            mainCharacter: {
+              name: "Default Character",
+              description: "Default description due to generation error.",
+              stats: defaultCharacterStats(),
+            },
+            lorebook: {
+              overallSummary: "Default lorebook summary due to generation error.",
+              entries: [{name: "Default Entry", description: "Default entry description", category: "Default"}],
+            },
+            otherCharacters: [{name: "Default Other Character", description: "Default other character description"}],
+            initialInventory: ["Default item"],
+            startingLocation: "Default starting location",
+            initialQuest: defaultInitialQuestOmitted(),
+            initialPromptForPlayer: "What do you do? (Generation failed)",
+          };
+      }
+      return geminiResult.output;
     }
-    return output;
   }
 );
+
+// New prompt for Gemma (Ollama) - tool-less
+const gemmaGenerateSeriesDetailsPrompt = ai.definePrompt({
+  name: 'gemmaGenerateSeriesDetailsPrompt',
+  input: { schema: GenerateSeriesDetailsInputSchema },
+  // No explicit output schema, expect raw string.
+  // NO TOOLS for Gemma
+  prompt: `You are an expert world-builder and narrative designer. Generate detailed starting information for a game based on the series: "{{seriesName}}".
+Format your response strictly using Markdown as follows:
+
+# Canonical Series Title
+[Provide the full, official title of the series]
+
+# Main Character Profile
+## Name
+[Protagonist's Full Name]
+## Description
+[2-3 sentences: personality, core motivations, iconic abilities/traits at series start, key internal conflict. Use **bold** and *italics* for emphasis.]
+## Thematic Stats
+- Strength: [Thematic value/descriptor, e.g., Average, Overwhelmingly Powerful, Weak but Resilient]
+- Agility: [Thematic value/descriptor, e.g., Cat-like Reflexes, Clumsy, Swift]
+- Wits: [Thematic value/descriptor, e.g., Master Strategist, Average, Easily Fooled]
+- Charm: [Thematic value/descriptor, e.g., Highly Charismatic, Socially Awkward, Manipulative]
+(Note: Magic Power, Luck, Special Ability can be omitted for this simpler output, or briefly mentioned in Description if vital.)
+
+# Lorebook
+## Overall Summary
+[1-2 paragraphs: series' world, primary conflict, central themes.]
+## Lore Entries
+(Provide 5-7 diverse entries. Use the specified categories.)
+### Category: Key Locations
+- **[Location Name 1]:** [Brief description, 1-2 sentences. e.g., A bustling port city known for its trade.]
+- **[Location Name 2]:** [Brief description. e.g., An ancient forest rumored to hold magical secrets.]
+### Category: Key NPCs
+- **[NPC Name 1 (Ally/Mentor/Early Antagonist)]:** [Brief description, 1-2 sentences. e.g., The wise old wizard who guides the hero.]
+- **[NPC Name 2 (Different Role)]:** [Brief description. e.g., A cunning rival who often crosses the hero's path.]
+### Category: Historical Events
+- **[Event Name 1]:** [Brief description, 1-2 sentences. e.g., The Great War that shaped the current political landscape.]
+### Category: Magic Systems / Unique Technologies (If applicable, otherwise omit category)
+- **[System/Technology Name]:** [Brief description, 1-2 sentences. e.g., How elemental magic works in this world.]
+### Category: Factions / Organizations
+- **[Faction Name 1]:** [Brief description, 1-2 sentences. e.g., The Royal Guard sworn to protect the kingdom.]
+
+# Other Notable Characters
+(Provide 2-3 other important characters relevant at the start.)
+- **[Character Name 1]:** [Brief description, 1-2 sentences: role, relationship to MC, defining trait.]
+- **[Character Name 2]:** [Brief description.]
+
+# Initial Inventory
+(List 2-3 thematic starting items.)
+- [Item 1]
+- [Item 2]
+
+# Starting Location
+## Name
+[Specific, named location where the story begins]
+## Description
+[Brief, 1-2 sentence description of this starting location. This sets the immediate scene.]
+
+# Initial Quest
+## Title
+[Captivating title for the MC's very first, immediate quest/goal]
+## Description
+[1-2 sentences describing the immediate problem or goal from MC's perspective, tied to Starting Location and Initial Player Prompt.]
+
+# Initial Player Prompt
+[A compelling, direct question or immediate choice for the player to start the game, flowing from the Starting Location and Initial Quest. e.g., "You see the guards approaching. Do you try to hide, or stand your ground?"]
+
+Ensure all content is consistent with the "{{seriesName}}" canon, especially its initial stages. Use Markdown strictly as shown.
+`,
+});
 

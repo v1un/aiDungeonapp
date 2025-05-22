@@ -9,6 +9,12 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import dotenv from 'dotenv';
+import { addNpcToLorebookTool } from '@/ai/lore-tools'; // Assuming this is the correct import
+
+// Load environment variables
+dotenv.config(); // For .env
+dotenv.config({ path: '.env.local', override: true }); // For .env.local
 
 const GenerateNpcInputSchema = z.object({
   playerCharacterDescription: z
@@ -111,8 +117,200 @@ const generateNpcFlow = ai.defineFlow(
     inputSchema: GenerateNpcInputSchema,
     outputSchema: GenerateNpcOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input: GenerateNpcInput): Promise<GenerateNpcOutput> => {
+    const aiProvider = process.env.AI_PROVIDER || 'googleai';
+
+    if (aiProvider === 'ollama') {
+      const gemmaResult = await gemmaGenerateNpcPrompt(input);
+      const textOutput = typeof gemmaResult === 'string' ? gemmaResult : (gemmaResult as any).npcDetailsText || '';
+
+      let name = "";
+      let background = "";
+      let personality = "";
+      let goals = ""; // Schema is string, Gemma prompt implies list. Will join.
+      let appearance = "";
+      const relationships: GenerateNpcOutput['relationships'] = [];
+      let loreEntryText = "";
+      let loreCategory = input.purpose || "General NPC"; // Infer from purpose or default
+
+      try {
+        const nameMatch = textOutput.match(/^Name:\s*(.*)/im);
+        if (nameMatch && nameMatch[1]) name = nameMatch[1].trim();
+
+        const backgroundMatch = textOutput.match(/Background:\s*([\s\S]*?)(?=Personality:|$)/im);
+        if (backgroundMatch && backgroundMatch[1]) background = backgroundMatch[1].trim();
+
+        const personalityMatch = textOutput.match(/Personality:\s*([\s\S]*?)(?=Goals:|$)/im);
+        if (personalityMatch && personalityMatch[1]) personality = personalityMatch[1].trim();
+        
+        const goalsBlockMatch = textOutput.match(/Goals:\s*([\s\S]*?)(?=Appearance:|$)/im);
+        if (goalsBlockMatch && goalsBlockMatch[1]) {
+          const goalsList = goalsBlockMatch[1]
+            .split('\n')
+            .map(goal => goal.replace(/-\s*/, '').trim())
+            .filter(goal => goal.length > 0);
+          goals = goalsList.join('; '); // Join into a single string
+        }
+
+        const appearanceMatch = textOutput.match(/Appearance:\s*([\s\S]*?)(?=Key Relationships:|$)/im);
+        if (appearanceMatch && appearanceMatch[1]) appearance = appearanceMatch[1].trim();
+
+        const relationshipsBlockMatch = textOutput.match(/Key Relationships:\s*([\s\S]*?)(?=Lorebook Entry:|$)/im);
+        if (relationshipsBlockMatch && relationshipsBlockMatch[1]) {
+          const relLines = relationshipsBlockMatch[1].split('\n').filter(line => line.trim().startsWith('-'));
+          for (const line of relLines) {
+            const relMatch = line.match(/-\s*(.*?):\s*(.*)/);
+            if (relMatch && relMatch[1] && relMatch[2]) {
+              relationships.push({
+                characterName: relMatch[1].trim(),
+                relationshipType: relMatch[2].trim(),
+                description: `${relMatch[1].trim()} is a ${relMatch[2].trim()}.` // Simple description
+              });
+              if (relationships.length >= 3) break; // Max 3 as per schema
+            }
+          }
+        }
+        
+        const loreEntryMatch = textOutput.match(/Lorebook Entry:\s*([\s\S]*)/im);
+        if (loreEntryMatch && loreEntryMatch[1]) loreEntryText = loreEntryMatch[1].trim();
+
+        if (!name && !background && !personality && !goals && !appearance && relationships.length === 0 && !loreEntryText) {
+            console.warn("Gemma output parsing failed significantly for generateNpc. Raw output:", textOutput);
+            return {
+                name: "NPC Name (Parsing Failed)",
+                background: "NPC background could not be parsed. Gemma output: " + textOutput.substring(0,150),
+                personality: "Default",
+                goals: "Default goals",
+                appearance: "Default appearance",
+                relationships: [],
+                loreCategory: "Error",
+                loreEntry: { name: "NPC Name (Parsing Failed)", description: "Lore entry could not be parsed.", category: "Error" },
+            };
+        }
+
+      } catch (parseError) {
+        console.error("Error parsing Gemma output for generateNpc:", parseError);
+        return {
+            name: "NPC Name (Parsing Error)",
+            background: "Error during parsing. Gemma output: " + textOutput.substring(0,150),
+            personality: "Default",
+            goals: "Default goals",
+            appearance: "Default appearance",
+            relationships: [],
+            loreCategory: "Error",
+            loreEntry: { name: "NPC Name (Parsing Error)", description: "Lore entry parsing error.", category: "Error" },
+        };
+      }
+      
+      // Construct the final output for Gemma path
+      // Note: addNpcToLorebookTool is NOT called for Gemma path
+      return {
+        name,
+        background,
+        personality,
+        goals,
+        appearance,
+        relationships,
+        loreCategory, // Use inferred/defaulted category
+        loreEntry: {
+          name: name || "Unnamed NPC",
+          description: loreEntryText || "No lore entry provided.",
+          category: loreCategory, // Use inferred/defaulted category
+        },
+      };
+
+    } else {
+      // Google AI / Gemini Path (existing logic)
+      const geminiOutput = await prompt(input);
+      if (!geminiOutput.output) {
+         console.error('generateNpcFlow (Gemini) returned undefined output.');
+         return {
+            name: "Default Gemini NPC",
+            background: "Default background.",
+            personality: "Default",
+            goals: "Default goals",
+            appearance: "Default appearance",
+            relationships: [],
+            loreCategory: "Default",
+            loreEntry: { name: "Default Gemini NPC", description: "Default lore entry.", category: "Default" },
+        };
+      }
+      
+      // Call addNpcToLorebookTool ONLY for the Gemini path
+      try {
+        await addNpcToLorebookTool({
+          name: geminiOutput.output.name,
+          description: geminiOutput.output.loreEntry.description,
+          category: geminiOutput.output.loreCategory,
+          // Additional fields like 'aliases', 'relatedEntries' can be added if the tool supports them
+        });
+        console.log(`NPC ${geminiOutput.output.name} processed by addNpcToLorebookTool.`);
+      } catch (toolError) {
+        console.error(`Error calling addNpcToLorebookTool for ${geminiOutput.output.name}:`, toolError);
+        // Decide if you want to fail the flow or just log the error and continue
+      }
+      
+      return geminiOutput.output;
+    }
   }
 );
+
+// New prompt for Gemma (Ollama) - tool-less
+const gemmaGenerateNpcPrompt = ai.definePrompt({
+  name: 'gemmaGenerateNpcPrompt',
+  input: { schema: GenerateNpcInputSchema },
+  // No explicit output schema, expect raw string.
+  // NO TOOLS for Gemma
+  prompt: `You are a role-playing game master creating an NPC for the fictional series "{{{seriesTitle}}}".
+
+Your task is to create a non-player character (NPC) that feels like they genuinely belong in this fictional universe. The NPC should be interesting, memorable, and provide meaningful interaction opportunities for the player.
+
+SERIES INFORMATION:
+Series Title: {{{seriesTitle}}}
+World Context: {{{worldContext}}}
+Player Character: {{{playerCharacterDescription}}}
+{{#if currentLocation}}Current Location: {{{currentLocation}}}{{/if}}
+{{#if purpose}}NPC Purpose: {{{purpose}}}{{/if}}
+
+{{#if existingNpcs}}
+EXISTING NPCs IN THE SETTING:
+{{#each existingNpcs}}
+- {{{name}}}: {{{description}}}
+{{/each}}
+{{/if}}
+
+REQUIREMENTS:
+1.  The NPC should feel like an authentic part of {{{seriesTitle}}}, with naming conventions, speech patterns, and background that match the series' style.
+2.  Create a believable connection to the world's lore and existing characters.
+3.  Ensure the NPC has clear motivations and goals that could drive player interactions.
+4.  Make the NPC distinct from existing characters while still fitting naturally in the world.
+5.  Provide a "Lorebook Entry" section that's a concise summary suitable for a game's reference.
+
+Format your response clearly using Markdown as follows:
+
+Name: [NPC Name]
+
+Background:
+[Detailed background, 2-3 paragraphs...]
+
+Personality:
+[Key personality traits, 1-2 paragraphs...]
+
+Goals:
+- [Primary Goal]
+- [Secondary Goal (if any)]
+
+Appearance:
+[Detailed appearance, 1-2 paragraphs...]
+
+Key Relationships:
+(Provide 0-3 key relationships. If none, write "None.")
+- [Character Name 1]: [Relationship type, e.g., Ally, Rival, Family Member, Mentor]
+- [Character Name 2]: [Relationship type]
+
+Lorebook Entry:
+[A concise paragraph or two suitable for a lorebook entry about this NPC, summarizing their key aspects.]
+
+All this information should be part of your single text response. Do not use any external tools.
+`,
+});
