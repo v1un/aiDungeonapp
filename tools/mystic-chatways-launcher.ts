@@ -487,6 +487,7 @@ async function startNextjsServer(): Promise<void> {
         FORCE_COLOR: '1',
         // Pass GenKit ports to the Next.js app
         GENKIT_API_URL: ports.genkitAPI ? `http://localhost:${ports.genkitAPI}` : '',
+        GENKIT_API_PORT: ports.genkitAPI ? ports.genkitAPI.toString() : '4000',
         GENKIT_UI_URL: ports.genkitUI ? `http://localhost:${ports.genkitUI}` : ''
       }
     });

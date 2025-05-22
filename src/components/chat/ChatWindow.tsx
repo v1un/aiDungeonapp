@@ -507,13 +507,16 @@ export default function ChatWindow() {
         </div>
       </div>
 
-      {isInitialLoadComplete && activeSessionId && gameState && (
-        <GameHUD 
-          gameState={gameState} 
-          onOpenCharacterScreen={openCharacterScreen}
-          onOpenQuestLogScreen={openQuestLogScreen}
-        />
-      )}
+      {/* Add a container with controlled z-index to ensure proper stacking */}
+      <div className="relative z-40">
+        {isInitialLoadComplete && activeSessionId && gameState && (
+          <GameHUD 
+            gameState={gameState} 
+            onOpenCharacterScreen={openCharacterScreen}
+            onOpenQuestLogScreen={openQuestLogScreen}
+          />
+        )}
+      </div>
 
       {isInitialLoadComplete && activeSessionId && gameState && (
         <CharacterScreen 

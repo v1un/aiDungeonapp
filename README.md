@@ -19,6 +19,8 @@ Mystic Chatways is an AI-powered text-based RPG application that lets you explor
 
 ## Prerequisites
 
+- **Gemini API Key**: This application requires a Google Gemini API key to function. See [API_KEY_SETUP.md](API_KEY_SETUP.md) for detailed instructions on how to obtain and set up your key.
+
 Before you begin, ensure you have the following installed:
 
 - Node.js (v18 or later)

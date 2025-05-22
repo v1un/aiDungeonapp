@@ -53,8 +53,14 @@ function getSystemInfo() {
 // Enhanced health check endpoint for the backend
 export async function GET() {
   try {
-    // Get GenKit API port from environment or use default
-    const genkitPort = process.env.GENKIT_API_PORT || '4001';
+    // Get the GenKit API port - try both port and URL variables
+    const genkitPort = process.env.GENKIT_API_PORT || '4000'; // Default to 4000 now
+    const genkitApiUrl = process.env.GENKIT_API_URL || `http://localhost:${genkitPort}`;
+    
+    // Extract port from URL if available, otherwise use the port directly
+    const effectivePort = genkitApiUrl.includes('://') 
+      ? new URL(genkitApiUrl).port || '4000' 
+      : genkitPort;
     
     // Check if GenKit service is accessible
     let genkitStatus: { status: string; message: string } = {
@@ -63,9 +69,9 @@ export async function GET() {
     };
     
     try {
-      const response = await fetch(`http://localhost:${genkitPort}/health`, {
+      const response = await fetch(`http://localhost:${effectivePort}/health`, {
         method: 'GET',
-        signal: AbortSignal.timeout(500), // Short timeout to avoid delays
+        signal: AbortSignal.timeout(1000), // Slightly longer timeout but still quick
       });
       
       if (response.ok) {

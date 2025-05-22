@@ -104,7 +104,7 @@ export function ChatLayout({
       </ScrollArea>
       
       {/* Chat input */}
-      <div className="border-t border-border/40 backdrop-blur-sm bg-background/80 p-4 w-full">
+      <div className="border-t border-border/40 backdrop-blur-sm bg-background/80 p-4 w-full z-50 relative">
         <div className="mx-auto w-full max-w-4xl px-2 sm:px-4">
           <ChatInput
             value={inputValue}

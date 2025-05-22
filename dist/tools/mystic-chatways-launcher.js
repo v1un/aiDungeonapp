@@ -72,6 +72,10 @@ var config = {
     processNames: {
         genkit: 'GenKit',
         nextjs: 'Next.js'
+    },
+    dependencies: {
+        required: ['next', 'genkit', 'typescript'],
+        recommended: ['tsx', 'tailwindcss', 'genkit-cli']
     }
 };
 // Frontend detection patterns (used to filter and categorize logs)
@@ -581,7 +585,7 @@ function startNextjsServer() {
                         shell: true,
                         env: __assign(__assign({}, process.env), { PORT: ports.nextjs.toString(), FORCE_COLOR: '1', 
                             // Pass GenKit ports to the Next.js app
-                            GENKIT_API_URL: ports.genkitAPI ? "http://localhost:".concat(ports.genkitAPI) : '', GENKIT_UI_URL: ports.genkitUI ? "http://localhost:".concat(ports.genkitUI) : '' })
+                            GENKIT_API_URL: ports.genkitAPI ? "http://localhost:".concat(ports.genkitAPI) : '', GENKIT_API_PORT: ports.genkitAPI ? ports.genkitAPI.toString() : '4000', GENKIT_UI_URL: ports.genkitUI ? "http://localhost:".concat(ports.genkitUI) : '' })
                     });
                     processes.nextjs.process = nextProcess;
                     // Handle process output
@@ -619,7 +623,206 @@ function startNextjsServer() {
         });
     });
 }
-// ... (rest of the code remains the same)
+/**
+ * Check if a dependency is installed
+ */
+function isDependencyInstalled(packageName) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            return [2 /*return*/, new Promise(function (resolve) {
+                    (0, child_process_1.exec)("npm list ".concat(packageName, " --depth=0"), function (error) {
+                        resolve(!error);
+                    });
+                })];
+        });
+    });
+}
+/**
+ * Check and install dependencies
+ */
+function checkDependencies() {
+    return __awaiter(this, void 0, void 0, function () {
+        var installationPromises, _loop_1, _i, _a, dep, _b, _c, dep, isInstalled;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
+                case 0:
+                    logInfo('Checking dependencies...');
+                    installationPromises = [];
+                    _loop_1 = function (dep) {
+                        var isInstalled;
+                        return __generator(this, function (_e) {
+                            switch (_e.label) {
+                                case 0: return [4 /*yield*/, isDependencyInstalled(dep)];
+                                case 1:
+                                    isInstalled = _e.sent();
+                                    if (!isInstalled) {
+                                        logInfo("Required dependency ".concat(dep, " is not installed. Installing..."));
+                                        installationPromises.push(new Promise(function (resolve) {
+                                            (0, child_process_1.exec)("npm install ".concat(dep), function (error) {
+                                                if (error) {
+                                                    logError("Failed to install ".concat(dep, ": ").concat(error.message));
+                                                }
+                                                else {
+                                                    logSuccess("Installed ".concat(dep, " successfully"));
+                                                }
+                                                resolve();
+                                            });
+                                        }));
+                                    }
+                                    return [2 /*return*/];
+                            }
+                        });
+                    };
+                    _i = 0, _a = config.dependencies.required;
+                    _d.label = 1;
+                case 1:
+                    if (!(_i < _a.length)) return [3 /*break*/, 4];
+                    dep = _a[_i];
+                    return [5 /*yield**/, _loop_1(dep)];
+                case 2:
+                    _d.sent();
+                    _d.label = 3;
+                case 3:
+                    _i++;
+                    return [3 /*break*/, 1];
+                case 4:
+                    _b = 0, _c = config.dependencies.recommended;
+                    _d.label = 5;
+                case 5:
+                    if (!(_b < _c.length)) return [3 /*break*/, 8];
+                    dep = _c[_b];
+                    return [4 /*yield*/, isDependencyInstalled(dep)];
+                case 6:
+                    isInstalled = _d.sent();
+                    if (!isInstalled) {
+                        logInfo("Recommended dependency ".concat(dep, " is not installed. You may want to install it with: npm install ").concat(dep));
+                    }
+                    _d.label = 7;
+                case 7:
+                    _b++;
+                    return [3 /*break*/, 5];
+                case 8:
+                    if (!(installationPromises.length > 0)) return [3 /*break*/, 10];
+                    logInfo('Installing missing dependencies...');
+                    return [4 /*yield*/, Promise.all(installationPromises)];
+                case 9:
+                    _d.sent();
+                    _d.label = 10;
+                case 10: return [2 /*return*/];
+            }
+        });
+    });
+}
+/**
+ * Detect if a process has gone unresponsive or crashed
+ */
+function monitorProcessHealth() {
+    return __awaiter(this, void 0, void 0, function () {
+        var healthInterval;
+        var _this = this;
+        return __generator(this, function (_a) {
+            logInfo('Setting up health monitoring...');
+            healthInterval = setInterval(function () { return __awaiter(_this, void 0, void 0, function () {
+                var isHealthy, error_4, isHealthy, error_5;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (!(processes.genkit.process && !processes.genkit.process.killed)) return [3 /*break*/, 6];
+                            if (!ports.genkitAPI) return [3 /*break*/, 6];
+                            return [4 /*yield*/, isUrlReachable("http://localhost:".concat(ports.genkitAPI, "/health"))];
+                        case 1:
+                            isHealthy = _a.sent();
+                            if (!!isHealthy) return [3 /*break*/, 6];
+                            logError('GenKit API is not responding. Attempting to restart...');
+                            _a.label = 2;
+                        case 2:
+                            _a.trys.push([2, 5, , 6]);
+                            processes.genkit.process.kill('SIGTERM');
+                            // Wait a moment for the process to fully terminate
+                            return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 2000); })];
+                        case 3:
+                            // Wait a moment for the process to fully terminate
+                            _a.sent();
+                            return [4 /*yield*/, startGenkitServer()];
+                        case 4:
+                            _a.sent();
+                            return [3 /*break*/, 6];
+                        case 5:
+                            error_4 = _a.sent();
+                            logError("Failed to restart GenKit: ".concat(error_4.message));
+                            return [3 /*break*/, 6];
+                        case 6:
+                            if (!(processes.nextjs.process && !processes.nextjs.process.killed)) return [3 /*break*/, 12];
+                            return [4 /*yield*/, isUrlReachable("http://localhost:".concat(ports.nextjs, "/"))];
+                        case 7:
+                            isHealthy = _a.sent();
+                            if (!!isHealthy) return [3 /*break*/, 12];
+                            logError('Next.js is not responding. Attempting to restart...');
+                            _a.label = 8;
+                        case 8:
+                            _a.trys.push([8, 11, , 12]);
+                            processes.nextjs.process.kill('SIGTERM');
+                            // Wait a moment for the process to fully terminate
+                            return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, 2000); })];
+                        case 9:
+                            // Wait a moment for the process to fully terminate
+                            _a.sent();
+                            return [4 /*yield*/, startNextjsServer()];
+                        case 10:
+                            _a.sent();
+                            return [3 /*break*/, 12];
+                        case 11:
+                            error_5 = _a.sent();
+                            logError("Failed to restart Next.js: ".concat(error_5.message));
+                            return [3 /*break*/, 12];
+                        case 12: return [2 /*return*/];
+                    }
+                });
+            }); }, 30000);
+            // Clear interval on shutdown
+            process.on('exit', function () {
+                clearInterval(healthInterval);
+            });
+            return [2 /*return*/];
+        });
+    });
+}
+/**
+ * Check if any processes with the same names are already running
+ */
+function killConflictingProcesses() {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            logInfo('Checking for conflicting processes...');
+            return [2 /*return*/, new Promise(function (resolve) {
+                    (0, child_process_1.exec)('ps aux | grep -e "next dev" -e "genkit start" | grep -v grep', function (error, stdout) {
+                        if (error) {
+                            // No conflicting processes found, which is fine
+                            resolve();
+                            return;
+                        }
+                        // Found potentially conflicting processes
+                        if (stdout.trim()) {
+                            logInfo('Found potentially conflicting processes. Attempting to terminate them...');
+                            (0, child_process_1.exec)('pkill -f "next dev"; pkill -f "genkit start"', function (killError) {
+                                if (killError) {
+                                    logError('Failed to kill some processes. You may need to manually close them.');
+                                }
+                                else {
+                                    logSuccess('Successfully terminated conflicting processes.');
+                                }
+                                // Wait a bit before continuing
+                                setTimeout(resolve, 2000);
+                            });
+                        }
+                        else {
+                            resolve();
+                        }
+                    });
+                })];
+        });
+    });
+}
 /**
  * Print a summary of the running services
  */
@@ -748,21 +951,24 @@ function setupSignalHandlers() {
  */
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var logFiles, _i, logFiles_1, logFile, stats, timestamp, err_2, error_4;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var logFiles, _i, logFiles_1, logFile, stats, timestamp, err_2, serverConfigs, _a, serverConfigs_1, config_1, err_3, error_6;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
-                    _a.trys.push([0, 15, , 17]);
+                    _b.trys.push([0, 26, , 28]);
                     // Print banner
                     printBanner();
                     // Set up signal handlers for graceful shutdown
                     setupSignalHandlers();
                     logInfo('Starting Mystic Chatways services...');
-                    // Create logs directory
+                    // Create required directories
                     return [4 /*yield*/, fs.mkdir(config.logDir, { recursive: true })];
                 case 1:
-                    // Create logs directory
-                    _a.sent();
+                    // Create required directories
+                    _b.sent();
+                    return [4 /*yield*/, fs.mkdir('.genkit/servers', { recursive: true })];
+                case 2:
+                    _b.sent();
                     logFiles = [
                         processes.genkit.logFile,
                         processes.nextjs.logFile,
@@ -773,69 +979,119 @@ function main() {
                         centralErrorLogFile
                     ];
                     _i = 0, logFiles_1 = logFiles;
-                    _a.label = 2;
-                case 2:
-                    if (!(_i < logFiles_1.length)) return [3 /*break*/, 11];
+                    _b.label = 3;
+                case 3:
+                    if (!(_i < logFiles_1.length)) return [3 /*break*/, 12];
                     logFile = logFiles_1[_i];
                     if (!logFile)
-                        return [3 /*break*/, 10];
-                    _a.label = 3;
-                case 3:
-                    _a.trys.push([3, 9, , 10]);
-                    return [4 /*yield*/, fs.stat(logFile).catch(function () { return null; })];
+                        return [3 /*break*/, 11];
+                    _b.label = 4;
                 case 4:
-                    stats = _a.sent();
-                    if (!stats) return [3 /*break*/, 8];
-                    if (!(stats.size > 10 * 1024 * 1024)) return [3 /*break*/, 6];
+                    _b.trys.push([4, 10, , 11]);
+                    return [4 /*yield*/, fs.stat(logFile).catch(function () { return null; })];
+                case 5:
+                    stats = _b.sent();
+                    if (!stats) return [3 /*break*/, 9];
+                    if (!(stats.size > 10 * 1024 * 1024)) return [3 /*break*/, 7];
                     timestamp = new Date().toISOString().replace(/[:.]/g, '-');
                     return [4 /*yield*/, fs.rename(logFile, "".concat(logFile, ".").concat(timestamp, ".bak"))];
-                case 5:
-                    _a.sent();
-                    return [3 /*break*/, 8];
-                case 6: 
+                case 6:
+                    _b.sent();
+                    return [3 /*break*/, 9];
+                case 7: 
                 // Otherwise just clear it
                 return [4 /*yield*/, fs.writeFile(logFile, '')];
-                case 7:
+                case 8:
                     // Otherwise just clear it
-                    _a.sent();
-                    _a.label = 8;
-                case 8: return [3 /*break*/, 10];
-                case 9:
-                    err_2 = _a.sent();
-                    return [3 /*break*/, 10];
+                    _b.sent();
+                    _b.label = 9;
+                case 9: return [3 /*break*/, 11];
                 case 10:
+                    err_2 = _b.sent();
+                    return [3 /*break*/, 11];
+                case 11:
                     _i++;
-                    return [3 /*break*/, 2];
-                case 11: 
+                    return [3 /*break*/, 3];
+                case 12:
+                    _b.trys.push([12, 18, , 19]);
+                    return [4 /*yield*/, fs.readdir('.genkit/servers')];
+                case 13:
+                    serverConfigs = _b.sent();
+                    _a = 0, serverConfigs_1 = serverConfigs;
+                    _b.label = 14;
+                case 14:
+                    if (!(_a < serverConfigs_1.length)) return [3 /*break*/, 17];
+                    config_1 = serverConfigs_1[_a];
+                    if (!config_1.endsWith('.json')) return [3 /*break*/, 16];
+                    return [4 /*yield*/, fs.unlink(path.join('.genkit/servers', config_1))];
+                case 15:
+                    _b.sent();
+                    logInfo("Cleared stale GenKit configuration: ".concat(config_1));
+                    _b.label = 16;
+                case 16:
+                    _a++;
+                    return [3 /*break*/, 14];
+                case 17: return [3 /*break*/, 19];
+                case 18:
+                    err_3 = _b.sent();
+                    return [3 /*break*/, 19];
+                case 19: 
                 // Check for available ports before starting
                 return [4 /*yield*/, setupAvailablePorts()];
-                case 12:
+                case 20:
                     // Check for available ports before starting
-                    _a.sent();
+                    _b.sent();
+                    // Install missing dependencies
+                    return [4 /*yield*/, checkDependencies()];
+                case 21:
+                    // Install missing dependencies
+                    _b.sent();
+                    // Kill any conflicting processes
+                    return [4 /*yield*/, killConflictingProcesses()];
+                case 22:
+                    // Kill any conflicting processes
+                    _b.sent();
                     // Start GenKit server
                     return [4 /*yield*/, startGenkitServer()];
-                case 13:
+                case 23:
                     // Start GenKit server
-                    _a.sent();
+                    _b.sent();
                     // Start Next.js server
                     return [4 /*yield*/, startNextjsServer()];
-                case 14:
+                case 24:
                     // Start Next.js server
-                    _a.sent();
+                    _b.sent();
+                    // Monitor process health
+                    return [4 /*yield*/, monitorProcessHealth()];
+                case 25:
+                    // Monitor process health
+                    _b.sent();
                     // Print summary
                     printSummary();
                     logSuccess('Mystic Chatways is now running!');
                     logInfo('Press Ctrl+C to stop all services.');
-                    return [3 /*break*/, 17];
-                case 15:
-                    error_4 = _a.sent();
-                    logError("Failed to start Mystic Chatways: ".concat(error_4.message));
-                    console.error(error_4);
+                    // Add a warning if we're not using the default ports
+                    if (ports.nextjs !== 9003 || (ports.genkitAPI && ports.genkitAPI !== 4000)) {
+                        logInfo('');
+                        logInfo('Note: Using non-default ports:');
+                        if (ports.nextjs !== 9003) {
+                            logInfo("- Next.js running on port ".concat(ports.nextjs, " instead of default 9003"));
+                        }
+                        if (ports.genkitAPI && ports.genkitAPI !== 4000) {
+                            logInfo("- GenKit API running on port ".concat(ports.genkitAPI, " instead of default 4000"));
+                        }
+                        logInfo("This may require adjusting environment variables if you're connecting from other applications.");
+                    }
+                    return [3 /*break*/, 28];
+                case 26:
+                    error_6 = _b.sent();
+                    logError("Failed to start Mystic Chatways: ".concat(error_6.message));
+                    console.error(error_6);
                     return [4 /*yield*/, shutdown(1)];
-                case 16:
-                    _a.sent();
-                    return [3 /*break*/, 17];
-                case 17: return [2 /*return*/];
+                case 27:
+                    _b.sent();
+                    return [3 /*break*/, 28];
+                case 28: return [2 /*return*/];
             }
         });
     });

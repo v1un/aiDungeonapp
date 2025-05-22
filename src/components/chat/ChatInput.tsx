@@ -25,7 +25,7 @@ export function ChatInput({ value, onChange, onSubmit, isLoading, customLoadingM
   }, [isLoading]);
 
   return (
-    <div className="relative">
+    <div className="relative z-50">
       <form 
         onSubmit={onSubmit} 
         className="relative flex items-center gap-2 transition-all"
@@ -44,6 +44,7 @@ export function ChatInput({ value, onChange, onSubmit, isLoading, customLoadingM
             disabled={isLoading}
             className="flex-grow pl-9 pr-4 py-6 rounded-full border border-border/50 bg-background/70 backdrop-blur-sm text-foreground shadow-lg focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-0 transition-all"
             aria-label="Chat input"
+            style={{ position: 'relative', zIndex: 50 }}
           />
         </div>
 

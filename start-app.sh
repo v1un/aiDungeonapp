@@ -14,6 +14,27 @@ echo ""
 echo -e "\033[1;33mLaunching Mystic Chatways using TypeScript launcher...\033[0m"
 echo ""
 
+# Check if API key is configured
+if [ ! -f ".env.local" ] || ! grep -q "GEMINI_API_KEY" .env.local; then
+  echo -e "\033[1;31mNo Gemini API key found!\033[0m"
+  echo -e "\033[1;33mPlease run ./set-api-key.sh first to configure your Gemini API key.\033[0m"
+  echo -e "\033[0;36mYou can get a Gemini API key from: https://ai.google.dev/\033[0m"
+  echo ""
+  
+  # Ask if the user wants to run the setup script now
+  read -p "Do you want to set up your API key now? (y/n): " choice
+  case "$choice" in 
+    y|Y ) ./set-api-key.sh;;
+    * ) echo -e "\033[1;31mExiting. Please run ./set-api-key.sh when ready.\033[0m"; exit 1;;
+  esac
+fi
+
+# Export environment variables from .env.local
+if [ -f ".env.local" ]; then
+  echo -e "\033[0;32mLoading environment variables from .env.local\033[0m"
+  export $(grep -v '^#' .env.local | xargs)
+fi
+
 # Check if dist directory exists and TypeScript is compiled
 if [ ! -f "dist/tools/mystic-chatways-launcher.js" ]; then
   echo -e "\033[1;33mCompiling TypeScript launcher...\033[0m"

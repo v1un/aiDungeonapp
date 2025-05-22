@@ -3,15 +3,21 @@ import { NextResponse } from 'next/server';
 // Health check endpoint for GenKit connectivity
 export async function GET() {
   try {
-    // Get the GenKit API port from environment variable or use the default (4001)
-    // The start-app.sh script now sets GENKIT_API_PORT after detecting which port GenKit is using
-    const genkitPort = process.env.GENKIT_API_PORT || '4001';
+    // Get the GenKit API port - try both port and URL variables
+    // The launcher sets both GENKIT_API_PORT and GENKIT_API_URL
+    const genkitPort = process.env.GENKIT_API_PORT || '4000'; // Default to 4000 now
+    const genkitApiUrl = process.env.GENKIT_API_URL || `http://localhost:${genkitPort}`;
     
-    console.log(`Checking GenKit health on port ${genkitPort}`);
+    // Extract port from URL if available, otherwise use the port directly
+    const effectivePort = genkitApiUrl.includes('://') 
+      ? new URL(genkitApiUrl).port || '4000' 
+      : genkitPort;
+    
+    console.log(`Checking GenKit health on port ${effectivePort}`);
     
     try {
       // Check the API port with the health endpoint
-      const response = await fetch(`http://localhost:${genkitPort}/health`, {
+      const response = await fetch(`http://localhost:${effectivePort}/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
