@@ -97,7 +97,34 @@ export async function processPlayerInput(
       }
       
       currentGameState.seriesSetupComplete = true;
-      currentGameState.seriesDetails = seriesDetails;
+      // Ensure all otherCharacters have a defined string id and relationships have valid types
+      const fixedSeriesDetails: SeriesDetails = {
+        ...seriesDetails,
+        otherCharacters: (seriesDetails.otherCharacters || []).map((char, idx) => ({
+          ...char,
+          id: char.id ?? `char-${idx}`,
+        })),
+        // Ensure relationships have valid types from the enum
+        relationships: seriesDetails.relationships ? Object.fromEntries(
+          Object.entries(seriesDetails.relationships).map(([key, relations]) => [
+            key,
+            relations.map(rel => ({
+              ...rel,
+              // Ensure the type is one of the allowed values, default to 'unknown' if not
+              type: ['ally', 'enemy', 'family', 'friend', 'rival', 'mentor', 'student', 
+                    'lover', 'acquaintance', 'business', 'political', 'unknown'].includes(rel.type) 
+                    ? rel.type as "unknown" | "ally" | "enemy" | "family" | "friend" | "rival" | 
+                      "mentor" | "student" | "lover" | "acquaintance" | "business" | "political"
+                    : 'unknown'
+            }))
+          ])
+        ) : undefined,
+        // Fix worldMemory structure to match the expected type
+        worldMemory: seriesDetails.worldMemory ? {
+          globalEvents: seriesDetails.worldMemory.globalEvents || []
+        } : undefined
+      };
+      currentGameState.seriesDetails = fixedSeriesDetails;
       currentGameState.inventory = seriesDetails.initialInventory || [];
       currentGameState.currentLocation = seriesDetails.startingLocation || 'An Unknown Place';
       currentGameState.activeQuests = [];
@@ -107,7 +134,7 @@ export async function processPlayerInput(
         currentGameState.activeQuests.push(seriesDetails.initialQuest);
       }
       
-      gameStateUpdate.seriesDetails = seriesDetails;
+      gameStateUpdate.seriesDetails = fixedSeriesDetails;
       gameStateUpdate.inventory = currentGameState.inventory;
       gameStateUpdate.currentLocation = currentGameState.currentLocation;
       gameStateUpdate.activeQuests = currentGameState.activeQuests;

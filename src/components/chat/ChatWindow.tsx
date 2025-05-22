@@ -486,6 +486,7 @@ export default function ChatWindow() {
       description: `Successfully loaded ${seriesName} from cache.`,
     });
   };
+  
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="relative flex h-screen w-full overflow-hidden bg-background">

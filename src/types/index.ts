@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 export interface Message {
@@ -22,12 +21,59 @@ export interface MainCharacter {
   name: string;
   description: string;
   stats: CharacterStats;
+  memoryEntries?: Array<{
+    content: string;
+    timestamp: number;
+    importance: number;
+  }>;
 }
 
 export interface OtherCharacter {
   name: string;
   description: string;
 }
+
+// New relationship models
+export const RelationshipTypeEnum = z.enum([
+  'ally', 'enemy', 'family', 'friend', 'rival', 'mentor', 'student', 
+  'lover', 'acquaintance', 'business', 'political', 'unknown'
+]);
+export type RelationshipType = z.infer<typeof RelationshipTypeEnum>;
+
+export const RelationshipSchema = z.object({
+  characterId: z.string().describe("Unique identifier for the related character"),
+  characterName: z.string().describe("Name of the character in this relationship"),
+  type: RelationshipTypeEnum.describe("Type of relationship between the characters"),
+  intensity: z.number().min(1).max(10).describe("Strength of the relationship from 1 (weak) to 10 (strong)"),
+  description: z.string().describe("Brief description of the relationship history and dynamics"),
+  history: z.array(
+    z.object({
+      event: z.string().describe("A significant interaction or event between the characters"),
+      impact: z.number().min(-5).max(5).describe("Impact on relationship: negative (-5 to -1), neutral (0), positive (1 to 5)"),
+      timestamp: z.number().describe("When this event occurred (Unix timestamp)")
+    })
+  ).optional().describe("History of significant interactions that have shaped this relationship")
+});
+export type Relationship = z.infer<typeof RelationshipSchema>;
+
+// Updated OtherCharacter schema with relationships
+export const OtherCharacterSchema = z.object({
+  id: z.string().describe("Unique identifier for this character"),
+  name: z.string().describe("The full name of this character"),
+  description: z.string().describe("A brief description of this character"),
+  relationships: z.array(RelationshipSchema).optional().describe("This character's relationships with others"),
+  firstEncountered: z.number().optional().describe("When the player first met this character (Unix timestamp)"),
+  lastInteraction: z.number().optional().describe("When the player last interacted with this character (Unix timestamp)"),
+  isPermanent: z.boolean().optional().describe("Whether this is a permanent character in the world").default(true),
+  memoryEntries: z.array(
+    z.object({
+      content: z.string().describe("Memory content - what happened or what was learned"),
+      timestamp: z.number().describe("When this memory was created (Unix timestamp)"),
+      importance: z.number().min(1).max(10).describe("How important this memory is (1-10)")
+    })
+  ).optional().describe("Important memories related to this character")
+});
+export type EnhancedOtherCharacter = z.infer<typeof OtherCharacterSchema>;
 
 export const QuestSchema = z.object({
   id: z.string().describe("A unique identifier for the quest."),
@@ -65,11 +111,21 @@ export interface SeriesDetails {
   seriesTitle: string;
   mainCharacter: MainCharacter;
   lorebook: Lorebook;
-  otherCharacters: OtherCharacter[];
+  otherCharacters: EnhancedOtherCharacter[]; // Updated to use enhanced characters
   initialPromptForPlayer: string;
   initialInventory?: string[];
   startingLocation?: string;
   initialQuest?: Quest; // This is the full Quest object after system processing
+  relationships?: { [characterId: string]: Relationship[] }; // Map character IDs to their relationships
+  worldMemory?: {
+    globalEvents: Array<{
+      content: string;
+      timestamp: number;
+      characters: string[]; // Character IDs involved
+      location: string;
+      importance: number;
+    }>;
+  };
 }
 
 export interface ClientGameState {
@@ -101,4 +157,3 @@ export interface GameSession {
   messages: Message[];
 }
 
-    

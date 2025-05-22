@@ -856,29 +856,46 @@ function printSummary() {
  */
 function shutdown() {
     return __awaiter(this, arguments, void 0, function (exitCode) {
+        var error_6, error_7;
         if (exitCode === void 0) { exitCode = 0; }
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     logInfo('Shutting down services...');
-                    if (!processes.nextjs.process) return [3 /*break*/, 2];
+                    if (!processes.nextjs.process) return [3 /*break*/, 4];
                     logInfo('Stopping Next.js server...');
                     processes.nextjs.process.kill('SIGTERM');
-                    if (!processes.nextjs.logStream) return [3 /*break*/, 2];
-                    return [4 /*yield*/, processes.nextjs.logStream.close()];
+                    if (!processes.nextjs.logStream) return [3 /*break*/, 4];
+                    _a.label = 1;
                 case 1:
-                    _a.sent();
-                    _a.label = 2;
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, processes.nextjs.logStream.close()];
                 case 2:
-                    if (!processes.genkit.process) return [3 /*break*/, 4];
+                    _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_6 = _a.sent();
+                    // Ignore errors when closing log streams
+                    console.error("Error closing Next.js log stream: ".concat(error_6.message));
+                    return [3 /*break*/, 4];
+                case 4:
+                    if (!processes.genkit.process) return [3 /*break*/, 8];
                     logInfo('Stopping GenKit server...');
                     processes.genkit.process.kill('SIGTERM');
-                    if (!processes.genkit.logStream) return [3 /*break*/, 4];
+                    if (!processes.genkit.logStream) return [3 /*break*/, 8];
+                    _a.label = 5;
+                case 5:
+                    _a.trys.push([5, 7, , 8]);
                     return [4 /*yield*/, processes.genkit.logStream.close()];
-                case 3:
+                case 6:
                     _a.sent();
-                    _a.label = 4;
-                case 4:
+                    return [3 /*break*/, 8];
+                case 7:
+                    error_7 = _a.sent();
+                    // Ignore errors when closing log streams
+                    console.error("Error closing GenKit log stream: ".concat(error_7.message));
+                    return [3 /*break*/, 8];
+                case 8:
                     // Exit the process
                     process.exit(exitCode);
                     return [2 /*return*/];
@@ -951,7 +968,7 @@ function setupSignalHandlers() {
  */
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var logFiles, _i, logFiles_1, logFile, stats, timestamp, err_2, serverConfigs, _a, serverConfigs_1, config_1, err_3, error_6;
+        var logFiles, _i, logFiles_1, logFile, stats, timestamp, err_2, serverConfigs, _a, serverConfigs_1, config_1, err_3, error_8;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -1084,9 +1101,9 @@ function main() {
                     }
                     return [3 /*break*/, 28];
                 case 26:
-                    error_6 = _b.sent();
-                    logError("Failed to start Mystic Chatways: ".concat(error_6.message));
-                    console.error(error_6);
+                    error_8 = _b.sent();
+                    logError("Failed to start Mystic Chatways: ".concat(error_8.message));
+                    console.error(error_8);
                     return [4 /*yield*/, shutdown(1)];
                 case 27:
                     _b.sent();

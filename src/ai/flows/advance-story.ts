@@ -22,6 +22,13 @@ import {
   retrieveLocationTool 
 } from '@/ai/tools/world-building-tools';
 
+// Import character relationship management tools
+import {
+  updateRelationshipTool,
+  addCharacterMemoryTool,
+  retrieveCharacterMemoriesTool
+} from '@/ai/tools/relationship-manager';
+
 const AdvanceStoryInputSchema = z.object({
   playerInput: z.string().describe("The player's latest action or dialogue."),
   chatHistorySummary: z.string().describe("A brief summary of the last 3-5 turns of conversation."),
@@ -36,7 +43,12 @@ const AdvanceStoryInputSchema = z.object({
     description: z.string(),
     objectives: z.array(z.string()),
   })).describe("The character's currently active quests and their objectives."),
-  seriesTitle: z.string().describe("The title of the series the game is based on.")
+  seriesTitle: z.string().describe("The title of the series the game is based on."),
+  presentCharacters: z.array(z.object({
+    id: z.string().describe("The unique ID of the character present in the current scene."),
+    name: z.string().describe("The name of the character."),
+    description: z.string().optional().describe("Brief description of the character.")
+  })).optional().describe("Characters currently present in the scene that the player may interact with.")
 });
 export type AdvanceStoryInput = z.infer<typeof AdvanceStoryInputSchema>;
 
@@ -71,7 +83,10 @@ const prompt = ai.definePrompt({
     generateEnvironmentTool,
     retrieveLocationTool,
     addLocationToLorebookTool,
-    enrichLorebookTool
+    enrichLorebookTool,
+    updateRelationshipTool,
+    addCharacterMemoryTool,
+    retrieveCharacterMemoriesTool
   ],
   prompt: `You are a master storyteller and Game Master for an immersive text-based RPG set in the world of **{{seriesTitle}}**.
 The player is controlling **{{mainCharacter.name}}** ({{mainCharacter.description}}).
@@ -107,6 +122,10 @@ Your Task:
         *   **Use the 'enrichLorebookTool'** with your narrative response to automatically extract key information about the world, characters, events, items, or locations. This ensures the lorebook stays updated with all significant world elements.
         *   When you create significant new narrative elements, always try to update the lorebook.
     *   **World Building**: Consistently reference established lore elements to create a cohesive world experience. When no specific lore exists for something important, create plausible details that align with the existing world.
+    *   **Character Relationships and Memory**:
+        *   **Use the 'retrieveCharacterMemoriesTool'**: Before characters react to the player, retrieve their memories to ensure consistent characterization and realistic reactions based on past interactions.
+        *   **Use the 'addCharacterMemoryTool'**: When significant interactions occur, record them as memories for relevant characters with appropriate importance levels (1-10).
+        *   **Use the 'updateRelationshipTool'**: When interactions affect relationships between characters, update the relationship details accordingly, including type, intensity, description, and specific event details.
 4.  **State Changes (IMPORTANT - REFLECT IN OUTPUT SCHEMA)**:
     *   **Location**: If the player's action leads them to a new distinct named location, set \`updatedLocation\`.
     *   **Inventory**: If the player gains or loses an item, provide the *complete updated list* in \`updatedInventory\`.
@@ -347,51 +366,203 @@ const advanceStoryFlow = ai.defineFlow(
             importance: 1
           }
         });
+        
+        // Process character interactions if present characters are defined
+        if (input.presentCharacters && input.presentCharacters.length > 0) {
+          await handleCharacterInteractions(
+            input.presentCharacters,
+            input.mainCharacter.name,
+            input.playerInput,
+            output.narrativeResponse,
+            input.currentLocation
+          );
+        }
+
       } catch (error) {
         console.log("Context update failed:", error);
       }
 
-      // Automatically enrich the lorebook with the narrative response
-      try {
-        if (output && output.narrativeResponse) {
-          // Determine the most appropriate context type based on player input and response
-          let contextType: 'world' | 'character' | 'event' | 'item' | 'location' | 'custom' = 'world';
-          
-          if (input.playerInput.toLowerCase().includes('talk') || 
-              input.playerInput.toLowerCase().includes('speak') || 
-              input.playerInput.toLowerCase().includes('ask') ||
-              output.narrativeResponse.includes('said') ||
-              output.narrativeResponse.includes('replied')) {
-            contextType = 'character';
-          } else if (input.playerInput.toLowerCase().includes('go') || 
-                    input.playerInput.toLowerCase().includes('travel') || 
-                    input.playerInput.toLowerCase().includes('enter') ||
-                    output.updatedLocation) {
-            contextType = 'location';
-          } else if (input.playerInput.toLowerCase().includes('take') || 
-                    input.playerInput.toLowerCase().includes('pick up') || 
-                    input.playerInput.toLowerCase().includes('use') ||
-                    output.updatedInventory) {
-            contextType = 'item';
-          }
-          
-          await enrichLorebookTool({
-            content: output.narrativeResponse,
-            contextType: contextType
-          });
-        }
-      } catch (error) {
-        console.log("Auto-enrichment of lorebook failed:", error);
-        // Don't block the response if enrichment fails
-      }
-
       return output;
     } catch (error) {
-      console.error("Error in advanceStoryFlow:", error);
-      // Fallback response if something goes wrong
-      return {
-        narrativeResponse: `*The narrator pauses for a moment...*\n\nYour action leads to unexpected developments. As ${input.mainCharacter.name}, you find yourself adapting to the situation, drawing on your experience and instincts.\n\n*What do you do next?*`
-      };
+      console.error('Story advancement error:', error);
+      throw error;
     }
   }
 );
+
+/**
+ * Processes interactions between the main character and other characters present in the scene.
+ * Updates character memories and relationship dynamics based on narrative events.
+ */
+async function handleCharacterInteractions(
+  presentCharacters: Array<{ id: string; name: string; description?: string }>,
+  mainCharacterName: string,
+  playerInput: string,
+  narrativeResponse: string,
+  location: string
+): Promise<void> {
+  try {
+    // Process each character present in the scene
+    for (const character of presentCharacters) {
+      try {
+        // Skip if character has no ID or name
+        if (!character.id || !character.name) continue;
+        
+        // Add a memory to the character about this interaction
+        const interactionSummary = summarizeInteraction(playerInput, narrativeResponse, character.name);
+        const interactionImpact = determineInteractionImpact(narrativeResponse, character.name);
+        const interactionType = determineInteractionType(playerInput, narrativeResponse, character.name);
+        
+        // Skip if no meaningful interaction detected
+        if (interactionSummary && interactionSummary !== '') {
+          // For significant interactions (impact > 1), create a memory
+          const importance = Math.abs(interactionImpact) + 3; // Scale from 3-8 based on impact
+          
+          // Add memory to the character
+          await addCharacterMemoryTool({
+            characterId: character.id,
+            content: `At ${location}, ${interactionSummary} This interaction was ${interactionImpact > 0 ? 'positive' : interactionImpact < 0 ? 'negative' : 'neutral'}.`,
+            importance: importance
+          });
+          
+          // Also add memory for the main character
+          await addCharacterMemoryTool({
+            characterId: 'main',
+            content: `At ${location}, I interacted with ${character.name}. ${interactionSummary}`,
+            importance: importance
+          });
+          
+          // For more significant interactions, update the relationship
+          if (Math.abs(interactionImpact) >= 2) {
+            // Retrieve previous memories to inform relationship updates
+            const previousMemories = await retrieveCharacterMemoriesTool({
+              characterId: 'main',
+              relatedToCharacterId: character.id,
+              minimumImportance: 5,
+              limit: 3
+            });
+            
+            // Update the relationship with this new interaction
+            await updateRelationshipTool({
+              characterId1: 'main',
+              characterId2: character.id,
+              type: interactionType,
+              intensity: calculateRelationshipIntensity(interactionType, interactionImpact),
+              description: generateRelationshipDescription(mainCharacterName, character.name, interactionType, interactionImpact),
+              eventDescription: interactionSummary,
+              eventImpact: interactionImpact
+            });
+          }
+        }
+      } catch (error) {
+        console.log(`Failed to update memory or relationship for character ${character.name}:`, error);
+      }
+    }
+  } catch (error) {
+    console.log("Character interaction processing failed:", error);
+  }
+}
+
+// Helper functions for character interactions
+function determineInteractionType(playerInput: string, narrativeResponse: string, characterName: string): string {
+  const combinedText = (playerInput + ' ' + narrativeResponse).toLowerCase();
+  const charName = characterName.toLowerCase();
+  
+  // Check for hostile interactions
+  if (combinedText.includes('attack') || combinedText.includes('fight') || combinedText.includes('threaten') ||
+      combinedText.includes('kill') || combinedText.includes('hurt') || combinedText.includes('steal from')) {
+    if (combinedText.includes(charName + ' attacks') || 
+        combinedText.includes('attacks ' + charName) ||
+        combinedText.includes(charName + ' fights') ||
+        combinedText.includes('fights ' + charName)) {
+      return 'enemy';
+    }
+  }
+  
+  // Check for friendly interactions
+  if (combinedText.includes('help') || combinedText.includes('assist') || combinedText.includes('support') ||
+      combinedText.includes('heal') || combinedText.includes('gift') || combinedText.includes('give to')) {
+    return 'ally';
+  }
+  
+  // Check for romantic interactions
+  if (combinedText.includes('love') || combinedText.includes('kiss') || combinedText.includes('embrace') ||
+      combinedText.includes('romantic') || combinedText.includes('flirt')) {
+    return 'lover';
+  }
+  
+  // Default to the most common case - acquaintance
+  return 'acquaintance';
+}
+
+function determineInteractionImpact(narrativeResponse: string, characterName: string): number {
+  const text = narrativeResponse.toLowerCase();
+  const charName = characterName.toLowerCase();
+  
+  // Check for positive interaction markers
+  const positiveMarkers = ['smile', 'thank', 'grateful', 'happy', 'pleased', 'appreciate', 
+                          'laugh', 'joy', 'friendship', 'trust', 'help', 'respect'];
+  const positiveCount = positiveMarkers.filter(marker => 
+    text.includes(charName + ' ' + marker) || 
+    text.includes(marker + 's ' + charName) || 
+    text.includes(marker + 'ed ' + charName)
+  ).length;
+  
+  // Check for negative interaction markers
+  const negativeMarkers = ['frown', 'angry', 'upset', 'disappointed', 'worried', 'frightened', 
+                          'scared', 'threaten', 'hurt', 'distrust', 'suspicion', 'hate'];
+  const negativeCount = negativeMarkers.filter(marker => 
+    text.includes(charName + ' ' + marker) || 
+    text.includes(marker + 's ' + charName) || 
+    text.includes(marker + 'ed ' + charName)
+  ).length;
+  
+  // Calculate impact score from -5 to +5
+  const impact = Math.min(5, Math.max(-5, positiveCount - negativeCount));
+  return impact;
+}
+
+function summarizeInteraction(playerInput: string, narrativeResponse: string, characterName: string): string {
+  // Extract relevant sentences mentioning the character
+  const sentences = narrativeResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const relevantSentences = sentences.filter(s => 
+    s.toLowerCase().includes(characterName.toLowerCase())
+  );
+  
+  if (relevantSentences.length > 0) {
+    // Return 1-2 relevant sentences as a summary
+    return relevantSentences.slice(0, 2).join('. ') + '.';
+  }
+  
+  // Fallback summary
+  return `${characterName} was present when the player ${playerInput.substring(0, 30)}...`;
+}
+
+function calculateRelationshipIntensity(type: string, impact: number): number {
+  // Base intensity based on type
+  let baseIntensity = 5; // Default medium intensity
+  
+  if (type === 'lover') baseIntensity = 7;
+  else if (type === 'enemy') baseIntensity = 6;
+  else if (type === 'ally') baseIntensity = 6;
+  
+  // Modify based on impact
+  return Math.min(10, Math.max(1, baseIntensity + Math.floor(impact / 2)));
+}
+
+function generateRelationshipDescription(char1Name: string, char2Name: string, type: string, impact: number): string {
+  const impactText = impact > 2 ? "positively" : 
+                    impact < -2 ? "negatively" : 
+                    "somewhat";
+  
+  switch(type) {
+    case 'ally':
+      return `${char1Name} considers ${char2Name} an ally. Their recent interactions have ${impactText} affected their relationship.`;
+    case 'enemy':
+      return `${char1Name} sees ${char2Name} as an adversary. Recent events have ${impactText} reinforced this view.`;
+    case 'lover':
+      return `${char1Name} has romantic feelings toward ${char2Name}. Recent interactions have ${impactText} affected these feelings.`;
+    default:
+      return `${char1Name} and ${char2Name} have interacted, with ${impactText} effects on their relationship.`;
+  }
+}

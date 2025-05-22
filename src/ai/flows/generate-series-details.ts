@@ -32,13 +32,31 @@ const GenerateSeriesDetailsOutputSchema = z.object({
       magicPower: z.string().optional().describe("A thematic or descriptive value for magical aptitude, if applicable. Use 'N/A' if not, or describe its nature (e.g., 'Untapped Potential', 'Master of Elemental Magic')."),
       luck: z.string().optional().describe("A thematic or descriptive value for the character's fortune or typical luck (e.g., 'Cursed', 'Surprisingly Fortunate', 'Average')."),
       specialAbility: z.string().optional().describe("A concise description of a notable special ability or unique trait pivotal to the character, especially early in the series (e.g., 'Return by Death - Resets time upon death', 'Force Sensitivity - Untrained').")
-    }).describe("Key thematic stats or attributes. These should be fitting and descriptive, reflecting the character's portrayal at the beginning of the series.")
+    }).describe("Key thematic stats or attributes. These should be fitting and descriptive, reflecting the character's portrayal at the beginning of the series."),
+    memoryEntries: z.array(
+      z.object({
+        content: z.string().describe("Memory content - what happened or what was learned"),
+        timestamp: z.number().describe("When this memory was created (Unix timestamp)"),
+        importance: z.number().min(1).max(10).describe("How important this memory is (1-10)")
+      })
+    ).optional().describe("Important memories related to the main character")
   }).describe("Detailed information about the main protagonist."),
   lorebook: LorebookSchema.describe("A structured and comprehensive lorebook for the series."),
   otherCharacters: z.array(
     z.object({
       name: z.string().describe("The full name of an important supporting character, antagonist, or key figure present or relevant early in the series."),
       description: z.string().describe("A brief description (1-2 sentences) of this character, their relationship to the main character (if any), their primary goal/role at the series' start, and a defining trait. Use markdown for emphasis."),
+      id: z.string().optional().describe("Unique identifier for this character - system generated"),
+      isPermanent: z.boolean().optional().describe("Whether this is a permanent character in the world").default(true),
+      firstEncountered: z.number().optional().describe("When the player first met this character (Unix timestamp)"),
+      lastInteraction: z.number().optional().describe("When the player last interacted with this character (Unix timestamp)"),
+      memoryEntries: z.array(
+        z.object({
+          content: z.string().describe("Memory content - what happened or what was learned"),
+          timestamp: z.number().describe("When this memory was created (Unix timestamp)"),
+          importance: z.number().min(1).max(10).describe("How important this memory is (1-10)")
+        })
+      ).optional().describe("Important memories related to this character")
     })
   ).min(3).max(5).describe("A list of 3 to 5 other notable characters crucial to the initial stages of the series."),
   initialInventory: z.array(z.string()).optional().describe("A list of 2-3 thematic starting items for the main character, directly relevant to their situation at the very beginning of the series. e.g., ['Tattered Clothes', 'A Mysterious Locket', 'Empty Water Canteen']. If none, can be an empty array or omit.").default([]),
@@ -51,7 +69,34 @@ const GenerateSeriesDetailsOutputSchema = z.object({
     id: z.string().describe("A unique identifier for the quest.").default(() => `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`),
     status: z.enum(['active', 'completed', 'failed']).describe("The current status of the quest.").default('active')
   }).describe("An initial main quest. This quest must be an *immediate* challenge or goal for the main character, directly stemming from their `startingLocation` and initial predicament as described in `initialPromptForPlayer`. It should guide the player's very first actions."),
-  initialPromptForPlayer: z.string().describe("A compelling, direct question or immediate choice to present to the player to start their interaction. This prompt should seamlessly flow from the `startingLocation` and the `initialQuest` description, putting the player in the MC's shoes. e.g., 'The alley is dark, and the thugs are closing in on the silver-haired girl. What do you shout, or what is your first move?' or 'The escape pod has crashed. Alarms are blaring. Your first priority is...? What do you do?' Use markdown for emphasis and atmosphere.")
+  initialPromptForPlayer: z.string().describe("A compelling, direct question or immediate choice to present to the player to start their interaction. This prompt should seamlessly flow from the `startingLocation` and the `initialQuest` description, putting the player in the MC's shoes. e.g., 'The alley is dark, and the thugs are closing in on the silver-haired girl. What do you shout, or what is your first move?' or 'The escape pod has crashed. Alarms are blaring. Your first priority is...? What do you do?' Use markdown for emphasis and atmosphere."),
+  relationships: z.record(z.string(), z.array(
+    z.object({
+      characterId: z.string().describe("Unique identifier for the related character"),
+      characterName: z.string().describe("Name of the character in this relationship"),
+      type: z.string().describe("Type of relationship between the characters"),
+      intensity: z.number().min(1).max(10).describe("Strength of the relationship from 1 (weak) to 10 (strong)"),
+      description: z.string().describe("Brief description of the relationship history and dynamics"),
+      history: z.array(
+        z.object({
+          event: z.string().describe("A significant interaction or event between the characters"),
+          impact: z.number().min(-5).max(5).describe("Impact on relationship: negative (-5 to -1), neutral (0), positive (1 to 5)"),
+          timestamp: z.number().describe("When this event occurred (Unix timestamp)")
+        })
+      ).optional()
+    })
+  )).optional().describe("Map of character IDs to their relationships with other characters"),
+  worldMemory: z.object({
+    globalEvents: z.array(
+      z.object({
+        content: z.string().describe("Description of a world event"),
+        timestamp: z.number().describe("When this event occurred (Unix timestamp)"),
+        characters: z.array(z.string()).describe("Character IDs involved"),
+        location: z.string().describe("Where this event occurred"),
+        importance: z.number().min(1).max(10).describe("How important this event is (1-10)")
+      })
+    ).optional()
+  }).optional().describe("Collection of world-level memories and events")
 }).describe("Comprehensive details generated for a fictional series to set up an RPG-like experience.");
 export type GenerateSeriesDetailsOutput = z.infer<typeof GenerateSeriesDetailsOutputSchema>;
 
@@ -74,6 +119,73 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
           id: `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           status: 'active' as const,
         };
+      }
+      
+      // Enhance other characters with IDs and initialize relationship structures
+      if (output.otherCharacters && output.otherCharacters.length > 0) {
+        // Initialize relationships structure first
+        fullOutput.relationships = {};
+        fullOutput.relationships['main'] = [];
+        
+        // Process each character and generate their IDs and details
+        fullOutput.otherCharacters = output.otherCharacters.map((character, index) => {
+          // Generate a unique ID for each character
+          const characterId = `char-${Date.now()}-${Math.random().toString(36).substring(2, 5)}-${index}`;
+          
+          // Initialize this character's relationship array in the relationships map
+          fullOutput.relationships![characterId] = [];
+          
+          // Return the enhanced character object
+          return {
+            ...character,
+            id: characterId,
+            isPermanent: true,
+            firstEncountered: Date.now(),
+            lastInteraction: Date.now(),
+            memoryEntries: [{
+              content: `Initial appearance in the story. ${character.description}`,
+              timestamp: Date.now(),
+              importance: 8 // High importance as this is the character's defining moment
+            }]
+          };
+        });
+        
+        // Now that all characters have IDs, build the relationship networks
+        fullOutput.otherCharacters.forEach(character => {
+          if (!character.id) return; // Skip if somehow ID is missing
+          
+          // Create relationship between main character and this character
+          const mainToCharRelationship = {
+            characterId: character.id,
+            characterName: character.name,
+            type: determineInitialRelationshipType(character.description),
+            intensity: determineInitialRelationshipIntensity(character.description),
+            description: generateInitialRelationshipDescription(fullOutput.mainCharacter.name, character.name, character.description),
+            history: [{
+              event: "Initial encounter based on narrative setup",
+              impact: 0, // Neutral initial impact
+              timestamp: Date.now()
+            }]
+          };
+          
+          fullOutput.relationships!['main'].push(mainToCharRelationship);
+          
+          // Create reverse relationship
+          const characterToMainRelationship = {
+            characterId: 'main',
+            characterName: fullOutput.mainCharacter.name,
+            type: mainToCharRelationship.type,
+            intensity: mainToCharRelationship.intensity,
+            description: generateInitialRelationshipDescription(character.name, fullOutput.mainCharacter.name, character.description),
+            history: [{
+              event: "Initial encounter based on narrative setup",
+              impact: 0,
+              timestamp: Date.now()
+            }]
+          };
+          
+          fullOutput.relationships![character.id].push(characterToMainRelationship);
+        });
       }
       
       // Cache the successful result if we're on the client side
@@ -134,6 +246,103 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
 // Type alias for the output of the flow before system modifications (like adding quest ID/status)
 type SeriesDetailsOutput = z.infer<typeof GenerateSeriesDetailsOutputSchema>;
 
+// Helper functions for relationship generation
+function determineInitialRelationshipType(characterDescription: string): string {
+  const description = characterDescription.toLowerCase();
+  
+  if (description.includes('friend') || description.includes('ally') || description.includes('companion')) {
+    return 'ally';
+  }
+  if (description.includes('enemy') || description.includes('rival') || description.includes('antagonist') || 
+      description.includes('villain') || description.includes('nemesis') || description.includes('foe')) {
+    return 'enemy';
+  }
+  if (description.includes('family') || description.includes('sibling') || description.includes('brother') || 
+      description.includes('sister') || description.includes('father') || description.includes('mother') ||
+      description.includes('parent') || description.includes('child')) {
+    return 'family';
+  }
+  if (description.includes('mentor') || description.includes('teacher') || description.includes('guide')) {
+    return 'mentor';
+  }
+  if (description.includes('student') || description.includes('apprentice') || description.includes('disciple')) {
+    return 'student';
+  }
+  if (description.includes('lover') || description.includes('romantic') || description.includes('partner')) {
+    return 'lover';
+  }
+  if (description.includes('business') || description.includes('colleague') || description.includes('associate')) {
+    return 'business';
+  }
+  
+  // Default to acquaintance if no clear type is found
+  return 'acquaintance';
+}
+
+function determineInitialRelationshipIntensity(characterDescription: string): number {
+  const description = characterDescription.toLowerCase();
+  
+  // Check for strong relationship indicators
+  if (description.includes('close') || description.includes('best') || 
+      description.includes('loyal') || description.includes('devoted') ||
+      description.includes('lifelong') || description.includes('trusted')) {
+    return 8; // High intensity
+  }
+  
+  // Check for medium strength indicators
+  if (description.includes('friend') || description.includes('ally') ||
+      description.includes('partner') || description.includes('companion')) {
+    return 6; // Medium-high intensity
+  }
+  
+  // Check for antagonistic indicators
+  if (description.includes('arch') || description.includes('sworn') ||
+      description.includes('mortal') || description.includes('greatest') ||
+      description.includes('nemesis')) {
+    return 9; // Very high intensity (for enemies)
+  }
+  
+  if (description.includes('enemy') || description.includes('rival') ||
+      description.includes('antagonist') || description.includes('foe')) {
+    return 7; // High intensity (for enemies)
+  }
+  
+  // Check for casual indicators
+  if (description.includes('acquaintance') || description.includes('recently met') ||
+      description.includes('new')) {
+    return 3; // Low intensity
+  }
+  
+  // Default to medium intensity if no clear indicators
+  return 5;
+}
+
+function generateInitialRelationshipDescription(character1Name: string, character2Name: string, contextDescription: string): string {
+  // Extract relationship hints from the context
+  const type = determineInitialRelationshipType(contextDescription);
+  
+  // Generate appropriate description based on type
+  switch (type) {
+    case 'ally':
+      return `${character1Name} considers ${character2Name} an ally and potential friend, based on their initial interactions.`;
+    case 'enemy':
+      return `${character1Name} sees ${character2Name} as an adversary or obstacle to their goals.`;
+    case 'family':
+      return `${character1Name} and ${character2Name} share a family connection, with all the complications that entails.`;
+    case 'mentor':
+      return `${character1Name} views ${character2Name} as someone who can provide guidance and wisdom.`;
+    case 'student':
+      return `${character1Name} takes on a teaching role in relation to ${character2Name}.`;
+    case 'lover':
+      return `${character1Name} has romantic feelings or a complex personal connection with ${character2Name}.`;
+    case 'business':
+      return `${character1Name} has a professional or transactional relationship with ${character2Name}.`;
+    case 'acquaintance':
+      return `${character1Name} has just met or barely knows ${character2Name}, but recognizes their significance.`;
+    default:
+      return `${character1Name} and ${character2Name} have a relationship that is still developing and being defined.`;
+  }
+}
 
 const prompt = ai.definePrompt({
   name: 'generateSeriesDetailsPrompt',

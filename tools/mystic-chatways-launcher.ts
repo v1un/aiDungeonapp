@@ -713,7 +713,12 @@ async function shutdown(exitCode: number = 0): Promise<void> {
     
     // Close log stream
     if (processes.nextjs.logStream) {
-      await processes.nextjs.logStream.close();
+      try {
+        await processes.nextjs.logStream.close();
+      } catch (error) {
+        // Ignore errors when closing log streams
+        console.error(`Error closing Next.js log stream: ${(error as Error).message}`);
+      }
     }
   }
   
@@ -724,7 +729,12 @@ async function shutdown(exitCode: number = 0): Promise<void> {
     
     // Close log stream
     if (processes.genkit.logStream) {
-      await processes.genkit.logStream.close();
+      try {
+        await processes.genkit.logStream.close();
+      } catch (error) {
+        // Ignore errors when closing log streams
+        console.error(`Error closing GenKit log stream: ${(error as Error).message}`);
+      }
     }
   }
   
