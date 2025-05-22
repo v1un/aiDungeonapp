@@ -42,9 +42,8 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY next.config.ts ./
 COPY start-app.sh ./
-COPY --chmod=+x start-app.sh ./
 
-# Make start scripts executable
+# Make start script executable
 RUN chmod +x start-app.sh
 
 # Add non-root user

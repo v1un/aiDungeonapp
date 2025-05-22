@@ -1,29 +1,54 @@
-[2025-05-22T02:17:02.022Z] [BACKEND]    - Local:        http://localhost:9003
+[2025-05-22T15:27:34.941Z] [BACKEND]    - Local:        http://localhost:9003
    - Network:      http://192.168.1.69:9003
 
-[2025-05-22T02:17:06.279Z] [BACKEND]  GET / [32m200[39m in 48ms
+[2025-05-22T15:27:39.199Z] [BACKEND]  GET / [32m200[39m in 55ms
 
-[2025-05-22T02:17:20.051Z] [BACKEND]  GET / [32m200[39m in 57ms
+[2025-05-22T15:27:43.535Z] [BACKEND]  GET / [32m200[39m in 50ms
 
-[2025-05-22T02:17:20.500Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/health in 316ms
+[2025-05-22T15:27:43.977Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/health in 300ms
 
-[2025-05-22T02:17:20.559Z] [BACKEND]  GET /api/health [32m200[39m in 380ms
+[2025-05-22T15:27:44.018Z] [BACKEND]  GET /api/health [32m200[39m in 346ms
 
-[2025-05-22T02:17:20.768Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/genkit-health in 205ms
+[2025-05-22T15:27:44.237Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/genkit-health in 216ms
 
-[2025-05-22T02:17:20.790Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 228ms
+[2025-05-22T15:27:44.256Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 236ms
 
-[2025-05-22T02:17:22.216Z] [BACKEND]  GET /lorebook [32m200[39m in 441ms
+[2025-05-22T15:27:46.570Z] [BACKEND]  GET /settings [32m200[39m in 616ms
 
-[2025-05-22T02:17:23.567Z] [BACKEND]  GET / [32m200[39m in 21ms
+[2025-05-22T15:27:47.766Z] [BACKEND]  GET / [32m200[39m in 21ms
 
-[2025-05-22T02:17:23.604Z] [BACKEND]  GET /api/health [32m200[39m in 17ms
+[2025-05-22T15:27:47.803Z] [BACKEND]  GET /api/health [32m200[39m in 18ms
 
-[2025-05-22T02:17:23.607Z] [BACKEND]  GET /api/health [32m200[39m in 18ms
+[2025-05-22T15:27:47.806Z] [BACKEND]  GET /api/health [32m200[39m in 20ms
 
-[2025-05-22T02:17:23.623Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
+[2025-05-22T15:27:47.823Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
 
-[2025-05-22T02:17:23.636Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+[2025-05-22T15:27:47.836Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
 
-[2025-05-22T02:17:36.332Z] [BACKEND]  GET / [32m200[39m in 45ms
+[2025-05-22T15:27:48.732Z] [BACKEND]  GET /settings [32m200[39m in 18ms
+
+[2025-05-22T15:27:55.384Z] [BACKEND]  GET / [32m200[39m in 18ms
+
+[2025-05-22T15:27:55.421Z] [BACKEND]  GET /api/health [32m200[39m in 16ms
+
+[2025-05-22T15:27:55.422Z] [BACKEND]  GET /api/health [32m200[39m in 18ms
+
+[2025-05-22T15:27:55.445Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
+
+[2025-05-22T15:27:55.458Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+
+[2025-05-22T15:28:05.510Z] [BACKEND] ERROR:  [33m[1m⚠[22m[39m Found a change in next.config.ts. Restarting the server to apply the changes...
+
+[2025-05-22T15:28:05.956Z] [BACKEND]    [1m[38;2;173;127;168m▲ Next.js 15.3.2[39m[22m (Turbopack)
+   - Local:        http://localhost:9003
+   - Network:      http://192.168.1.69:9003
+   - Environments: .env.local
+
+ [32m[1m✓[22m[39m Starting...
+
+[2025-05-22T15:28:12.996Z] [BACKEND]    - Local:        http://localhost:9003
+   - Network:      http://192.168.1.69:9003
+   - Environments: .env.local
+
+[2025-05-22T15:28:17.260Z] [BACKEND]  GET / [32m200[39m in 47ms
 
