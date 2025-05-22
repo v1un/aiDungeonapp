@@ -59,26 +59,32 @@ const prompt = ai.definePrompt({
   name: 'generateCharacterPrompt',
   input: {schema: GenerateCharacterInputSchema},
   output: {schema: GenerateCharacterOutputSchema},
-  prompt: `You are a character creation expert for the fictional universe of "{{{seriesTitle}}}". 
-
-You will generate a character based on the player's concept that fits naturally within this universe. 
+  prompt: `You are a world-class character creation expert and storyteller for the fictional universe of "{{{seriesTitle}}}".
+Your goal is to generate a deeply compelling character based on the player's concept, making them feel instantly integrated into the provided world context.
 
 Series: {{{seriesTitle}}}
-World Context: {{{worldContext}}}
-Player Concept: {{{characterConcept}}}
+Player's World Context & Initial Lore: {{{worldContext}}}
+Player's Character Concept: {{{characterConcept}}}
 
-Your task is to create a character that:
-1. Has a name that stylistically matches naming conventions in {{{seriesTitle}}}
-2. Has a detailed backstory that connects to the existing lore of {{{seriesTitle}}}
-3. Has stats and abilities that make sense within this fictional universe's rules and systems
-4. Would believably exist in this world and interact with canonical characters
+Your detailed task is to create a character with the following attributes:
 
-Ensure that the backstory is engaging, ties into existing world elements from {{{seriesTitle}}}, and provides a good starting point for the character's adventure.
+1.  **Name**: A name that stylistically matches naming conventions in "{{{seriesTitle}}}".
+2.  **Backstory (Rich and Detailed)**:
+    *   Craft a multi-paragraph backstory (at least 3-4 paragraphs).
+    *   **Deeply integrate elements from the "Player's World Context & Initial Lore"**: Weave specific details, themes, or events from \`{{{worldContext}}}\` into the character's history, personal motivations, and relationships.
+    *   **Invent Lore Connections**: Based on \`{{{worldContext}}}\`, invent and incorporate 2-3 unique, minor lore elements directly impacting the character. These could be things like:
+        *   A small, local faction they have ties to or conflict with.
+        *   A specific, lesser-known location significant to their past.
+        *   A past event they were part of or affected by, not of series-wide scale but personally important.
+        *   A recurring local mystery or legend they are aware of or involved with.
+        *   A notable non-canonical NPC (e.g., a mentor, rival, contact) who has shaped them.
+    *   **Adventure Hooks**: The backstory must include 1-2 unresolved issues, pressing personal goals, or potential conflicts that can serve as immediate starting points for the character's adventures or interactions.
+3.  **Stats**: Core stats (strength, dexterity, constitution, intelligence, wisdom, charisma) as numbers from 1-10, reflecting their capabilities relative to others in "{{{seriesTitle}}}", consistent with their backstory and concept.
+4.  **Skills**: A list of 3-5 key skills or recognized talents relevant in the world of "{{{seriesTitle}}}", fitting their background.
+5.  **Character's Immediate Perspective**: Include 1-2 sentences describing the character's immediate goals or their current perspective on the situation described in \`{{{worldContext}}}\`.
+6.  **Authenticity**: Ensure the character would believably exist in this world, could interact with canonical characters, and that their description incorporates setting-specific terminology, cultural references, and thematic elements from "{{{seriesTitle}}}".
 
-Stats should be numbers from 1-10 that reflect the character's capabilities relative to others in {{{seriesTitle}}}.
-Skills should be abilities or talents that would be recognized and relevant in the world of {{{seriesTitle}}}.
-
-Make sure the character feels like they truly belong in this fictional universe by incorporating setting-specific terminology, cultural references, and thematic elements from {{{seriesTitle}}}.`, // Backstory should be a string.
+Produce a character that is not just a collection of stats and a name, but a living entity with a history and a future within the specified world.`,
 });
 
 const generateCharacterFlow = ai.defineFlow(
