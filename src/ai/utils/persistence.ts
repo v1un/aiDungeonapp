@@ -10,7 +10,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import { z } from 'genkit';
 
 // Define the base directory for data storage
 const DATA_DIR = process.env.AI_DATA_DIR || path.join(process.cwd(), 'data');

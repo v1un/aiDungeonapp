@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 // Ensure type imports are not duplicated and are comprehensive
-import type { GameSession, ClientGameState, Message, ProcessedPlayerInput, SeriesDetails, Quest } from '@/types';
+import type { GameSession, ClientGameState, Message, ProcessedPlayerInput, SeriesDetails } from '@/types';
 // @ts-expect-error UUID library doesn't have proper TypeScript types but works correctly
 import { v4 as uuidv4 } from 'uuid';
 import { processPlayerInput } from '@/lib/game-actions';
-// Removed duplicate type imports that were here
 
 // Import necessary UI components - assuming shadcn/ui structure, adjust if different
 import { Button } from '@/components/ui/button';
@@ -117,6 +116,8 @@ export default function ChatWindow() {
   
   const { toast } = useToast();
   
+  // Function is already defined above
+  
   const createNewSession = (idSuffix: string | number = Date.now()): GameSession => {
     const uniqueId = `${DEFAULT_SESSION_ID}${idSuffix}-${Math.random().toString(36).substring(2, 7)}`;
     return {
@@ -133,6 +134,19 @@ export default function ChatWindow() {
       messages: [initialAiWelcomeMessage],
     };
   };
+
+  const syncSeriesDetailsToLorebook = useCallback((seriesDetails: SeriesDetails | undefined) => {
+    if (seriesDetails && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('mysticChatways_seriesDetails', JSON.stringify(seriesDetails));
+      } catch (error) {
+        console.error('Error syncing series details to lorebook storage:', error);
+      }
+    } else if (!seriesDetails && typeof window !== 'undefined') {
+      // If no series details provided, clear the lorebook cache
+      localStorage.removeItem('mysticChatways_seriesDetails');
+    }
+  }, []);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -174,7 +188,7 @@ export default function ChatWindow() {
     } finally {
       setIsInitialLoadComplete(true);
     }
-  }, []);
+  }, [activeSessionId, syncSeriesDetailsToLorebook]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || allSessions.length === 0) return;
@@ -357,36 +371,17 @@ export default function ChatWindow() {
       }
       
       const errorMessage: Message = {
-        id: uuidv4(), 
+        id: uuidv4(),
         sender: 'ai',
-        text: "I'm sorry, I encountered an error while processing your message. Please try again later.",
+        text: 'Sorry, there was an error processing your message. Please try again.',
         timestamp: Date.now(),
       };
-      setMessages(prevMessages => [...prevMessages, errorMessage]);
-      
-      toast({
-        title: "Error", 
-        description: "Failed to process your message. Please try again.", 
-        variant: "destructive",
-      });
+      setMessages([...messages, errorMessage]);
     } finally {
       setIsLoading(false);
       setCurrentLoadingMessage(null);
     }
   };
-
-  const syncSeriesDetailsToLorebook = useCallback((seriesDetails: SeriesDetails | undefined) => {
-    if (seriesDetails && typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('mysticChatways_seriesDetails', JSON.stringify(seriesDetails));
-      } catch (error) {
-        console.error('Error syncing series details to lorebook storage:', error);
-      }
-    } else if (!seriesDetails && typeof window !== 'undefined') {
-      // If no series details provided, clear the lorebook cache
-      localStorage.removeItem('mysticChatways_seriesDetails');
-    }
-  }, []);
 
   useEffect(() => {
     // Sync seriesDetails to lorebook storage whenever it changes

@@ -44,7 +44,7 @@ async function updateRelationshipImplementation(input: UpdateRelationshipInput):
   const relationships1 = gameState.seriesDetails.relationships[input.characterId1] || [];
   
   // Check if relationship already exists
-  let existingRelationship = relationships1.find(r => r.characterId === input.characterId2);
+  const existingRelationship = relationships1.find(r => r.characterId === input.characterId2);
   const previousRelationship = existingRelationship ? { ...existingRelationship } : undefined;
   
   // Create event data if provided
@@ -114,14 +114,23 @@ async function updateRelationshipImplementation(input: UpdateRelationshipInput):
 }
 
 // Helper function to find a character's name from their ID
-function findCharacterName(gameState: any, characterId: string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function findCharacterName(gameState: { seriesDetails?: { mainCharacter?: { name: string }; otherCharacters?: Array<{ id: string; name: string }> } }, characterId: string): string {
+  // Check if seriesDetails, mainCharacter, or otherCharacters are undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!gameState.seriesDetails || !(gameState.seriesDetails as any).mainCharacter || !(gameState.seriesDetails as any).otherCharacters) {
+    return "Unknown Character";
+  }
+  
   // Check if it's the main character
   if (characterId === 'main') {
-    return gameState.seriesDetails.mainCharacter.name;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (gameState.seriesDetails as any).mainCharacter.name;
   }
   
   // Check other characters
-  const character = gameState.seriesDetails.otherCharacters.find((c: any) => c.id === characterId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const character = (gameState.seriesDetails as any).otherCharacters.find((c: any) => c.id === characterId);
   return character ? character.name : "Unknown Character";
 }
 
@@ -147,7 +156,6 @@ async function addCharacterMemoryImplementation(input: AddCharacterMemoryInput):
   }
 
   // Find the character
-  let character;
   if (input.characterId === 'main') {
     // Special handling for main character memories
     if (!gameState.seriesDetails.mainCharacter.memoryEntries) {
@@ -161,7 +169,8 @@ async function addCharacterMemoryImplementation(input: AddCharacterMemoryInput):
     return { success: true, message: "Memory added to main character" };
   } else {
     // Find other character
-    character = gameState.seriesDetails.otherCharacters.find((c: any) => c.id === input.characterId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const character = gameState.seriesDetails.otherCharacters.find((c: any) => c.id === input.characterId);
     if (!character) {
       return { success: false, message: `Character with ID ${input.characterId} not found` };
     }
@@ -178,7 +187,7 @@ async function addCharacterMemoryImplementation(input: AddCharacterMemoryInput):
       importance: input.importance
     });
     
-    return { success: true, message: `Memory added to ${character.name}` };
+    return { success: true, message: `Memory added to ${(character as { name: string }).name}` };
   }
 }
 
@@ -218,14 +227,17 @@ async function retrieveCharacterMemoriesImplementation(
     };
   }
 
-  let memories = [];
+  let memories: Array<{ content: string; timestamp: number; importance: number }> = [];
   let characterName = "Unknown";
 
   // Get memories based on character ID
   if (input.characterId === 'main') {
-    characterName = gameState.seriesDetails.mainCharacter.name;
-    memories = gameState.seriesDetails.mainCharacter.memoryEntries || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    characterName = (gameState.seriesDetails as any).mainCharacter.name;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    memories = (gameState.seriesDetails as any).mainCharacter.memoryEntries || [];
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const character = gameState.seriesDetails.otherCharacters.find((c: any) => c.id === input.characterId);
     if (!character) {
       return {

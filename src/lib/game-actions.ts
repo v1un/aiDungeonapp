@@ -92,7 +92,7 @@ export async function processPlayerInput(
         // Small trick to detect if we're using cached content:
         // Try to generate without cache, if it fails it means the original was from cache
         await generateSeriesDetails({ seriesName: playerInput, useCache: false });
-      } catch (error) {
+      } catch {
         isFromCache = true;
       }
       

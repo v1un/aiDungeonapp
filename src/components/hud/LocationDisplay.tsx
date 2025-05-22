@@ -1,7 +1,7 @@
 // src/components/hud/LocationDisplay.tsx
 "use client";
 
-import { MapPin, Compass } from 'lucide-react';
+import { Compass } from 'lucide-react';
 
 interface LocationDisplayProps {
   currentLocation: string;

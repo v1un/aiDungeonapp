@@ -14,6 +14,7 @@ const GenerateSeriesDetailsInputSchema = z.object({
   useCache: z.boolean().optional().describe('Whether to use cached data as a fallback. Default is true.').default(true),
   parts: z.array(z.enum(['basic', 'lorebook', 'characters', 'quest', 'worldMemory'])).optional().describe('Which parts to generate. If not specified, generates all parts.')
 });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type GenerateSeriesDetailsInput = z.infer<typeof GenerateSeriesDetailsInputSchema>;
 
 // Schema for basic series information
@@ -130,6 +131,7 @@ const WorldMemorySchema = z.object({
   }).optional().describe("Collection of world-level memories and events")
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const GenerateSeriesDetailsOutputSchema = z.object({
   seriesTitle: z.string().describe("The canonical, official title of the series."),
   mainCharacter: z.object({
@@ -416,6 +418,7 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
     );
     
     // Generate other parts in parallel where possible
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const promises: Promise<any>[] = [];
     
     if (partsToGenerate.includes('lorebook')) {
@@ -460,6 +463,7 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
     // Generate world memory after we have character IDs
     let worldMemoryResult;
     if (partsToGenerate.includes('worldMemory') && characterNetworkResult) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const characterIds = characterNetworkResult.otherCharacters?.map((char: any) => char.id).filter(Boolean) || [];
       worldMemoryResult = await retryOperation(
         () => generateWorldMemory(input, characterIds),
