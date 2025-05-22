@@ -11,8 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 // GameSidebar import removed
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"; // Sidebar and SidebarContent removed from this import
 import { ConnectionStatus } from "@/components/status/ConnectionStatus";
+import CachedSeriesPicker from "@/components/status/CachedSeriesPicker"; // Added for error handling
 // GameSidebar import removed below
-import { Settings, ChevronDown, PlusCircle, Check, Edit3, Trash2, Sparkles } from 'lucide-react';
+import { Settings, ChevronDown, PlusCircle, Check, Edit3, Trash2, Sparkles, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { 
@@ -75,6 +76,10 @@ export default function ChatWindow() {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentLoadingMessage, setCurrentLoadingMessage] = useState<string | null>(null);
+  
+  // API error handling state
+  const [showApiErrorDialog, setShowApiErrorDialog] = useState(false);
+  const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null);
   
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   
@@ -316,14 +321,34 @@ export default function ChatWindow() {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSessions));
     } catch (error) {
       console.error('Error processing message:', error);
+      
+      // Extract the error message
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      
+      // Check if this is an AI API error (Google Generative AI)
+      if (errorMsg.includes('GoogleGenerativeAI Error') || 
+          errorMsg.includes('500 Internal Server Error') || 
+          errorMsg.includes('503 Service Unavailable')) {
+        
+        // Set API error message and show dialog
+        setApiErrorMessage(
+          "The AI service is currently experiencing issues. You can choose from previously generated worlds or try again later."
+        );
+        setShowApiErrorDialog(true);
+      }
+      
       const errorMessage: Message = {
-        id: uuidv4(), sender: 'ai',
+        id: uuidv4(), 
+        sender: 'ai',
         text: "I'm sorry, I encountered an error while processing your message. Please try again later.",
         timestamp: Date.now(),
       };
       setMessages(prevMessages => [...prevMessages, errorMessage]);
+      
       toast({
-        title: "Error", description: "Failed to process your message. Please try again.", variant: "destructive",
+        title: "Error", 
+        description: "Failed to process your message. Please try again.", 
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -407,7 +432,60 @@ export default function ChatWindow() {
     };
   }, [isCharacterScreenOpen, isQuestLogScreenOpen, router]);
 
-
+  const handleCachedSeriesSelect = (seriesName: string): void => {
+    if (!activeSessionId || !seriesName.trim()) return;
+    
+    // Close the API error dialog
+    setShowApiErrorDialog(false);
+    
+    // Create a user message indicating they selected a cached series
+    const userMessage: Message = {
+      id: uuidv4(),
+      sender: 'player',
+      text: seriesName,
+      timestamp: Date.now(),
+    };
+    
+    // Create an AI response acknowledging the selection
+    const aiMessage: Message = {
+      id: uuidv4(),
+      sender: 'ai',
+      text: `Great choice! Welcome to the world of ${seriesName}. I'm loading the adventure details from our cached data. What would you like to do first in this world?`,
+      timestamp: Date.now(),
+    };
+    
+    // Update messages with both the user selection and AI response
+    const updatedMessages = [...messages, userMessage, aiMessage];
+    setMessages(updatedMessages);
+    
+    // Update the current session with the new messages
+    const currentSession = allSessions.find(s => s.id === activeSessionId);
+    if (currentSession) {
+      const updatedSession = {
+        ...currentSession,
+        messages: updatedMessages,
+        lastPlayed: Date.now()
+      };
+      
+      const updatedSessions = allSessions.map(s => 
+        s.id === activeSessionId ? updatedSession : s
+      );
+      setAllSessions(updatedSessions);
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSessions));
+      } catch (error) {
+        console.error('Error saving updated session:', error);
+      }
+    }
+    
+    // Show a success toast
+    toast({
+      title: "Series Selected",
+      description: `Successfully loaded ${seriesName} from cache.`,
+    });
+  };
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="relative flex h-screen w-full overflow-hidden bg-background">
@@ -585,6 +663,27 @@ export default function ChatWindow() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* API Error Dialog with Cached Series Picker */}
+      <Dialog open={showApiErrorDialog} onOpenChange={setShowApiErrorDialog}>
+        <DialogContent className="sm:max-w-md md:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <span>AI Service Issue</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-1">
+            <p className="mb-4 text-sm text-muted-foreground">{apiErrorMessage}</p>
+            <CachedSeriesPicker onSelect={handleCachedSeriesSelect} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowApiErrorDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }

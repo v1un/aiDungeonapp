@@ -10,9 +10,13 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { LorebookSchema } from '@/types';
+// This import is used in the client component through a dynamic import
+// So it doesn't affect server-side rendering
+const seriesCachePath = '@/lib/series-cache';
 
 const GenerateSeriesDetailsInputSchema = z.object({
   seriesName: z.string().describe('The name of the fictional series (e.g., "Re:Zero", "Star Wars", "Harry Potter").'),
+  useCache: z.boolean().optional().describe('Whether to use cached data as a fallback. Default is true.').default(true),
 });
 export type GenerateSeriesDetailsInput = z.infer<typeof GenerateSeriesDetailsInputSchema>;
 
@@ -52,17 +56,79 @@ const GenerateSeriesDetailsOutputSchema = z.object({
 export type GenerateSeriesDetailsOutput = z.infer<typeof GenerateSeriesDetailsOutputSchema>;
 
 export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): Promise<SeriesDetailsOutput> {
-  const output = await generateSeriesDetailsFlow(input);
-  // Ensure the initialQuest, if present, gets a system-generated ID and status
-  const fullOutput: SeriesDetailsOutput = { ...output };
-  if (output.initialQuest) {
-    fullOutput.initialQuest = {
-        ...output.initialQuest, // Base properties
-        id: `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        status: 'active' as const,
-    };
+  // Maximum number of retry attempts for API errors
+  const MAX_RETRIES = 2;
+  let lastError: Error | null = null;
+  const useCache = input.useCache !== false; // Default to true if not specified
+  
+  // Retry logic for handling transient API errors
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const output = await generateSeriesDetailsFlow(input);
+      
+      // Ensure the initialQuest, if present, gets a system-generated ID and status
+      const fullOutput: SeriesDetailsOutput = { ...output };
+      if (output.initialQuest) {
+        fullOutput.initialQuest = {
+          ...output.initialQuest, // Base properties
+          id: `quest-init-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          status: 'active' as const,
+        };
+      }
+      
+      // Cache the successful result if we're on the client side
+      if (typeof window !== 'undefined') {
+        // We need to dynamically import the cache module since it's a client-side module
+        try {
+          const { cacheSeriesDetails } = await import(seriesCachePath);
+          cacheSeriesDetails(input.seriesName, fullOutput);
+        } catch (cacheError) {
+          console.error('Failed to cache series details:', cacheError);
+          // Continue even if caching fails
+        }
+      }
+      
+      return fullOutput;
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`Series details generation attempt ${attempt + 1}/${MAX_RETRIES + 1} failed:`, error);
+      
+      // Check if this is a server error (5xx) from Google AI API which might be temporary
+      const isTransientError = error instanceof Error && 
+        (error.message.includes('500 Internal Server Error') || 
+         error.message.includes('503 Service Unavailable') ||
+         error.message.includes('429 Too Many Requests'));
+      
+      // If it's the last attempt or not a transient error, don't retry
+      if (attempt === MAX_RETRIES || !isTransientError) {
+        break;
+      }
+      
+      // Wait with exponential backoff before retrying
+      const backoffMs = Math.min(1000 * Math.pow(2, attempt), 10000);
+      console.log(`Retrying in ${backoffMs}ms...`);
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+    }
   }
-  return fullOutput;
+  
+  // If all attempts failed and we're allowed to use cache, try to get from cache
+  if (useCache && typeof window !== 'undefined') {
+    try {
+      const { getCachedSeriesDetails } = await import(seriesCachePath);
+      const cachedDetails = getCachedSeriesDetails(input.seriesName);
+      
+      if (cachedDetails) {
+        console.log(`Using cached series details for "${input.seriesName}" as fallback`);
+        return cachedDetails as SeriesDetailsOutput;
+      }
+    } catch (cacheError) {
+      console.error('Failed to retrieve cached series details:', cacheError);
+      // Continue to error if cache retrieval fails
+    }
+  }
+  
+  // If we get here, all attempts failed and there was no cache available
+  throw new Error(`Failed to generate series details after ${MAX_RETRIES + 1} attempts: ${lastError?.message || 'Unknown error'}`);
 }
 
 // Type alias for the output of the flow before system modifications (like adding quest ID/status)
@@ -85,19 +151,27 @@ Key Generation Guidelines:
     *   **Description**: (2-3 sentences) Focus on personality, core motivations, iconic abilities/traits *at the series' beginning*. Mention key internal conflicts.
     *   **Stats**: Thematic, *descriptive* stats (Strength, Dexterity, Intelligence, Magic Power, Luck, Special Ability).
 
-3.  **Lorebook**: This is crucial for immersion. Generate a structured lorebook:
-    *   **Overall Summary**: (1-2 paragraphs) Briefly describe the series' world, its primary conflict, and central themes.
-    *   **Entries**: Generate 10-20 detailed \\\`LoreEntry\\\` objects. Each entry needs a \\\`name\\\`, a \\\`description\\\` (2-4 sentences, use markdown), and a \\\`category\\\`.
-        *   Distribute entries across diverse, relevant categories such as:
-            *   'Key Locations': (e.g., specific cities, important landmarks, mystical realms)
+3.  **Lorebook**: This is crucial for immersion. Generate an extensive structured lorebook:
+    *   **Overall Summary**: (2-3 paragraphs) Provide a comprehensive description of the series' world, its primary conflicts, central themes, and significant historical context.
+    *   **Entries**: Generate 25-50 detailed \\\`LoreEntry\\\` objects, with strong emphasis on depth and variety. Each entry needs a \\\`name\\\`, a \\\`description\\\` (3-6 sentences, use markdown for formatting), and a \\\`category\\\`.
+        *   Distribute entries across these expanded categories (include at least 3-5 entries per category):
+            *   'Key Locations': (e.g., specific cities, important landmarks, mystical realms, dungeons, taverns, castles)
+            *   'Major Regions': (e.g., countries, provinces, realms, planets, dimensions)
             *   'Important NPCs': (e.g., allies, mentors, early antagonists not covered in 'Other Characters')
-            *   'Historical Events': (e.g., past wars, founding events, prophecies that shape the present)
-            *   'Magic Systems & Unique Technologies': (e.g., how magic works, who uses it, key technologies)
-            *   'Factions & Organizations': (e.g., guilds, kingdoms, secret societies, their goals)
-            *   'Creatures & Races': (e.g., non-human species, significant beasts)
-            *   'Cultural Notes': (e.g., customs, societal norms, beliefs)
-            *   'Important Items & Artifacts': (e.g., legendary weapons, key plot devices)
-        *   Ensure descriptions are informative and engaging.
+            *   'Historical Events': (e.g., past wars, founding events, prophecies, catastrophes, pivotal moments)
+            *   'Recent Events': (e.g., conflicts, political changes, disasters that have happened within the last few years)
+            *   'Magic Systems': (e.g., how magic works, magical traditions, schools of magic, restrictions)
+            *   'Technologies & Innovations': (e.g., unique technologies, scientific advancements, arcane devices)
+            *   'Factions & Organizations': (e.g., guilds, kingdoms, secret societies, religious orders, military groups)
+            *   'Political Landscape': (e.g., power structures, ruling systems, conflicts between powers)
+            *   'Creatures & Races': (e.g., non-human species, significant beasts, monsters, mythical beings)
+            *   'Cultural Notes': (e.g., customs, societal norms, beliefs, celebrations, taboos)
+            *   'Religious Systems': (e.g., deities, religious practices, spiritual beliefs)
+            *   'Important Items & Artifacts': (e.g., legendary weapons, key plot devices, magical items)
+            *   'Natural Features': (e.g., geographic features, ecosystems, weather phenomena)
+            *   'Legends & Myths': (e.g., in-world stories, folklore, prophecies) 
+        *   Create entries with rich details that can be woven into gameplay narratives and player interactions.
+        *   Include specific information that can be directly referenced in gameplay situations.
 
 4.  **Other Characters**: (3-5 characters) For each:
     *   **Name**: Full name.
@@ -127,11 +201,27 @@ const generateSeriesDetailsFlow = ai.defineFlow(
     outputSchema: GenerateSeriesDetailsOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
-    if (!output) {
+    try {
+      const {output} = await prompt(input);
+      if (!output) {
         throw new Error("AI failed to generate series details.");
+      }
+      return output;
+    } catch (error) {
+      // Enhance error message with more context for better debugging
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const enhancedError = new Error(`Error generating series details: ${errorMessage}`);
+      
+      // Preserve the original stack trace if available
+      if (error instanceof Error && error.stack) {
+        enhancedError.stack = error.stack;
+      }
+      
+      // Log the error with the series name for debugging
+      console.error(`Failed to generate series details for "${input.seriesName}":`, enhancedError);
+      
+      throw enhancedError;
     }
-    return output;
   }
 );
 

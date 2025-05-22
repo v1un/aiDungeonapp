@@ -55,8 +55,8 @@ export const LoreEntrySchema = z.object({
 export type LoreEntry = z.infer<typeof LoreEntrySchema>;
 
 export const LorebookSchema = z.object({
-  overallSummary: z.string().describe("A 1-2 paragraph overarching summary of the series' world, its primary conflict, and central themes."),
-  entries: z.array(LoreEntrySchema).min(10).max(20).describe("A collection of specific lore entries. Aim for 10-20 detailed entries in total, distributed across various relevant categories to provide a rich understanding of the series' universe.")
+  overallSummary: z.string().describe("A 2-3 paragraph comprehensive summary of the series' world, its primary conflict, central themes, and significant historical context."),
+  entries: z.array(LoreEntrySchema).min(25).max(50).describe("A rich collection of specific lore entries. Aim for 25-50 detailed entries in total, distributed across various relevant categories to provide a deep and immersive understanding of the series' universe.")
 });
 export type Lorebook = z.infer<typeof LorebookSchema>;
 

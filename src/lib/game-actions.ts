@@ -83,12 +83,25 @@ export async function processPlayerInput(
       return { responseText: "Please provide the name of a fictional series to begin." };
     }
     try {
-      const seriesDetails = await generateSeriesDetails({ seriesName: playerInput });
+      const seriesDetails = await generateSeriesDetails({ seriesName: playerInput, useCache: true });
+      
+      // Flag to track if this was from cache (we'll know if an error occurred but we still got details)
+      let isFromCache = false;
+      
+      try {
+        // Small trick to detect if we're using cached content:
+        // Try to generate without cache, if it fails it means the original was from cache
+        await generateSeriesDetails({ seriesName: playerInput, useCache: false });
+      } catch (error) {
+        isFromCache = true;
+      }
+      
       currentGameState.seriesSetupComplete = true;
       currentGameState.seriesDetails = seriesDetails;
       currentGameState.inventory = seriesDetails.initialInventory || [];
       currentGameState.currentLocation = seriesDetails.startingLocation || 'An Unknown Place';
       currentGameState.activeQuests = [];
+      
       if (seriesDetails.initialQuest) {
         // Add the initialQuest to active quests
         currentGameState.activeQuests.push(seriesDetails.initialQuest);
@@ -101,6 +114,12 @@ export async function processPlayerInput(
 
       let responseText = `The world of **${seriesDetails.seriesTitle}** materializes around you. You are **${seriesDetails.mainCharacter.name}**, and right now...\n\n`;
       responseText += `${seriesDetails.initialPromptForPlayer}`;
+      
+      // Add a notice if we're using cached content
+      if (isFromCache) {
+        responseText += `\n\n*(Note: Using a cached version of this world due to temporary AI service issues. Content was generated during a previous session.)*`;
+      }
+      
       responseText += `\n\n*(Character details, inventory, and your current quest are in the Game Info sidebar. Click the book icon to explore the full **Lorebook** with detailed information about this world!)*`;
       
       return { responseText, gameStateUpdate };
@@ -112,8 +131,32 @@ export async function processPlayerInput(
       gameStateUpdate.inventory = [];
       gameStateUpdate.currentLocation = 'Not yet determined';
       gameStateUpdate.activeQuests = [];
+      
+      // Provide more specific error messages based on error type
+      let errorMessage = 'I encountered an issue setting up that series. Please try a different series name or try again.';
+      
+      // Check for specific error types to provide better guidance
+      if (error instanceof Error) {
+        // API service errors (temporary issues)
+        if (error.message.includes('500 Internal Server Error') || 
+            error.message.includes('503 Service Unavailable')) {
+          errorMessage = 'The AI service is currently experiencing issues. This is likely a temporary problem. ' + 
+                        'Please try again in a few minutes.';
+        }
+        // Rate limiting or quota errors
+        else if (error.message.includes('429 Too Many Requests')) {
+          errorMessage = 'We\'ve hit the AI service rate limits. Please try again in a few minutes.';
+        }
+        // Network or connection errors
+        else if (error.message.includes('network') || error.message.includes('connection') || 
+                 error.message.includes('ECONNREFUSED') || error.message.includes('timeout')) {
+          errorMessage = 'There seems to be a network issue connecting to the AI service. ' +
+                        'Please check your internet connection and try again.';
+        }
+      }
+      
       return { 
-        responseText: 'I encountered an issue setting up that series. Please try a different series name or try again.',
+        responseText: errorMessage,
         gameStateUpdate 
       };
     }

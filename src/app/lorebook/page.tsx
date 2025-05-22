@@ -30,6 +30,7 @@ export default function LorebookPage() {
   const [seriesDetails, setSeriesDetails] = useState<SeriesDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
     try {
@@ -111,6 +112,8 @@ export default function LorebookPage() {
     }
   }, []);
 
+  // Function to filter entries based on search term (defined in the component scope but not used)
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -162,6 +165,38 @@ export default function LorebookPage() {
     acc[category].push(entry);
     return acc;
   }, {} as Record<string, LoreEntry[]>);
+  
+  // Function to filter entries based on search term
+  const filterEntries = (term: string, entriesObj: Record<string, LoreEntry[]>): Record<string, LoreEntry[]> => {
+    if (!term.trim()) {
+      // If no search term, return all entries
+      return entriesObj;
+    }
+    
+    const filtered: Record<string, LoreEntry[]> = {};
+    const lowerTerm = term.toLowerCase();
+    
+    Object.entries(entriesObj).forEach(([category, categoryEntries]) => {
+      const matchingEntries = categoryEntries.filter(entry => 
+        entry.name.toLowerCase().includes(lowerTerm) || 
+        entry.description.toLowerCase().includes(lowerTerm)
+      );
+      
+      if (matchingEntries.length > 0) {
+        filtered[category] = matchingEntries;
+      }
+    });
+    
+    return filtered;
+  };
+  
+  // Get filtered entries based on search term
+  const filteredEntries = searchTerm ? filterEntries(searchTerm, groupedEntries) : groupedEntries;
+  
+  // Count total matches when searching
+  const totalMatchCount = searchTerm ? 
+    Object.values(filteredEntries).reduce((sum, entries) => sum + entries.length, 0) : 
+    lorebook.entries.length;
 
   return (
     <div className="space-y-6">
@@ -173,13 +208,59 @@ export default function LorebookPage() {
           <div className="prose prose-sm sm:prose lg:prose-lg dark:prose-invert max-w-none whitespace-pre-wrap text-foreground/90 leading-relaxed">
             {parseSimpleMarkdown(lorebook.overallSummary)}
           </div>
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-primary/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-primary">{lorebook.entries.length}</div>
+              <div className="text-xs text-muted-foreground">Total Entries</div>
+            </div>
+            <div className="bg-primary/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-primary">
+                {Object.keys(groupedEntries).length}
+              </div>
+              <div className="text-xs text-muted-foreground">Categories</div>
+            </div>
+            <div className="bg-primary/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-primary">
+                {Math.round(lorebook.entries.reduce((sum, entry) => sum + entry.description.length, 0) / 1000)}K
+              </div>
+              <div className="text-xs text-muted-foreground">Characters of Lore</div>
+            </div>
+            <div className="bg-primary/10 rounded-lg p-3 text-center">
+              <div className="text-2xl font-bold text-primary">
+                {
+                  lorebook.entries.filter(entry => 
+                    entry.category.toLowerCase().includes('location') || 
+                    entry.category.toLowerCase().includes('region')
+                  ).length
+                }
+              </div>
+              <div className="text-xs text-muted-foreground">Locations</div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       <h2 className="text-xl font-semibold text-primary mt-8 mb-4">Detailed Lore Entries</h2>
-      {Object.entries(groupedEntries).length > 0 ? (
+      <div className="flex items-center mb-4">
+        <input
+          type="text"
+          placeholder="Search lore entries..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+        />
+      </div>
+      {/* Search results summary */}
+      {searchTerm && (
+        <div className="mb-4 text-sm text-foreground/80">
+          {totalMatchCount > 0 ? 
+            `Found ${totalMatchCount} ${totalMatchCount === 1 ? 'entry' : 'entries'} matching "${searchTerm}"` : 
+            `No entries found matching "${searchTerm}"`}
+        </div>
+      )}
+      {Object.entries(filteredEntries).length > 0 ? (
         <Accordion type="multiple" className="w-full space-y-4">
-          {Object.entries(groupedEntries).map(([category, entries]) => (
+          {Object.entries(filteredEntries).map(([category, entries]) => (
             <AccordionItem value={category} key={category} className="border border-border/70 rounded-lg shadow-md bg-card/70 backdrop-blur-sm">
               <AccordionTrigger className="px-6 py-4 text-lg hover:no-underline text-accent">
                 <div className="flex items-center">

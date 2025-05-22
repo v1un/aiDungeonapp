@@ -10,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { retrieveLoreInfoTool } from '@/ai/lore-tools'; // Import from flattened lore-tools file
+import { retrieveLoreInfoTool, addLocationToLorebookTool, enrichLorebookTool } from '@/ai/lore-tools'; // Import from flattened lore-tools file
 import type { /* Quest as _Quest, MainCharacter as _MainCharacter */ } from '@/types';
 
 // Import our new advanced storytelling tools
@@ -69,7 +69,9 @@ const prompt = ai.definePrompt({
     selectBranchTool,
     generateLocationTool,
     generateEnvironmentTool,
-    retrieveLocationTool
+    retrieveLocationTool,
+    addLocationToLorebookTool,
+    enrichLorebookTool
   ],
   prompt: `You are a master storyteller and Game Master for an immersive text-based RPG set in the world of **{{seriesTitle}}**.
 The player is controlling **{{mainCharacter.name}}** ({{mainCharacter.description}}).
@@ -94,11 +96,17 @@ Player's Action: "{{playerInput}}"
 Your Task:
 1.  **Narrate the Outcome**: Describe what happens as a result of the player's action. Be descriptive, engaging, and maintain the tone of "{{seriesTitle}}". Use markdown for emphasis (*italics* for thoughts, **bold** for key actions or names).
 2.  **World Interaction**: If the player interacts with an object, talks to an NPC (even if not explicitly named, infer if appropriate), or explores, describe the results.
-3.  **Lore Consistency**:
-    *   If the player asks about a specific person, place, item, or concept from "{{seriesTitle}}", or if your narrative needs to describe something that is likely detailed in the established lore (e.g., the history of a location, the abilities of a character, how a magic system works):
-    *   **Use the 'retrieveLoreInfoTool'**: Formulate a concise \`searchTerm\` (and optionally a \`categoryHint\`) to query the lorebook.
-    *   **Integrate Information**: Weave the information returned by the tool naturally into your narrative response. Do not just state "The tool said...".
-    *   If the tool finds no information, acknowledge that the detail might be unknown or not prominent in the established lore, and continue the narrative plausibly.
+3.  **Lore Integration (CRITICALLY IMPORTANT)**:
+    *   **Actively Use Provided Lore**: When I provide lore information in the prompt, make sure to incorporate these details naturally into your narrative to maintain world consistency. Don't ignore the lore context I've included.
+    *   **For Additional Lore Needs**: If the player asks about or interacts with a specific person, place, item, or concept from "{{seriesTitle}}", or if your narrative needs to describe something that should be in the established lore:
+        *   **Use the 'retrieveLoreInfoTool'**: Formulate a concise \`searchTerm\` (and optionally a \`categoryHint\`) to query the lorebook.
+        *   **Integrate Information Naturally**: Weave the information returned by the tool seamlessly into your narrative response, as if you already knew these details. Never say "According to the lorebook..." or similar phrases.
+    *   **When Discovering New Locations**: If the player discovers or creates a significant new location that deserves to be remembered:
+        *   **Use the 'addLocationToLorebookTool'**: Add the location with a rich description and appropriate category.
+    *   **Automatic Lorebook Enrichment**: 
+        *   **Use the 'enrichLorebookTool'** with your narrative response to automatically extract key information about the world, characters, events, items, or locations. This ensures the lorebook stays updated with all significant world elements.
+        *   When you create significant new narrative elements, always try to update the lorebook.
+    *   **World Building**: Consistently reference established lore elements to create a cohesive world experience. When no specific lore exists for something important, create plausible details that align with the existing world.
 4.  **State Changes (IMPORTANT - REFLECT IN OUTPUT SCHEMA)**:
     *   **Location**: If the player's action leads them to a new distinct named location, set \`updatedLocation\`.
     *   **Inventory**: If the player gains or loses an item, provide the *complete updated list* in \`updatedInventory\`.
@@ -218,36 +226,92 @@ const advanceStoryFlow = ai.defineFlow(
         }
       }
 
-      // Check lorebook for any relevant information
+      // Enhanced lorebook integration for better context
       let loreInfo = "";
       try {
         // Extract key terms from player input
-        const terms = input.playerInput
+        const playerInputTerms = input.playerInput
           .split(/\s+/)
-          .filter(word => word.length > 3 && !['this', 'that', 'with', 'from', 'your', 'what', 'where', 'when', 'which'].includes(word.toLowerCase()));
+          .filter(word => word.length > 3 && !['this', 'that', 'with', 'from', 'your', 'what', 'where', 'when', 'which', 'there', 'their', 'these', 'those', 'about'].includes(word.toLowerCase()));
         
-        if (terms.length > 0) {
-          // Try to find lore information about the most specific term
-          const searchTerm = terms[Math.floor(Math.random() * terms.length)];
-          const loreResult = await retrieveLoreInfoTool({
-            searchTerm: searchTerm
-          });
-          
-          if (loreResult && loreResult.found) {
-            loreInfo = loreResult.relevantInfo;
+        // Context-aware term extraction - consider current location and quest objectives
+        const contextTerms = [];
+        if (input.currentLocation) {
+          contextTerms.push(input.currentLocation);
+        }
+        
+        // Extract key terms from active quests
+        if (input.activeQuests && input.activeQuests.length > 0) {
+          const activeQuest = input.activeQuests[0]; // Focus on the most relevant quest
+          if (activeQuest.title) {
+            const questTitle = activeQuest.title.split(/\s+/).filter(w => w.length > 4);
+            contextTerms.push(...questTitle);
           }
         }
+
+        // Combine all potential search terms, prioritizing player input
+        const allTerms = [...playerInputTerms, ...contextTerms];
+        
+        // If we have terms to search for
+        if (allTerms.length > 0) {
+          const mainSearchResults: string[] = [];
+          const secondarySearchResults: string[] = [];
+          
+          // First try direct search with player input terms - up to 2 terms
+          for (let i = 0; i < Math.min(2, playerInputTerms.length); i++) {
+            const searchTerm = playerInputTerms[i];
+            try {
+              const loreResult = await retrieveLoreInfoTool({
+                searchTerm: searchTerm
+              });
+              
+              if (loreResult && loreResult.found) {
+                mainSearchResults.push(loreResult.relevantInfo);
+              }
+            } catch (err) {
+              console.log(`Error searching for term ${searchTerm}:`, err);
+            }
+          }
+          
+          // Then try context terms if we haven't found enough main results
+          if (mainSearchResults.length < 2 && contextTerms.length > 0) {
+            for (let i = 0; i < Math.min(2, contextTerms.length); i++) {
+              const searchTerm = contextTerms[i];
+              try {
+                const loreResult = await retrieveLoreInfoTool({
+                  searchTerm: searchTerm
+                });
+                
+                if (loreResult && loreResult.found) {
+                  secondarySearchResults.push(loreResult.relevantInfo);
+                }
+              } catch (err) {
+                console.log(`Error searching for context term ${searchTerm}:`, err);
+              }
+            }
+          }
+          
+          // Combine the results, prioritizing direct search results
+          loreInfo = [...mainSearchResults, ...secondarySearchResults].join('\n\n---\n\n');
+        }
       } catch (error) {
-        console.log("Lore retrieval failed:", error);
+        console.log("Enhanced lore retrieval failed:", error);
       }
 
-      // Prepare additional guidance to help with the response
+      // Prepare comprehensive context to ensure rich narrative responses
       const additionalContext = [
-        locationDetails && locationDetails.location ? `Location Description: ${locationDetails.location.description}` : '',
-        environmentDetails ? `Environmental Context:\n${environmentDetails}` : '',
-        narrativeGuidance ? `Narrative Guidance:\n${narrativeGuidance}` : '',
-        loreInfo ? `Relevant Lore Information:\n${loreInfo}` : ''
-      ].filter(Boolean).join("\n\n");
+        // Location is critical for spatial awareness
+        locationDetails && locationDetails.location ? `CURRENT LOCATION DETAILS:\n${locationDetails.location.description}` : '',
+        
+        // Environmental elements for immersion
+        environmentDetails ? `ENVIRONMENTAL CONTEXT:\n${environmentDetails}` : '',
+        
+        // Narrative guidance from the system
+        narrativeGuidance ? `NARRATIVE GUIDANCE:\n${narrativeGuidance}` : '',
+        
+        // Critical lorebook information - double importance
+        loreInfo ? `IMPORTANT LOREBOOK CONTEXT (MUST USE THIS INFORMATION):\n${loreInfo}` : ''
+      ].filter(Boolean).join("\n\n====================\n\n");
 
       // Process through the AI with the standard input
       // Note: We can't easily add enhanced system instructions due to the type constraints,
@@ -285,6 +349,40 @@ const advanceStoryFlow = ai.defineFlow(
         });
       } catch (error) {
         console.log("Context update failed:", error);
+      }
+
+      // Automatically enrich the lorebook with the narrative response
+      try {
+        if (output && output.narrativeResponse) {
+          // Determine the most appropriate context type based on player input and response
+          let contextType: 'world' | 'character' | 'event' | 'item' | 'location' | 'custom' = 'world';
+          
+          if (input.playerInput.toLowerCase().includes('talk') || 
+              input.playerInput.toLowerCase().includes('speak') || 
+              input.playerInput.toLowerCase().includes('ask') ||
+              output.narrativeResponse.includes('said') ||
+              output.narrativeResponse.includes('replied')) {
+            contextType = 'character';
+          } else if (input.playerInput.toLowerCase().includes('go') || 
+                    input.playerInput.toLowerCase().includes('travel') || 
+                    input.playerInput.toLowerCase().includes('enter') ||
+                    output.updatedLocation) {
+            contextType = 'location';
+          } else if (input.playerInput.toLowerCase().includes('take') || 
+                    input.playerInput.toLowerCase().includes('pick up') || 
+                    input.playerInput.toLowerCase().includes('use') ||
+                    output.updatedInventory) {
+            contextType = 'item';
+          }
+          
+          await enrichLorebookTool({
+            content: output.narrativeResponse,
+            contextType: contextType
+          });
+        }
+      } catch (error) {
+        console.log("Auto-enrichment of lorebook failed:", error);
+        // Don't block the response if enrichment fails
       }
 
       return output;
