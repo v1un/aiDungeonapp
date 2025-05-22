@@ -2,7 +2,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { WorldDetailSchema, WorldDetail } from '@/ai/lorebook-schemas'; // Import the schema
+import { WorldDetailSchema, WorldDetail } from '@/ai/lorebook-schemas'; // Correct import for WorldDetail type
 
 // Input Schema
 const GenerateWorldDetailsInputSchema = z.object({
@@ -11,67 +11,45 @@ const GenerateWorldDetailsInputSchema = z.object({
 });
 export type GenerateWorldDetailsInput = z.infer<typeof GenerateWorldDetailsInputSchema>;
 
-// Placeholder implementation
+// Output Schema is WorldDetailSchema (type is WorldDetail) imported from lorebook-schemas
+
+const generateWorldDetailsPrompt = ai.definePrompt({
+  name: 'generateWorldDetailsPrompt',
+  input: { schema: GenerateWorldDetailsInputSchema },
+  output: { schema: WorldDetailSchema },
+  prompt: `You are a master world-builder and lore historian for the fictional universe of "{{seriesTitle}}".
+The player has provided an initial concept for their experience within this universe:
+"{{{playerWorldContext}}}"
+
+Your task is to expand dramatically on this player-provided context to create a richer, more detailed foundation for their adventure. Generate the following world details, ensuring they are thematically consistent with "{{seriesTitle}}" and the player's initial context:
+
+1.  **Overall Setting Description**: Provide a comprehensive paragraph describing the world's atmosphere, primary themes (e.g., gritty survival, high fantasy, political intrigue, cosmic horror), and any unique, defining characteristics or technologies/magic systems.
+2.  **Key Historical Events**: Detail 3 to 5 pivotal historical events that have significantly shaped the current state of this world. For each event, briefly describe what happened and its lasting impact.
+3.  **Major Geographical Areas**: Describe 2 to 3 major continents, distinct regions, or significant geographical areas. For each, include its typical climate, key features, and perhaps a hint of its inhabitants or importance.
+4.  **Cultural Norms**: Outline 2 to 3 significant cultural norms, widespread traditions, or common societal structures that characters in this world would likely encounter or live by.
+
+Ensure all generated content is creative, engaging, and provides a solid foundation for storytelling.`,
+});
+
 export async function generateWorldDetails(input: GenerateWorldDetailsInput): Promise<WorldDetail> {
-  console.log(`[STUB] generateWorldDetails called with:`, input);
-  // Mock data matching WorldDetailSchema
-  const mockWorldDetails: WorldDetail = {
-    overallSettingDescription: `A vast and varied world for ${input.seriesTitle}, shaped by the player's initial ideas: ${input.playerWorldContext}. It features towering mountains, sprawling forests, and ancient ruins. Magic is common but often dangerous.`,
-    keyHistoricalEvents: [
-      "The Great Upheaval - A cataclysmic event that reshaped continents.",
-      "The Sundering of the Three Kingdoms - A major political war.",
-      "The First Mage Rebellion - When mages fought for their rights."
-    ],
-    majorGeographicalAreas: [
-      "The Dragon's Tooth Mountains",
-      "Whispering Woods",
-      "Sunken City of Aethel"
-    ],
-    culturalNorms: [
-      "Ancestor worship is common in the northern tribes.",
-      "A yearly festival of lights celebrates the end of the dark season.",
-      "Duels of honor are still practiced in some remote regions."
-    ]
-  };
-  return Promise.resolve(mockWorldDetails);
+  const { output } = await generateWorldDetailsPrompt(input);
+  if (!output) {
+    // This case should ideally be handled by Genkit's error handling or schema validation,
+    // but a manual check provides an explicit error.
+    throw new Error("AI failed to generate world details or the output was empty.");
+  }
+  return output;
 }
 
-// Genkit Flow (optional for stub, but good for structure)
-const generateWorldDetailsFlow = ai.defineFlow(
+// Optional: Define and export the Genkit flow if you want to run it using Genkit's CLI or other tools.
+// This is not strictly required if you only call generateWorldDetails() directly.
+export const generateWorldDetailsFlow = ai.defineFlow(
   {
     name: 'generateWorldDetailsFlow',
     inputSchema: GenerateWorldDetailsInputSchema,
     outputSchema: WorldDetailSchema,
   },
   async (input) => {
-    // In a real implementation, this would call an AI model with a prompt.
-    // For now, it directly calls our placeholder function.
-    return generateWorldDetails(input);
+    return generateWorldDetails(input); // Calls the function above
   }
 );
-
-// Prompt definition (for future use, not strictly needed for stub)
-const prompt = ai.definePrompt({
-  name: 'generateWorldDetailsPrompt',
-  input: { schema: GenerateWorldDetailsInputSchema },
-  output: { schema: WorldDetailSchema },
-  prompt: `You are a world-building assistant. Based on the series title "{{seriesTitle}}" and the player's initial context "{{playerWorldContext}}", expand this into a richer world.
-  
-  Provide details for:
-  - Overall Setting Description
-  - Key Historical Events
-  - Major Geographical Areas
-  - Cultural Norms
-
-  Present the output in the structured format defined by WorldDetailSchema.
-  Example - Overall Setting Description: A brief paragraph giving a general feel of the world.
-  Example - Key Historical Events: A list of 2-4 significant past events.
-  Example - Major Geographical Areas: A list of 2-4 important regions or landmarks.
-  Example - Cultural Norms: A list of 2-4 common societal practices.
-  `,
-});
-
-// To make the flow runnable (optional for stub)
-// export async function runGenerateWorldDetailsFlow(input: GenerateWorldDetailsInput): Promise<WorldDetail> {
-//   return generateWorldDetailsFlow(input);
-// }

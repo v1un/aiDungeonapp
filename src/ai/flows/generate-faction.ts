@@ -2,76 +2,82 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { FactionSchema, Faction, WorldDetail, WorldDetailSchema, TypedFactionSchema, TypedFaction } from '@/ai/lorebook-schemas'; // Import schemas
+import { 
+  FactionSchema, 
+  TypedFaction, 
+  WorldDetailSchema, // Used in GenerateFactionInputSchema
+  WorldDetail // Type for worldDetails
+} from '@/ai/lorebook-schemas';
 
-// Input Schema
-const GenerateFactionInputSchema = z.object({
+// Input Schema: Defines the structure for the input to the generateFaction function
+export const GenerateFactionInputSchema = z.object({
   seriesTitle: z.string().describe("The title of the fictional series."),
   worldDetails: WorldDetailSchema.describe("Key details about the world to ensure the faction fits in."),
-  factionConcept: z.string().describe("A brief concept or idea for the faction provided by the player or system."),
+  factionConcept: z.string().describe("A brief concept or idea for the faction. This could be a name, a role, or a theme."),
 });
 export type GenerateFactionInput = z.infer<typeof GenerateFactionInputSchema>;
 
-// Placeholder implementation
+// Genkit Prompt Definition
+const generateFactionPrompt = ai.definePrompt({
+  name: 'generateFactionPrompt',
+  input: { schema: GenerateFactionInputSchema }, // Input for the prompt execution
+  output: { schema: FactionSchema }, // AI is expected to generate data matching FactionSchema (without the 'type' field)
+  prompt: `You are a skilled narrative designer and political strategist creating a compelling faction for the universe of "{{seriesTitle}}".
+The established world context is as follows:
+Overall Setting: {{{worldDetails.overallSettingDescription}}}
+Key Historical Events:
+{{#each worldDetails.keyHistoricalEvents}}
+- {{{this}}}
+{{/each}}
+Cultural Norms:
+{{#each worldDetails.culturalNorms}}
+- {{{this}}}
+{{/each}}
+
+The initial concept for this faction is: "{{{factionConcept}}}"
+
+Your task is to develop a detailed profile for this faction. Generate the following:
+- **Name**: A fitting name for the faction.
+- **Description**: A detailed description (2-3 paragraphs) covering the faction's origins, core beliefs, common practices, and overall role or reputation in the world.
+- **Goals**: 2-3 primary, actionable goals or objectives of the faction.
+- **Leader (Optional)**: The name of a known leader or a key influential figure, if applicable. If so, a brief note on their style.
+- **Allies (Names Only)**: List 0-2 potential allied factions or groups by name (these can be other factions you might invent or generic concepts for now).
+- **Enemies (Names Only)**: List 0-2 potential rival factions or groups by name.
+- **Related World Events (Optional)**: Mention 1-2 events from the Key Historical Events list above that this faction was significantly involved in or shaped by, explaining their connection.
+
+Ensure the faction feels authentic to the "{{seriesTitle}}" and the provided world details, and that the \`factionConcept\` is well-explored. The faction should offer clear potential for storytelling, conflict, or alliance.`,
+});
+
+// AI Flow Function
 export async function generateFaction(input: GenerateFactionInput): Promise<TypedFaction> {
-  console.log(`[STUB] generateFaction called with:`, input);
-  // Mock data matching FactionSchema
-  const mockFaction: TypedFaction = {
-    type: 'faction', // Added type for TypedFactionSchema
-    name: `The Shadow Syndicate of ${input.seriesTitle}`,
-    description: `A secretive organization operating in the underbelly of society, inspired by '${input.factionConcept}'. They thrive in the chaos mentioned in '${input.worldDetails.overallSettingDescription.substring(0,50)}...'`,
-    goals: [
-      "To amass wealth and influence.",
-      "To control the black markets.",
-      "To remain hidden from major authorities."
-    ],
-    leader: "The Unseen Hand (identity unknown)",
-    allies: ["The Smugglers' Guild", "Corrupt City Officials"],
-    enemies: ["The Royal Guard", "The Merchant's Council"],
-    relatedWorldEvents: input.worldDetails.keyHistoricalEvents.slice(0,1) // Relate to the first historical event
-  };
-  return Promise.resolve(mockFaction);
+  console.log(`[generateFaction] Called with input:`, {
+    seriesTitle: input.seriesTitle,
+    factionConcept: input.factionConcept,
+    worldDetailsSummary: input.worldDetails.overallSettingDescription.substring(0, 50) + "..." // Log summary
+  });
+
+  const { output } = await generateFactionPrompt(input);
+
+  if (!output) {
+    console.error("[generateFaction] AI failed to generate faction details or the output was empty.");
+    throw new Error("AI failed to generate faction details.");
+  }
+
+  // Add the 'type' field to conform to TypedFactionSchema
+  const typedOutput: TypedFaction = { ...output, type: 'faction' };
+  
+  console.log(`[generateFaction] Generated typed faction:`, typedOutput.name);
+  return typedOutput;
 }
 
-// Genkit Flow (optional for stub, but good for structure)
-const generateFactionFlow = ai.defineFlow(
+// Optional: Define and export the Genkit flow if you want to run it using Genkit's CLI or other tools.
+export const generateFactionFlow = ai.defineFlow(
   {
     name: 'generateFactionFlow',
     inputSchema: GenerateFactionInputSchema,
-    outputSchema: TypedFactionSchema, // Outputting the typed version
+    outputSchema: TypedFactionSchema, // The final output of this flow is TypedFaction
   },
   async (input) => {
-    return generateFaction(input);
+    return generateFaction(input); // Calls the function above
   }
 );
-
-// Prompt definition (for future use)
-const prompt = ai.definePrompt({
-  name: 'generateFactionPrompt',
-  input: { schema: GenerateFactionInputSchema },
-  output: { schema: TypedFactionSchema }, // Outputting the typed version
-  prompt: `You are a faction creation specialist for the world of "{{seriesTitle}}".
-  World Details:
-  - Setting: {{worldDetails.overallSettingDescription}}
-  - Key Events: {{#each worldDetails.keyHistoricalEvents}}{{.}}, {{/each}}
-
-  Faction Concept: "{{factionConcept}}"
-
-  Based on the concept and world details, generate a faction with:
-  - Name
-  - Description (history, members)
-  - Goals (list)
-  - Leader (optional)
-  - Allies (list)
-  - Enemies (list)
-  - Related World Events (optional list, drawn from or inspired by key historical events)
-  
-  Ensure the faction feels like a natural part of the world. Output should conform to FactionSchema.
-  Remember to include the 'type: "faction"' field in the output.
-  `,
-});
-
-// To make the flow runnable (optional for stub)
-// export async function runGenerateFactionFlow(input: GenerateFactionInput): Promise<TypedFaction> {
-//   return generateFactionFlow(input);
-// }

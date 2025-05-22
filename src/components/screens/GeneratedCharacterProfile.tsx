@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // For error display
 import { ScrollArea } from "@/components/ui/scroll-area"; // For potentially long backstories
 import type { GenerateCharacterOutput } from '@/ai/flows/generate-character';
+import type { TypedFaction, TypedLocation } from '@/ai/lorebook-schemas'; // Import new types
 
 // Alias for clarity, matching the structure from generate-character.ts
 interface CharacterData extends GenerateCharacterOutput {}
@@ -16,6 +17,8 @@ interface GeneratedCharacterProfileProps {
   seriesTitle: string; // Still useful for context, especially on error
   generationError: string | null;
   onStartAdventure: () => void;
+  generatedFactions?: TypedFaction[];   // New prop
+  generatedLocations?: TypedLocation[]; // New prop
 }
 
 export function GeneratedCharacterProfile({
@@ -23,6 +26,8 @@ export function GeneratedCharacterProfile({
   seriesTitle,
   generationError,
   onStartAdventure,
+  generatedFactions,  // Destructure new prop
+  generatedLocations, // Destructure new prop
 }: GeneratedCharacterProfileProps) {
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
@@ -58,7 +63,6 @@ export function GeneratedCharacterProfile({
               <CardDescription>Please wait while we retrieve the details for your adventure in {seriesTitle}.</CardDescription>
             </CardHeader>
             <CardContent className="flex justify-center items-center py-10">
-              {/* You could add a spinner here if desired */}
               <p className="text-muted-foreground">Fetching character data...</p>
             </CardContent>
             <CardFooter className="flex flex-col items-center">
@@ -99,7 +103,7 @@ export function GeneratedCharacterProfile({
                     {Object.entries(characterData.stats).map(([statName, statValue]) => (
                       <div key={statName} className="bg-muted p-3 rounded-md">
                         <span className="font-semibold capitalize text-sm">
-                          {statName.replace(/([A-Z_])/g, ' $1').trim()}: {/* Add space for camelCase or snake_case */}
+                          {statName.replace(/([A-Z_])/g, ' $1').trim()}:
                         </span>
                         <span className="text-sm"> {String(statValue)}</span>
                       </div>
@@ -121,6 +125,47 @@ export function GeneratedCharacterProfile({
                     <p className="text-sm text-muted-foreground">No specific skills listed.</p>
                   )}
                 </div>
+
+                {/* Key Factions Display */}
+                {generatedFactions && generatedFactions.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-medium mt-4 mb-1">Key Factions:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {generatedFactions.map((faction) => (
+                        <span key={faction.id} className="bg-accent text-accent-foreground text-xs px-2 py-0.5 rounded">
+                          {faction.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {!generatedFactions || generatedFactions.length === 0 && (
+                    <div>
+                        <h3 className="text-lg font-medium mt-4 mb-1">Key Factions:</h3>
+                        <p className="text-sm text-muted-foreground">No specific factions highlighted.</p>
+                    </div>
+                )}
+
+                {/* Notable Locations Display */}
+                {generatedLocations && generatedLocations.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-medium mt-4 mb-1">Notable Locations:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {generatedLocations.map((location) => (
+                        <span key={location.id} className="bg-accent text-accent-foreground text-xs px-2 py-0.5 rounded">
+                          {location.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {!generatedLocations || generatedLocations.length === 0 && (
+                    <div>
+                        <h3 className="text-lg font-medium mt-4 mb-1">Notable Locations:</h3>
+                        <p className="text-sm text-muted-foreground">No specific locations highlighted.</p>
+                    </div>
+                )}
+
               </div>
             </CardContent>
             <CardFooter className="flex flex-col items-center">

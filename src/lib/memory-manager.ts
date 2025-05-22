@@ -1,85 +1,99 @@
-import { LoreEntity, LoreEntitySchema, TypedFaction, TypedLocation } from '@/ai/lorebook-schemas'; // Assuming LoreEntitySchema is the most generic
+import { 
+  LoreEntity, 
+  LoreEntitySchema, 
+  TypedFaction, 
+  TypedLocation,
+  TypedCharacter, // Import new type
+  TypedWorldDetail // Import new type
+} from '@/ai/lorebook-schemas';
 import { z } from 'zod';
 
 // Using Zod schema for ILoreEntity to stay consistent with the rest of the AI type definitions.
-// This also provides runtime validation if needed.
 export type ILoreEntity = LoreEntity; // Alias to the discriminated union
 
 export interface IMemoryManager {
-  addEntity(entity: ILoreEntity): Promise<string>; // Return ID of added entity
-  getEntity(id: string, type: string): Promise<ILoreEntity | null>;
-  updateEntity(id: string, type: string, updates: Partial<Omit<ILoreEntity, 'type'>>): Promise<ILoreEntity | null>;
+  addEntity(entity: ILoreEntity): Promise<void>; // Changed to Promise<void> as ID is part of entity
+  getEntity(id: string, type?: string): Promise<ILoreEntity | null>; // type is optional, useful for discriminated union
+  updateEntity(id: string, updates: Partial<Omit<ILoreEntity, 'id' | 'type'>>): Promise<ILoreEntity | null>; // Type is now part of entity
   getAllEntitiesOfType(type: string): Promise<ILoreEntity[]>;
   logEvent(eventSummary: string): Promise<void>;
   getRecentEvents(limit: number): Promise<string[]>;
 }
 
-// Simple ID generation for in-memory store
-let nextId = 1;
-function generateId(): string {
-  return `mem-${nextId++}`;
-}
-
 export class InMemoryMemoryManager implements IMemoryManager {
-  private entities: Map<string, ILoreEntity> = new Map(); // Store entities by ID
+  private entities: Map<string, ILoreEntity> = new Map(); // Store entities by ID (which is now part of ILoreEntity)
   private events: string[] = [];
   private readonly maxEvents = 100; // Cap the number of events stored
 
-  async addEntity(entity: ILoreEntity): Promise<string> {
-    const id = generateId();
-    // Add an 'id' field to the entity itself for easier retrieval/management if it doesn't have one.
-    // However, LoreEntitySchema doesn't define 'id'. We'll manage IDs externally in this map.
-    this.entities.set(id, entity);
-    console.log(`[MemoryManager] Added entity ${id} of type ${entity.type}:`, entity.name);
-    return id;
+  async addEntity(entity: ILoreEntity): Promise<void> {
+    // ID is now part of the entity itself, as defined in Typed schemas
+    if (!entity.id) {
+      console.error("[MemoryManager] Entity must have an ID to be added.", entity);
+      throw new Error("Entity must have an ID.");
+    }
+    if (this.entities.has(entity.id)) {
+      console.warn(`[MemoryManager] Entity with ID ${entity.id} already exists. Overwriting.`);
+    }
+    this.entities.set(entity.id, entity);
+    // Use .name for Faction, Location, Character. For WorldDetail, use a generic description or its ID.
+    const entityName = (entity as any).name || (entity as TypedWorldDetail).overallSettingDescription?.substring(0,30) || entity.id;
+    console.log(`[MemoryManager] Added/Updated entity ${entity.id} of type ${entity.type}:`, entityName);
   }
 
-  async getEntity(id: string, type: string): Promise<ILoreEntity | null> {
+  async getEntity(id: string, type?: string): Promise<ILoreEntity | null> {
     const entity = this.entities.get(id);
-    if (entity && entity.type === type) {
-      console.log(`[MemoryManager] Retrieved entity ${id} of type ${type}:`, entity.name);
-      return entity;
+    if (!entity) {
+      console.log(`[MemoryManager] Entity ${id} not found.`);
+      return null;
     }
-    if (entity && entity.type !== type) {
+    if (type && entity.type !== type) {
       console.warn(`[MemoryManager] Entity ${id} found, but type mismatch. Expected ${type}, got ${entity.type}`);
       return null;
     }
-    console.log(`[MemoryManager] Entity ${id} of type ${type} not found.`);
-    return null;
+    const entityName = (entity as any).name || (entity as TypedWorldDetail).overallSettingDescription?.substring(0,30) || entity.id;
+    console.log(`[MemoryManager] Retrieved entity ${id} of type ${entity.type}:`, entityName);
+    return entity;
   }
 
-  async updateEntity(id: string, type: string, updates: Partial<Omit<ILoreEntity, 'type'>>): Promise<ILoreEntity | null> {
+  async updateEntity(id: string, updates: Partial<Omit<ILoreEntity, 'id' | 'type'>>): Promise<ILoreEntity | null> {
     const existingEntity = this.entities.get(id);
-    if (existingEntity && existingEntity.type === type) {
-      // Perform type-safe update
-      let updatedEntity: ILoreEntity;
-      if (existingEntity.type === 'faction' && type === 'faction') {
-         updatedEntity = { ...existingEntity, ...updates as Partial<TypedFaction> };
-      } else if (existingEntity.type === 'location' && type === 'location') {
-         updatedEntity = { ...existingEntity, ...updates as Partial<TypedLocation> };
-      } else {
-        console.error(`[MemoryManager] Update failed: Unhandled entity type '${existingEntity.type}' for id ${id}.`);
-        return null;
-      }
-      
-      // Validate against the specific schema (optional, but good for robustness)
-      try {
-        LoreEntitySchema.parse(updatedEntity); // This will throw if the update makes the entity invalid
-        this.entities.set(id, updatedEntity);
-        console.log(`[MemoryManager] Updated entity ${id} of type ${type}:`, updatedEntity.name);
-        return updatedEntity;
-      } catch (error) {
-        console.error(`[MemoryManager] Update for entity ${id} resulted in invalid data:`, error);
-        return null; // Or re-throw, or return existingEntity
-      }
+    if (!existingEntity) {
+      console.log(`[MemoryManager] Entity ${id} not found for update.`);
+      return null;
+    }
 
-    }
-    if (existingEntity && existingEntity.type !== type) {
-        console.warn(`[MemoryManager] Entity ${id} found, but type mismatch for update. Expected ${type}, got ${existingEntity.type}`);
+    // Perform type-safe update by spreading based on type
+    let updatedData: ILoreEntity;
+    switch (existingEntity.type) {
+      case 'faction':
+        updatedData = { ...existingEntity, ...updates as Partial<Omit<TypedFaction, 'id' | 'type'>> };
+        break;
+      case 'location':
+        updatedData = { ...existingEntity, ...updates as Partial<Omit<TypedLocation, 'id' | 'type'>> };
+        break;
+      case 'character':
+        updatedData = { ...existingEntity, ...updates as Partial<Omit<TypedCharacter, 'id' | 'type'>> };
+        break;
+      case 'worldDetail':
+        updatedData = { ...existingEntity, ...updates as Partial<Omit<TypedWorldDetail, 'id' | 'type'>> };
+        break;
+      default:
+        // This should not happen if all types in LoreEntitySchema are handled
+        console.error(`[MemoryManager] Update failed: Unhandled entity type '${(existingEntity as any).type}' for id ${id}.`);
         return null;
     }
-    console.log(`[MemoryManager] Entity ${id} of type ${type} not found for update.`);
-    return null;
+    
+    // Validate against the specific schema (optional, but good for robustness)
+    try {
+      LoreEntitySchema.parse(updatedData); // This will throw if the update makes the entity invalid
+      this.entities.set(id, updatedData);
+      const entityName = (updatedData as any).name || (updatedData as TypedWorldDetail).overallSettingDescription?.substring(0,30) || updatedData.id;
+      console.log(`[MemoryManager] Updated entity ${id} of type ${updatedData.type}:`, entityName);
+      return updatedData;
+    } catch (error) {
+      console.error(`[MemoryManager] Update for entity ${id} resulted in invalid data:`, error);
+      return null; // Or re-throw, or return existingEntity
+    }
   }
 
   async getAllEntitiesOfType(type: string): Promise<ILoreEntity[]> {

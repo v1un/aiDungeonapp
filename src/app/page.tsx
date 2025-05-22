@@ -1,26 +1,49 @@
 "use client";
 
-import React, { useState, useEffect } from 'react'; // Added useEffect
+import React, { useState, useEffect } from 'react';
 import { GameSetupScreen } from '@/components/screens/GameSetupScreen';
 import { GenerationProgressScreen } from '@/components/screens/GenerationProgressScreen';
 import { GeneratedCharacterProfile } from '@/components/screens/GeneratedCharacterProfile';
 import { Button } from '@/components/ui/button';
-import { generateCharacter, GenerateCharacterOutput } from '@/ai/flows/generate-character'; // Import AI flow
+
+// AI Flow Imports
+import { generateCharacter, GenerateCharacterOutput } from '@/ai/flows/generate-character';
+import { generateWorldDetails } from '@/ai/flows/generate-world-details';
+import { generateFaction } from '@/ai/flows/generate-faction';
+import { generateLocation } from '@/ai/flows/generate-location';
+
+// Lorebook Schema & Memory Manager Imports
+import type { 
+  WorldDetail, 
+  TypedFaction, 
+  TypedLocation,
+  Character as CharacterSchemaType 
+} from '@/ai/lorebook-schemas';
+import { memoryManager } from '@/lib/memory-manager'; 
 
 // Define possible screen states
 type ScreenState = 'setup' | 'generating' | 'profile';
 
-// Updated CharacterData interface to match GenerateCharacterOutput
 interface CharacterData extends GenerateCharacterOutput {}
 
 export default function AdventurePage() {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('setup');
   const [seriesTitle, setSeriesTitle] = useState<string>('');
-  const [characterConcept, setCharacterConcept] = useState<string>(''); // New state
-  const [worldContext, setWorldContext] = useState<string>(''); // New state
+  const [characterConcept, setCharacterConcept] = useState<string>('');
+  const [worldContext, setWorldContext] = useState<string>('');
+  
+  const [worldDetails, setWorldDetails] = useState<WorldDetail | null>(null);
+  const [generatedFactions, setGeneratedFactions] = useState<TypedFaction[]>([]);
+  const [generatedLocations, setGeneratedLocations] = useState<TypedLocation[]>([]);
   const [characterData, setCharacterData] = useState<CharacterData | null>(null);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false); // New state for loading
-  const [generationError, setGenerationError] = useState<string | null>(null); // New state for error
+  
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+
+  const generateUniqueId = (typePrefix: string, nameSuffix: string = ''): string => {
+    const safeNameSuffix = nameSuffix.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    return `${typePrefix}_${safeNameSuffix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  };
 
   const handleStartGeneration = async (data: {
     seriesTitle: string;
@@ -30,54 +53,131 @@ export default function AdventurePage() {
     setSeriesTitle(data.seriesTitle);
     setCharacterConcept(data.characterConcept);
     setWorldContext(data.worldContext);
+    setWorldDetails(null);
+    setGeneratedFactions([]);
+    setGeneratedLocations([]);
     setCharacterData(null);
     setGenerationError(null);
-    setIsGenerating(true); // Indicate that generation is starting
-    setCurrentScreen('generating'); // Show generation progress screen
+    setIsGenerating(true);
+    setCurrentScreen('generating');
 
-    // Start AI generation immediately
+    let generationSucceeded = false;
+
     try {
-      const aiResult = await generateCharacter({
+      console.log("[PAGE] Attempting to generate world details...");
+      const rawWorldDetails = await generateWorldDetails({
+        seriesTitle: data.seriesTitle,
+        playerWorldContext: data.worldContext,
+      });
+      setWorldDetails(rawWorldDetails);
+      const worldDetailId = generateUniqueId('wd', data.seriesTitle);
+      await memoryManager.addEntity({ ...rawWorldDetails, id: worldDetailId, type: 'worldDetail' });
+      console.log(`[PAGE] World details generated and stored in memory with ID: ${worldDetailId}`);
+
+      const factionConcepts = ["The Shadow Syndicate", "Keepers of the Ancient Light", "The Ironclad Merchants Guild"]; 
+      const factions: TypedFaction[] = [];
+      console.log("[PAGE] Attempting to generate factions...");
+      for (const concept of factionConcepts) {
+        try {
+          const faction = await generateFaction({
+            seriesTitle: data.seriesTitle,
+            worldDetails: rawWorldDetails,
+            factionConcept: concept,
+          });
+          const factionWithId = { ...faction, id: faction.id || generateUniqueId('fac', faction.name) };
+          factions.push(factionWithId);
+          await memoryManager.addEntity(factionWithId);
+          console.log(`[PAGE] Faction "${factionWithId.name}" generated and stored in memory with ID: ${factionWithId.id}`);
+        } catch (e) {
+          console.error(`[PAGE] Failed to generate faction for concept: "${concept}"`, e);
+        }
+      }
+      setGeneratedFactions(factions);
+
+      const locationConcepts = ["The Whispering Chasm", "Old Town Market Square", "The Sunken Library"];
+      const locations: TypedLocation[] = [];
+      console.log("[PAGE] Attempting to generate locations...");
+      for (const concept of locationConcepts) {
+        try {
+          const location = await generateLocation({
+            seriesTitle: data.seriesTitle,
+            worldDetails: rawWorldDetails,
+            locationConcept: concept,
+          });
+          const locationWithId = { ...location, id: location.id || generateUniqueId('loc', location.name) };
+          locations.push(locationWithId);
+          await memoryManager.addEntity(locationWithId);
+          console.log(`[PAGE] Location "${locationWithId.name}" generated and stored in memory with ID: ${locationWithId.id}`);
+        } catch (e) {
+          console.error(`[PAGE] Failed to generate location for concept: "${concept}"`, e);
+        }
+      }
+      setGeneratedLocations(locations);
+
+      console.log("[PAGE] Attempting to generate character...");
+      const rawCharacterData = await generateCharacter({
         seriesTitle: data.seriesTitle,
         characterConcept: data.characterConcept,
         worldContext: data.worldContext,
+        worldDetails: rawWorldDetails,
+        factions: factions,
+        locations: locations,
       });
-      setCharacterData(aiResult);
+      setCharacterData(rawCharacterData);
+      const characterId = generateUniqueId('char', rawCharacterData.name);
+      const typedCharacterData: CharacterSchemaType & { id: string; type: 'character' } = {
+        ...rawCharacterData,
+        id: characterId,
+        type: 'character',
+      };
+      await memoryManager.addEntity(typedCharacterData);
+      console.log(`[PAGE] Character "${typedCharacterData.name}" generated and stored in memory with ID: ${characterId}`);
+      
+      generationSucceeded = true; // Mark as successful if all critical parts complete
+
     } catch (error) {
-      console.error("AI Character Generation Error:", error);
-      setGenerationError(error instanceof Error ? error.message : "An unknown error occurred during character generation.");
+      console.error("[PAGE] Critical AI Generation Error:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during critical generation stages.";
+      setGenerationError(errorMessage);
     } finally {
-      setIsGenerating(false); // Indicate that generation has finished (success or fail)
+      setIsGenerating(false);
+      console.log("[PAGE] Generation process finished. isGenerating:", false);
+      
+      // Log memory contents if generation was successful (characterData is the last critical piece)
+      if (generationSucceeded && !generationError) { // Check generationSucceeded flag
+        const logMemory = async () => {
+          console.log("--- Verifying Memory Manager Contents ---");
+          console.log("Stored World Details:", await memoryManager.getAllEntitiesOfType('worldDetail'));
+          console.log("Stored Factions:", await memoryManager.getAllEntitiesOfType('faction'));
+          console.log("Stored Locations:", await memoryManager.getAllEntitiesOfType('location'));
+          console.log("Stored Characters:", await memoryManager.getAllEntitiesOfType('character'));
+          console.log("--- End Memory Manager Contents ---");
+        };
+        logMemory();
+      }
     }
   };
   
-  // This function is called by GenerationProgressScreen when its "fake" progress animation finishes.
   const handleFakeProgressComplete = () => {
-    // If AI generation is already done (isGenerating is false), and we have data or an error,
-    // then it's safe to transition to the profile screen.
-    // The useEffect below will also catch this, but this can make the transition quicker
-    // if the animation finishes after the AI.
-    if (!isGenerating && (characterData || generationError)) {
+    if (!isGenerating && (characterData || generationError)) { 
       setCurrentScreen('profile');
     }
-    // If AI is still generating, GenerationProgressScreen will continue to show.
-    // The useEffect will handle transitioning once isGenerating becomes false.
   };
 
-  // useEffect to transition to profile screen once generation is done
   useEffect(() => {
-    // Only transition if we are currently on the 'generating' screen AND generation is no longer active
     if (currentScreen === 'generating' && !isGenerating && (characterData || generationError)) {
       setCurrentScreen('profile');
     }
   }, [isGenerating, characterData, generationError, currentScreen]);
 
   const handleStartAdventure = () => {
-    // Reset all relevant states for a new setup
     setCurrentScreen('setup');
     setSeriesTitle('');
     setCharacterConcept('');
     setWorldContext('');
+    setWorldDetails(null);
+    setGeneratedFactions([]);
+    setGeneratedLocations([]);
     setCharacterData(null);
     setGenerationError(null);
     setIsGenerating(false);
@@ -88,31 +188,24 @@ export default function AdventurePage() {
   }
 
   if (currentScreen === 'generating') {
-    // Pass isGenerating if GenerationProgressScreen wants to show a different message
-    // e.g. "Waiting for AI..." vs "Generating..."
-    // For now, GenerationProgressScreen is self-contained in its animation.
     return <GenerationProgressScreen onGenerationComplete={handleFakeProgressComplete} />;
   }
 
   if (currentScreen === 'profile') {
-    // GeneratedCharacterProfile will be updated in a subsequent step
-    // to correctly use characterData and display errors.
-    // For now, we pass the new props.
     return (
       <GeneratedCharacterProfile
         characterData={characterData} 
-        seriesTitle={seriesTitle} // Keep for context, e.g. if characterData is null due to error
+        seriesTitle={seriesTitle}
         generationError={generationError}
         onStartAdventure={handleStartAdventure}
-        // The old props characterName and characterDescription are now part of characterData
-        // These will be removed/refactored in GeneratedCharacterProfile's own update task
-        characterName={characterData?.name || "Error"} // Temporary, will be handled by GeneratedCharacterProfile
-        characterDescription={characterData?.backstory || generationError || "No data"} // Temporary
+        generatedFactions={generatedFactions}   // Pass factions
+        generatedLocations={generatedLocations} // Pass locations
+        // The characterName and characterDescription props were removed from GeneratedCharacterProfile in a previous step
+        // as characterData now contains all necessary fields.
       />
     );
   }
 
-  // Fallback or initial loading state
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <p className="mb-4">Loading or error state...</p>

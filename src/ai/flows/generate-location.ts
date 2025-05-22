@@ -2,73 +2,80 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { LocationSchema, Location, WorldDetail, WorldDetailSchema, TypedLocationSchema, TypedLocation } from '@/ai/lorebook-schemas'; // Import schemas
+import { 
+  LocationSchema, 
+  TypedLocation, 
+  WorldDetailSchema, // Used in GenerateLocationInputSchema
+  WorldDetail // Type for worldDetails
+} from '@/ai/lorebook-schemas';
 
-// Input Schema
-const GenerateLocationInputSchema = z.object({
+// Input Schema: Defines the structure for the input to the generateLocation function
+export const GenerateLocationInputSchema = z.object({
   seriesTitle: z.string().describe("The title of the fictional series."),
   worldDetails: WorldDetailSchema.describe("Key details about the world to ensure the location fits in."),
-  locationConcept: z.string().describe("A brief concept or idea for the location provided by the player or system."),
+  locationConcept: z.string().describe("A brief concept or idea for the location. This could be a name, a type of place, or a theme."),
 });
 export type GenerateLocationInput = z.infer<typeof GenerateLocationInputSchema>;
 
-// Placeholder implementation
+// Genkit Prompt Definition
+const generateLocationPrompt = ai.definePrompt({
+  name: 'generateLocationPrompt',
+  input: { schema: GenerateLocationInputSchema }, // Input for the prompt execution
+  output: { schema: LocationSchema }, // AI is expected to generate data matching LocationSchema (without the 'type' field)
+  prompt: `You are an expert cartographer and environmental storyteller for the universe of "{{seriesTitle}}".
+The established world context is as follows:
+Overall Setting: {{{worldDetails.overallSettingDescription}}}
+Major Geographical Areas:
+{{#each worldDetails.majorGeographicalAreas}}
+- {{{this}}}
+{{/each}}
+Key Historical Events:
+{{#each worldDetails.keyHistoricalEvents}}
+- {{{this}}}
+{{/each}}
+
+The initial concept for this location is: "{{{locationConcept}}}"
+
+Your task is to develop a detailed profile for this location. Generate the following:
+- **Name**: A fitting and evocative name for the location.
+- **Description**: A detailed description (2-3 paragraphs) covering the location's atmosphere, prominent features (terrain, architecture, flora, fauna), and general ambiance. Mention if it's part of any larger geographical area described above.
+- **Historical Significance (Optional)**: Briefly describe any historical importance or past events specifically associated with this location. This might tie into the Key Historical Events provided.
+- **Points of Interest**: List 2-3 specific, notable points of interest within or about this location (e.g., an ancient ruin, a unique natural wonder, a specific building, a dangerous zone).
+- **Related World Events (Optional)**: Mention 1-2 events from the Key Historical Events list that this location was directly involved in or significantly affected by, explaining the connection.
+
+Ensure the location feels authentic to "{{seriesTitle}}" and the world details, offering rich potential for exploration, discovery, or as a setting for events.`,
+});
+
+// AI Flow Function
 export async function generateLocation(input: GenerateLocationInput): Promise<TypedLocation> {
-  console.log(`[STUB] generateLocation called with:`, input);
-  // Mock data matching LocationSchema
-  const mockLocation: TypedLocation = {
-    type: 'location', // Added type for TypedLocationSchema
-    name: `The Lost Temple of ${input.locationConcept} in ${input.seriesTitle}`,
-    description: `An ancient and mysterious temple, hidden deep within the ${input.worldDetails.majorGeographicalAreas[0] || 'unknown regions'}. It's rumored to hold secrets related to '${input.locationConcept}'.`,
-    historicalSignificance: `Believed to be a site of power during the ${input.worldDetails.keyHistoricalEvents[0] || 'early ages'}.`,
-    pointsOfInterest: [
-      "The Collapsed Entrance",
-      "The Oracle's Chamber (sealed)",
-      "Glyph-covered Walls"
-    ],
-    relatedWorldEvents: input.worldDetails.keyHistoricalEvents.slice(1,2) // Relate to the second historical event if available
-  };
-  return Promise.resolve(mockLocation);
+  console.log(`[generateLocation] Called with input:`, {
+    seriesTitle: input.seriesTitle,
+    locationConcept: input.locationConcept,
+    worldDetailsSummary: input.worldDetails.overallSettingDescription.substring(0, 50) + "..." // Log summary
+  });
+
+  const { output } = await generateLocationPrompt(input);
+
+  if (!output) {
+    console.error("[generateLocation] AI failed to generate location details or the output was empty.");
+    throw new Error("AI failed to generate location details.");
+  }
+
+  // Add the 'type' field to conform to TypedLocationSchema
+  const typedOutput: TypedLocation = { ...output, type: 'location' };
+  
+  console.log(`[generateLocation] Generated typed location:`, typedOutput.name);
+  return typedOutput;
 }
 
-// Genkit Flow (optional for stub, but good for structure)
-const generateLocationFlow = ai.defineFlow(
+// Optional: Define and export the Genkit flow if you want to run it using Genkit's CLI or other tools.
+export const generateLocationFlow = ai.defineFlow(
   {
     name: 'generateLocationFlow',
     inputSchema: GenerateLocationInputSchema,
-    outputSchema: TypedLocationSchema, // Outputting the typed version
+    outputSchema: TypedLocationSchema, // The final output of this flow is TypedLocation
   },
   async (input) => {
-    return generateLocation(input);
+    return generateLocation(input); // Calls the function above
   }
 );
-
-// Prompt definition (for future use)
-const prompt = ai.definePrompt({
-  name: 'generateLocationPrompt',
-  input: { schema: GenerateLocationInputSchema },
-  output: { schema: TypedLocationSchema }, // Outputting the typed version
-  prompt: `You are a location creation specialist for the world of "{{seriesTitle}}".
-  World Details:
-  - Setting: {{worldDetails.overallSettingDescription}}
-  - Key Events: {{#each worldDetails.keyHistoricalEvents}}{{.}}, {{/each}}
-  - Major Areas: {{#each worldDetails.majorGeographicalAreas}}{{.}}, {{/each}}
-
-  Location Concept: "{{locationConcept}}"
-
-  Based on the concept and world details, generate a location with:
-  - Name
-  - Description (atmosphere, notable features)
-  - Historical Significance (optional)
-  - Points of Interest (list)
-  - Related World Events (optional list, drawn from or inspired by key historical events)
-  
-  Ensure the location feels like a natural part of the world. Output should conform to LocationSchema.
-  Remember to include the 'type: "location"' field in the output.
-  `,
-});
-
-// To make the flow runnable (optional for stub)
-// export async function runGenerateLocationFlow(input: GenerateLocationInput): Promise<TypedLocation> {
-//   return generateLocationFlow(input);
-// }
