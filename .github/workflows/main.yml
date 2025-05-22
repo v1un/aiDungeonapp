@@ -37,13 +37,36 @@ jobs:
         
       - name: Test
         run: npm test
+
+      - name: Compile TypeScript Launcher
+        run: cd tools && npx tsc --outDir ../dist/tools mystic-chatways-launcher.ts
       
-      - name: Cache build output
-        if: success() && github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      - name: Cache .next directory
+        if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         uses: actions/cache@v4
         with:
           path: .next
           key: ${{ runner.os }}-nextjs-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+
+      # Ensure build directories exist before artifact upload
+      - name: Ensure build output directories exist
+        run: |
+          mkdir -p .next
+          mkdir -p dist
+          mkdir -p dist/tools
+          
+      - name: Upload build artifacts for Docker
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            .next
+            dist
+          if-no-files-found: warn
+          retention-days: 7
 
   create-docker-image:
     name: Create Docker Image
@@ -54,6 +77,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: . # Download to the root, so .next and dist are placed correctly
         
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
