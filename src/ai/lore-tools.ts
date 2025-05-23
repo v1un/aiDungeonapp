@@ -331,10 +331,10 @@ async function enrichLorebookImplementation(input: EnrichLorebookInput): Promise
       category = 'Key Locations';
       break;
     case 'custom':
-      category = input.customCategory || 'Miscellaneous';
+      category = input.customCategory || 'Series-Specific Elements';
       break;
     default:
-      category = 'Miscellaneous';
+      category = 'Series-Specific Elements';
   }
   
   // Extract key phrases that might be significant proper nouns or concepts

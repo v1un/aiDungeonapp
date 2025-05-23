@@ -290,23 +290,32 @@ export async function selectBranch(input: z.infer<typeof selectBranchSchema>) {
 
 // Helper functions to extract action verbs and keywords
 function extractActionVerbs(text: string): string[] {
-  const commonActionVerbs = [
-    "walk", "run", "attack", "talk", "speak", "ask", "examine", "look", "search", 
-    "take", "grab", "pick", "open", "close", "use", "hide", "jump", "climb",
-    "push", "pull", "move", "touch", "eat", "drink", "sleep", "rest", "swim",
-    "fight", "flee", "escape", "investigate", "study", "read", "write", "cast",
-    "throw", "drop", "give", "buy", "sell", "trade", "equip", "unequip"
+  // Common action verbs that might indicate similar actions
+  const actionVerbs = [
+    'attack', 'defend', 'run', 'walk', 'talk', 'speak', 'look', 'search', 'find',
+    'take', 'give', 'use', 'open', 'close', 'move', 'go', 'come', 'help', 'fight',
+    'cast', 'heal', 'kill', 'save', 'protect', 'explore', 'investigate', 'follow',
+    'lead', 'hide', 'escape', 'climb', 'jump', 'swim', 'fly', 'ride', 'throw',
+    'catch', 'push', 'pull', 'break', 'fix', 'build', 'destroy', 'create'
   ];
   
-  return commonActionVerbs.filter(verb => text.includes(verb));
+  const words = text.toLowerCase().split(/\s+/);
+  return words.filter(word => {
+    const cleanWord = word.replace(/[^a-z]/g, '');
+    return actionVerbs.includes(cleanWord) || 
+           actionVerbs.some(verb => cleanWord.includes(verb) || verb.includes(cleanWord));
+  });
 }
 
 function extractKeywords(text: string): string[] {
-  // Remove common words and split into words
-  const words = text.replace(/\b(the|a|an|and|or|but|in|on|at|to|for|with|by|of|is|are|am|was|were|be|been|being)\b/gi, '')
-                    .split(/\s+/)
-                    .filter(word => word.length > 2);
-  return words;
+  // Extract meaningful keywords (nouns, important adjectives)
+  const words = text.toLowerCase().split(/\s+/);
+  return words.filter(word => {
+    const cleanWord = word.replace(/[^a-z]/g, '');
+    return cleanWord.length > 3 && 
+           !['that', 'this', 'with', 'from', 'they', 'them', 'there', 'their',
+             'what', 'when', 'where', 'which', 'would', 'could', 'should'].includes(cleanWord);
+  });
 }
 
 // Helper function to determine action type
@@ -524,5 +533,7 @@ function getRandomSocialReaction(): string {
   ];
   return getRandomElement(reactions);
 }
+
+// Note: Helper functions for semantic matching are already defined above
 
 

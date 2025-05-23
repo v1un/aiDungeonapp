@@ -1,7 +1,6 @@
 // src/components/hud/GameHUD.tsx
 "use client";
 
-import { useState } from 'react';
 import type { ClientGameState } from '@/types';
 import { PlayerVitals } from './PlayerVitals';
 import { LocationDisplay } from './LocationDisplay';
@@ -16,10 +15,17 @@ interface GameHUDProps {
   gameState: ClientGameState;
   onOpenCharacterScreen: () => void;
   onOpenQuestLogScreen: () => void;
+  isCollapsed: boolean; // Added prop
+  onToggleCollapse: () => void; // Added prop
 }
 
-export function GameHUD({ gameState, onOpenCharacterScreen, onOpenQuestLogScreen }: GameHUDProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+export function GameHUD({ 
+  gameState, 
+  onOpenCharacterScreen, 
+  onOpenQuestLogScreen,
+  isCollapsed, // Use prop
+  onToggleCollapse // Use prop
+}: GameHUDProps) {
   const mcStats = gameState.seriesDetails?.mainCharacter?.stats;
   const magicPower = mcStats?.magicPower;
   
@@ -33,7 +39,7 @@ export function GameHUD({ gameState, onOpenCharacterScreen, onOpenQuestLogScreen
       <div 
         className="flex justify-center mx-auto w-32 h-8 bg-stone-800 border-t border-x border-amber-700/70 
                    rounded-t-lg cursor-pointer relative -top-2"
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={onToggleCollapse} // Use prop callback
       >
         {isCollapsed ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </div>

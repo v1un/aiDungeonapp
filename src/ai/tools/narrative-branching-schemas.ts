@@ -22,5 +22,5 @@ export const generateBranchesSchema = z.object({
 export const selectBranchSchema = z.object({
   playerAction: z.string().describe('The actual action taken by the player'),
   relevantFactors: z.array(z.string()).optional().describe('Any factors that might influence branch selection'),
-  preferTone: z.enum(['dark', 'hopeful', 'mysterious', 'comedic', 'dramatic', 'neutral']).optional().describe('Tone preference for branch selection')
+  preferTone: z.enum(['dark', 'hopeful', 'mysterious', 'comedic', 'dramatic', 'neutral', 'epic', 'psychological', 'romantic', 'action-packed', 'philosophical']).optional().describe('Tone preference for branch selection - should match the series aesthetic')
 });

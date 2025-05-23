@@ -121,6 +121,7 @@ export async function generateEnvironment(input: z.infer<typeof generateEnvironm
   // Store the new elements (replacing old ones of the same type)
   const envElements = getEnvironmentalElements();
   const filteredElements = envElements.filter(e => 
+    !['atmosphere', 'sound', 'smell'].includes(e.type) &&
     (e.type !== 'weather' || !weather) && 
     (e.type !== 'timeOfDay' || !timeOfDay)
   );
@@ -137,11 +138,12 @@ export async function generateEnvironment(input: z.infer<typeof generateEnvironm
     smell
   ].filter(e => e) as EnvironmentalElement[];
   
-  envElements.push(...newElements);
+  // Add new elements to the array
+  newElements.forEach(element => envElements.push(element));
   
-  return { 
+  return {
     environmentalElements: newElements,
-    timeHasProgressed: timeProgression > 0
+    timeHasProgressed: timeOfDay ? true : false
   };
 }
 

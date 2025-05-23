@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -40,22 +39,64 @@ export async function generateQuest(input: GenerateQuestInput): Promise<Generate
 const generateQuestPrompt = ai.definePrompt({
   name: 'generateQuestPrompt',
   input: {schema: GenerateQuestInputSchema},
-  output: {schema: QuestSchema.omit({ id: true, status: true })}, // AI generates content, ID/status managed by system
-  prompt: `You are a master storyteller and game designer for text-based RPGs.
-Given the player's context, generate a compelling and fitting quest.
+  output: {schema: QuestSchema.omit({ id: true, status: true })},
+  prompt: `🎮 You are an **Elite Quest Designer** specializing in creating **series-authentic adventures** that feel like they belong in the original work.
 
-Player Context:
+🌟 **SERIES AUTHENTICITY MANDATE**: 
+Every quest element MUST feel like it could have been written by the original series creator. This is not negotiable.
+
+🌟 **PLAYER CONTEXT**:
 {{{playerContext}}}
 
-Based on this, devise a quest with:
-- A captivating title.
-- An engaging description that sets the scene and goal.
-- A clear list of 2-4 objectives the player must achieve.
-- A list of 1-3 thematic rewards for completing the quest.
+{{#if previousQuestCount}}
+📊 **Previous Quests Completed**: {{previousQuestCount}} (Design something fresh while maintaining series consistency)
+{{/if}}
 
-The quest should feel like a natural extension of the player's current situation and the series they are in.
-If {{previousQuestCount}} is provided and greater than 0, try to make this quest different from typical early-game quests.
-`,
+🎯 **MISSION**: Design a quest that seamlessly integrates with the established series lore, characters, and world-building while providing compelling gameplay.
+
+✨ **SERIES AUTHENTICITY REQUIREMENTS**:
+- **Canon Compliance**: All quest elements must align with established series lore
+- **World-Accurate Terminology**: Use exact names, locations, and concepts from the series
+- **Character Voice Consistency**: NPCs and dialogue must match established personalities
+- **Power System Accuracy**: Respect the series' unique magic/ability systems and limitations
+- **Cultural Authenticity**: Reflect the series' societal structures and customs
+- **Tonal Consistency**: Match the original series' narrative style and emotional depth
+
+🏗️ **QUEST COMPONENTS**:
+
+📜 **TITLE**: 
+- Use series-appropriate naming conventions
+- Reference established lore or terminology
+- Should feel like an episode/chapter title from the original work
+
+📖 **DESCRIPTION**: 
+- **Written in the series' narrative style**
+- Use **series-specific terminology** naturally
+- Include **canon-accurate world details**
+- Reference **established locations and cultures**
+- **Second person perspective** that matches series tone
+- **Markdown formatting** for emphasis consistent with series style
+
+🎯 **OBJECTIVES** (2-4 series-authentic goals):
+- Must be **achievable within series world rules**
+- Reference **established locations, characters, or systems**
+- Use **series-appropriate challenge types**
+- Progress should feel like **natural story development**
+
+🏆 **REWARDS** (1-3 series-meaningful prizes):
+- **Canonical items, abilities, or knowledge** from the series
+- Should **advance character development** in series-appropriate ways
+- Must **respect the series' power progression systems**
+- Tie directly to **established world lore and mechanics**
+
+💡 **SERIES-SPECIFIC DESIGN PRINCIPLES**:
+- Every quest should feel like a **deleted scene** from the original work
+- Include **moral dilemmas** that reflect the series' themes
+- NPCs should **behave authentically** to their established personalities
+- Challenge difficulty should **match the series' power scaling**
+- Story consequences should **align with series causality**
+
+Remember: This quest should be indistinguishable from content created by the original series author.`,
 });
 
 const generateQuestFlow = ai.defineFlow(

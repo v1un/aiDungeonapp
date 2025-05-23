@@ -33,6 +33,16 @@ export default function LorebookPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
+    // If there are no active game sessions, clear any cached lorebook and show error
+    const storedSessionsStr = localStorage.getItem('mysticChatways_gameSessions');
+    let sessions = [];
+    try { sessions = storedSessionsStr ? JSON.parse(storedSessionsStr) : []; } catch { sessions = []; }
+    if (!sessions.length) {
+      localStorage.removeItem(SERIES_DETAILS_STORAGE_KEY);
+      setError("No game sessions found. Please start a game in the chat to generate lore.");
+      setIsLoading(false);
+      return;
+    }
     try {
       // First check the dedicated storage key
       const storedSeriesDetails = localStorage.getItem(SERIES_DETAILS_STORAGE_KEY);

@@ -11,7 +11,8 @@ This document provides an overview of the AI system architecture used in AI Dung
 5. [Session Management](#session-management)
 6. [Error Handling](#error-handling)
 7. [Performance Considerations](#performance-considerations)
-8. [Extending the System](#extending-the-system)
+8. [Quality Standards](#quality-standards)
+9. [Extending the System](#extending-the-system)
 
 ## Overview
 
@@ -24,6 +25,7 @@ The architecture follows these key principles:
 - **Error Resilience**: Comprehensive error handling with fallbacks for graceful degradation.
 - **Memory Efficiency**: Session management prevents memory leaks in long-running applications.
 - **Performance Optimization**: Caching and efficient tool usage minimize latency.
+- **Narrative Quality**: All AI-generated content maintains high standards for immersion and engagement.
 
 ## Core Components
 
@@ -212,90 +214,45 @@ The system includes several performance optimizations:
 4. **Retry Mechanisms**: Critical operations include retry logic with exponential backoff.
 5. **Performance Metrics**: Tool calls are tracked and timed for performance monitoring.
 
-## Extending the System
+## Quality Standards
 
-### Adding a New Tool
+### Narrative Generation Quality
 
-1. Define the tool schema in a schema file
-2. Implement the tool functionality
-3. Register the tool in `tools/index.ts`
-4. Use the tool in your flow
+All AI prompts are designed to generate responses that meet these quality benchmarks with **absolute series authenticity**:
 
-Example:
+1. **Series-Authentic Atmosphere**: Rich sensory details that match the specific world's unique characteristics (magic systems, technology levels, cultural elements)
+2. **Canon-Compliant Character Voice**: Authentic perspective that perfectly matches the series protagonist's established personality, speech patterns, and worldview
+3. **Series-Specific Emotional Engagement**: Stakes and conflicts that align with the series' core themes and emotional tone
+4. **World-Accurate Authenticity**: Perfect representation of the fictional universe's rules, cultures, power systems, and established lore
+5. **Series-Appropriate Interactive Elements**: Choices and scenarios that feel natural within the specific fictional world
+6. **Canon-Consistent Status Awareness**: Location names, time systems, and world states that match the series' established framework
 
-```typescript
-// 1. Define schema
-const MyToolSchema = z.object({
-  input1: z.string().describe("Description of input1"),
-  input2: z.number().describe("Description of input2")
-});
+### Example Quality Target
 
-// 2. Implement functionality
-async function myToolImplementation(input: z.infer<typeof MyToolSchema>) {
-  // Tool implementation
-  return { result: "Success" };
-}
+Target narrative quality should seamlessly blend with the original series tone:
 
-// 3. Register in tools/index.ts
-export const myTool = ai.defineTool(
-  {
-    name: "myTool",
-    description: "Description of my tool",
-    inputSchema: MyToolSchema,
-    outputSchema: z.object({
-      result: z.string()
-    }),
-  },
-  myToolImplementation
-);
+```
+🌟 Welcome to the World of Re:Zero 🌟
+The fluorescent lights of the convenience store flicker one last time before everything goes white...
 
-// 4. Use in a flow
-const result = await safeToolCall(
-  'myTool',
-  myTool,
-  { input1: "value", input2: 42 },
-  { result: "Fallback" }
-);
+You blink rapidly as your vision clears, expecting to see the familiar aisles of the store where you were just buying snacks. Instead, you find yourself standing on cobblestone streets beneath an unfamiliar sky. The plastic bag in your hand crinkles as you grip it tighter—the only proof that moments ago you were in modern Japan.
+
+The architecture around you feels distinctly medieval yet fantastical, with pointed rooftops and magical street lamps that glow with an ethereal blue light. The air carries unfamiliar scents of spices and something that might be mana...
+
+[Multiple engaging choices with clear formatting that respect Re:Zero's narrative style]
+
+Current Status: Confused but unharmed | Location: Capital City Streets | Time: Afternoon
 ```
 
-### Adding a New Flow
+### Prompt Requirements
 
-1. Define input and output schemas
-2. Implement the flow functionality
-3. Export the flow function
+Every AI prompt must include these series-authenticity requirements:
 
-Example:
-
-```typescript
-// 1. Define schemas
-const MyFlowInputSchema = z.object({
-  input1: z.string().describe("Description of input1"),
-  input2: z.number().describe("Description of input2")
-});
-
-const MyFlowOutputSchema = z.object({
-  result: z.string().describe("Description of result")
-});
-
-// 2. Implement flow
-const myFlow = ai.defineFlow(
-  {
-    name: 'myFlow',
-    inputSchema: MyFlowInputSchema,
-    outputSchema: MyFlowOutputSchema,
-  },
-  async (input) => {
-    // Flow implementation
-    return { result: "Success" };
-  }
-);
-
-// 3. Export flow function
-export async function myFlowFunction(input: z.infer<typeof MyFlowInputSchema>): Promise<z.infer<typeof MyFlowOutputSchema>> {
-  return myFlow(input);
-}
-```
-
----
-
-This architecture provides a solid foundation for building complex AI-driven narrative experiences. By following the patterns and principles outlined in this document, you can extend and enhance the system while maintaining its robustness and performance.
+- **Mandatory Series Research**: Extensive knowledge of the specific series' world-building, character personalities, power systems, and cultural elements
+- **Canon Compliance Verification**: Cross-reference all generated content against established series lore
+- **Terminology Accuracy**: Use exact names, terms, and concepts from the original series
+- **Tonal Consistency**: Match the original series' narrative voice, pacing, and emotional depth
+- **Cultural Authenticity**: Respect the series' societal structures, customs, and belief systems
+- **Power System Coherence**: Accurately represent the series' unique magic/ability systems and their limitations
+- **Character Personality Fidelity**: Maintain authentic character voices and decision-making patterns
+- **World Logic Consistency**: Follow the established rules and physics of the fictional universe

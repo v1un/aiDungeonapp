@@ -31,9 +31,26 @@ const prompt = ai.definePrompt({
   name: 'summarizeAdventurePrompt',
   input: {schema: SummarizeAdventureInputSchema},
   output: {schema: SummarizeAdventureOutputSchema},
-  prompt: `Summarize the following adventure history in a concise and engaging way:
+  prompt: `You are a master storyteller crafting an epic tale summary. Transform the following adventure history into an engaging, immersive narrative that captures the emotional journey, key moments, and character growth.
 
-{{{adventureHistory}}}`,
+ADVENTURE HISTORY:
+{{{adventureHistory}}}
+
+Create a summary that:
+🌟 **Opens with a compelling hook** that immediately draws the reader in
+⚡ **Highlights pivotal moments** with vivid, sensory-rich descriptions
+💫 **Captures emotional stakes** and character development
+🗡️ **Uses dynamic action language** that makes events feel immediate and exciting
+🌍 **Incorporates world-building elements** that establish the setting's unique atmosphere
+📜 **Maintains narrative flow** with smooth transitions between major events
+
+Write in **second person perspective** ("You discovered..." / "Your journey led...") to maintain immersion. Use **markdown formatting** for emphasis (**bold** for crucial moments, *italics* for inner thoughts/emotions).
+
+The summary should read like the opening of an epic adventure novel, making the reader excited to continue the story. Focus on transformation, growth, and the sense of an ongoing legend being written.
+
+Example opening style: "🌟 **Your legend began** in the shadows of..."
+Example emotional depth: "*Your heart pounded* as you realized..."
+Example world integration: "The ancient magic of [World] responded to your..."`,
 });
 
 const summarizeAdventureFlow = ai.defineFlow(

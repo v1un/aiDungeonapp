@@ -78,6 +78,7 @@ export default function ChatWindow() {
   const [isCharacterScreenOpen, setIsCharacterScreenOpen] = useState(false);
   const [isQuestLogScreenOpen, setIsQuestLogScreenOpen] = useState(false);
   const [needsInitialSetup, setNeedsInitialSetup] = useState(false); // New state for initial setup
+  const [isHudCollapsed, setIsHudCollapsed] = useState(false); // Added state for HUD
 
   // Message-related state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -164,12 +165,12 @@ export default function ChatWindow() {
           setActiveSessionId(mostRecentSession.id);
           setMessages(mostRecentSession.messages);
           setGameState(mostRecentSession.gameState);
-          // Check if this session needs setup
-          setNeedsInitialSetup(!mostRecentSession.gameState?.seriesDetails);
           
-          if (mostRecentSession.gameState?.seriesDetails) {
-            syncSeriesDetailsToLorebook(mostRecentSession.gameState.seriesDetails);
-          }
+          // Determine if initial setup is needed
+          setNeedsInitialSetup(!mostRecentSession.gameState?.seriesDetails);
+
+          // Always sync series details to lorebook storage (removes cache if undefined)
+          syncSeriesDetailsToLorebook(mostRecentSession.gameState.seriesDetails);
         }
       } else {
         const defaultSession = createNewSession('default');
@@ -177,6 +178,8 @@ export default function ChatWindow() {
         setActiveSessionId(defaultSession.id);
         setMessages(defaultSession.messages);
         setNeedsInitialSetup(true); // New default session needs setup
+        // Clear lorebook cache for fresh start
+        syncSeriesDetailsToLorebook(undefined);
       }
     } catch (error) {
       console.error('Error loading game sessions:', error);
@@ -284,16 +287,18 @@ export default function ChatWindow() {
         // Sync the new active session's series details to lorebook
         syncSeriesDetailsToLorebook(newGameState.seriesDetails);
       } else {
-        const newSession = createNewSession();
-        setActiveSessionId(newSession.id);
-        setMessages(newSession.messages);
-        setGameState(newSession.gameState);
-        setAllSessions([newSession]);
-        setNeedsInitialSetup(true); // The very first session needs setup
-        
-        // Clear lorebook data if the last session is deleted
+        // Deleting the final session: clear persisted sessions to prevent old data on reload
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(LOCAL_STORAGE_KEY);
+        }
+        // Reset in-memory state to no sessions
+        setAllSessions([]);
+        setActiveSessionId(null);
+        setMessages([]);
+        setGameState({ inventory: [], currentLocation: '', activeQuests: [], userDisplayName: undefined, seriesDetails: undefined });
+        setNeedsInitialSetup(true);
+        // Also clear lorebook cache
         syncSeriesDetailsToLorebook(undefined);
-        
         setIsDeleteDialogOpen(false);
         setDeleteSessionId(null);
         return;
@@ -410,6 +415,9 @@ export default function ChatWindow() {
   const openQuestLogScreen = () => setIsQuestLogScreenOpen(true);
   const closeQuestLogScreen = () => setIsQuestLogScreenOpen(false);
 
+  // HUD collapse toggle
+  const toggleHudCollapse = () => setIsHudCollapsed(prev => !prev);
+
   // Hotkey handling
   useEffect(() => {
     const handleHotkeyPress = (event: KeyboardEvent) => {
@@ -451,7 +459,39 @@ export default function ChatWindow() {
   // InitialSetupScreen will handle its own logic for series selection/generation.
 
   const handleInitialSetupComplete = (seriesDetails: SeriesDetails) => {
-    if (!activeSessionId) return;
+    console.log("[ChatWindow] handleInitialSetupComplete called. Active Session ID:", activeSessionId);
+    console.log("[ChatWindow] All sessions at this point:", JSON.stringify(allSessions.map(s => ({id: s.id, name: s.name}))));
+
+    if (!activeSessionId) {
+      console.error("[ChatWindow] Active session ID is null in handleInitialSetupComplete. This should not happen if InitialSetupScreen was rendered.");
+      toast({
+        title: "Session Error",
+        description: "No active session found. Please try starting a new game or selecting an existing one.",
+        variant: "destructive",
+      });
+      setNeedsInitialSetup(true); // Force back to setup or selection
+      return;
+    }
+
+    const currentSessionDetails = allSessions.find(s => s.id === activeSessionId);
+    if (!currentSessionDetails) {
+      console.error(`[ChatWindow] Active session with ID '${activeSessionId}' not found in allSessions during setup completion. This is unexpected.`);
+      console.error("[ChatWindow] Current allSessions:", JSON.stringify(allSessions.map(s => ({id: s.id, name: s.name}))));
+      toast({
+        title: "Session Sync Error",
+        description: `Could not load your current game session (ID: ${activeSessionId}). Please try refreshing the page. If the problem persists, starting a new game might help.`,
+        variant: "destructive",
+      });
+      // Attempt to recover or guide the user
+      if (allSessions.length > 0) {
+        console.warn(`[ChatWindow] Active session ID '${activeSessionId}' was not found in the current list of allSessions. This indicates a potential state inconsistency. Resetting activeSessionId to null to allow the system to re-initialize from stored sessions or create a new one.`);
+        setActiveSessionId(null); // This will trigger the main useEffect to load the most recent session or guide to new game.
+      } else {
+        console.warn("[ChatWindow] Active session not found, and no other sessions exist. Forcing new game setup.");
+        handleStartNewGame(); // This is appropriate if no sessions exist at all.
+      }
+      return;
+    }
 
     const updatedGameState: ClientGameState = {
       ...gameState,
@@ -470,12 +510,6 @@ export default function ChatWindow() {
     };
     const updatedMessages = [welcomeMessage]; 
     setMessages(updatedMessages);
-
-    const currentSessionDetails = allSessions.find(s => s.id === activeSessionId);
-    if (!currentSessionDetails) {
-      console.error("Active session not found during setup completion");
-      return;
-    }
 
     const updatedSession: GameSession = { 
       ...currentSessionDetails,
@@ -646,6 +680,8 @@ export default function ChatWindow() {
             gameState={gameState} 
             onOpenCharacterScreen={openCharacterScreen}
             onOpenQuestLogScreen={openQuestLogScreen}
+            isCollapsed={isHudCollapsed} // Pass state
+            onToggleCollapse={toggleHudCollapse} // Pass handler
           />
         )}
       </div>

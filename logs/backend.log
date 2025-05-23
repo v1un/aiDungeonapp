@@ -1,232 +1,181 @@
-[2025-05-23T01:47:07.919Z] [BACKEND]    - Local:        http://localhost:9003
-   - Network:      http://192.168.1.69:9003
+[2025-05-23T04:16:41.090Z] [BACKEND]    - Local:        http://localhost:9003
+
+[2025-05-23T04:16:41.090Z] [BACKEND]    - Network:      http://192.168.1.69:9003
    - Environments: .env.local
 
-[2025-05-23T01:47:12.189Z] [BACKEND]  GET / [32m200[39m in 51ms
+ [32m[1m✓[22m[39m Starting...
 
-[2025-05-23T01:47:15.074Z] [BACKEND]  GET / [32m200[39m in 54ms
+[2025-05-23T04:16:45.365Z] [BACKEND]  GET / [32m200[39m in 64ms
 
-[2025-05-23T01:47:15.484Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/health in 290ms
+[2025-05-23T04:16:47.644Z] [BACKEND]  GET / [32m200[39m in 52ms
 
-[2025-05-23T01:47:15.526Z] [BACKEND]  GET /api/health [32m200[39m in 333ms
+[2025-05-23T04:16:48.048Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/health in 282ms
 
-[2025-05-23T01:47:15.776Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/genkit-health in 248ms
+[2025-05-23T04:16:48.093Z] [BACKEND]  GET /api/health [32m200[39m in 330ms
 
-[2025-05-23T01:47:15.795Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 268ms
+[2025-05-23T04:16:48.314Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/genkit-health in 219ms
 
-[2025-05-23T01:47:22.226Z] [BACKEND]  [37m[1m○[22m[39m Compiling /api/generation-status ...
+[2025-05-23T04:16:48.333Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 239ms
 
-[2025-05-23T01:47:22.997Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/generation-status in 1271ms
+[2025-05-23T04:17:05.467Z] [BACKEND]  [37m[1m○[22m[39m Compiling /api/generation-status ...
 
-[2025-05-23T01:47:23.210Z] [BACKEND]  GET /api/generation-status [32m200[39m in 1485ms
+[2025-05-23T04:17:06.237Z] [BACKEND]  [32m[1m✓[22m[39m Compiled /api/generation-status in 1272ms
 
-[2025-05-23T01:47:23.226Z] [BACKEND]  GET /api/generation-status [32m200[39m in 15ms
+[2025-05-23T04:17:06.449Z] [BACKEND]  GET /api/generation-status [32m200[39m in 1484ms
 
-[2025-05-23T01:47:23.747Z] [BACKEND]  GET /api/generation-status [32m200[39m in 21ms
+[2025-05-23T04:17:06.469Z] [BACKEND]  GET /api/generation-status [32m200[39m in 18ms
 
-[2025-05-23T01:47:24.644Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
+[2025-05-23T04:17:06.987Z] [BACKEND]  GET /api/generation-status [32m200[39m in 22ms
 
-[2025-05-23T01:47:24.658Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+[2025-05-23T04:17:07.976Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:24.723Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:08.978Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
 
-[2025-05-23T01:47:25.724Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:09.978Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
 
-[2025-05-23T01:47:26.801Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:10.977Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
 
-[2025-05-23T01:47:27.806Z] [BACKEND]  GET /api/generation-status [32m200[39m in 14ms
+[2025-05-23T04:17:11.976Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:28.800Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:12.977Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
 
-[2025-05-23T01:47:29.804Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:13.982Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:30.806Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:14.976Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:31.807Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:15.419Z] [BACKEND]  GET / [32m200[39m in 53ms
 
-[2025-05-23T01:47:32.807Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:15.990Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:33.806Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:16.989Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:34.807Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:17.786Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
 
-[2025-05-23T01:47:35.808Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:17.800Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
 
-[2025-05-23T01:47:36.808Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:17.992Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
 
-[2025-05-23T01:47:37.808Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:18.991Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
 
-[2025-05-23T01:47:38.811Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:19.991Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:39.811Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:20.989Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:40.811Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:21.991Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:41.813Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:22.990Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:42.243Z] [BACKEND]  GET / [32m200[39m in 54ms
+[2025-05-23T04:17:23.995Z] [BACKEND]  GET /api/generation-status [32m200[39m in 14ms
 
-[2025-05-23T01:47:42.814Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:24.994Z] [BACKEND]  GET /api/generation-status [32m200[39m in 14ms
 
-[2025-05-23T01:47:43.814Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:25.991Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:44.815Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:26.992Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:45.211Z] [BACKEND]  GET /api/health [32m200[39m in 12ms
+[2025-05-23T04:17:27.991Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:45.225Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
+[2025-05-23T04:17:28.993Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
 
-[2025-05-23T01:47:45.814Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
+[2025-05-23T04:17:29.994Z] [BACKEND]  GET /api/generation-status [32m200[39m in 14ms
 
-[2025-05-23T01:47:46.819Z] [BACKEND]  GET /api/generation-status [32m200[39m in 16ms
+[2025-05-23T04:17:30.993Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:47.818Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:31.992Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:48.818Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:33.802Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
 
-[2025-05-23T01:47:49.819Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:34.845Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:50.821Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:35.887Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
 
-[2025-05-23T01:47:51.821Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:36.929Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:52.823Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:37.972Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:53.827Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:39.015Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:54.645Z] [BACKEND]  GET /api/health [32m200[39m in 12ms
+[2025-05-23T04:17:40.061Z] [BACKEND]  GET /api/generation-status [32m200[39m in 15ms
 
-[2025-05-23T01:47:54.659Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
+[2025-05-23T04:17:41.132Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
 
-[2025-05-23T01:47:54.825Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
+[2025-05-23T04:17:42.175Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:55.827Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:43.217Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:47:56.832Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:17:44.261Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:57.832Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:45.303Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:47:58.832Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:45.415Z] [BACKEND]  GET / [32m200[39m in 49ms
 
-[2025-05-23T01:47:59.836Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:46.430Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
 
-[2025-05-23T01:48:00.835Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:47.474Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:48:01.835Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:48.517Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:48:02.838Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:48.519Z] [BACKEND]  GET /api/health [32m200[39m in 15ms
 
-[2025-05-23T01:48:03.837Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:48.534Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 13ms
 
-[2025-05-23T01:48:04.837Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
+[2025-05-23T04:17:49.532Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:48:05.843Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
+[2025-05-23T04:17:50.575Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:48:06.841Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:51.616Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
 
-[2025-05-23T01:48:07.841Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:52.661Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:48:08.845Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:53.705Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
 
-[2025-05-23T01:48:09.848Z] [BACKEND]  GET /api/generation-status [32m200[39m in 15ms
+[2025-05-23T04:17:54.750Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:48:11.743Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:55.793Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:48:12.236Z] [BACKEND]  GET / [32m200[39m in 45ms
+[2025-05-23T04:17:56.836Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:48:13.347Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:57.880Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:48:14.392Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:17:58.922Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
 
-[2025-05-23T01:48:15.439Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:17:59.964Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
 
-[2025-05-23T01:48:15.441Z] [BACKEND]  GET /api/health [32m200[39m in 15ms
+[2025-05-23T04:18:01.017Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
 
-[2025-05-23T01:48:15.457Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 14ms
+[2025-05-23T04:18:02.059Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
 
-[2025-05-23T01:48:16.436Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
+[2025-05-23T04:18:02.064Z] [BACKEND]  POST / [32m200[39m in 58124ms
 
-[2025-05-23T01:48:17.439Z] [BACKEND]  GET /api/generation-status [32m200[39m in 13ms
+[2025-05-23T04:18:12.161Z] [BACKEND]  GET / [32m200[39m in 58ms
 
-[2025-05-23T01:48:18.480Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
+[2025-05-23T04:18:15.417Z] [BACKEND]  GET / [32m200[39m in 47ms
 
-[2025-05-23T01:48:19.480Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:18:18.538Z] [BACKEND]  GET /api/health [32m200[39m in 12ms
 
-[2025-05-23T01:48:20.481Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
+[2025-05-23T04:18:18.571Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
 
-[2025-05-23T01:48:22.234Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:18:45.442Z] [BACKEND]  GET / [32m200[39m in 49ms
 
-[2025-05-23T01:48:23.284Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:18:48.536Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
 
-[2025-05-23T01:48:24.328Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:18:48.549Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
 
-[2025-05-23T01:48:24.642Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
+[2025-05-23T04:19:15.465Z] [BACKEND]  GET / [32m200[39m in 48ms
 
-[2025-05-23T01:48:24.797Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
+[2025-05-23T04:19:18.591Z] [BACKEND]  GET /api/health [32m200[39m in 12ms
 
-[2025-05-23T01:48:25.841Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
+[2025-05-23T04:19:18.605Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
 
-[2025-05-23T01:48:26.886Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:19:45.462Z] [BACKEND]  GET / [32m200[39m in 42ms
 
-[2025-05-23T01:48:27.932Z] [BACKEND]  GET /api/generation-status [32m200[39m in 14ms
+[2025-05-23T04:19:48.590Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
 
-[2025-05-23T01:48:28.931Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:19:48.602Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
 
-[2025-05-23T01:48:29.930Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
+[2025-05-23T04:20:15.460Z] [BACKEND]  GET / [32m200[39m in 40ms
 
-[2025-05-23T01:48:30.930Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
+[2025-05-23T04:20:18.589Z] [BACKEND]  GET /api/health [32m200[39m in 10ms
 
-[2025-05-23T01:48:32.020Z] [BACKEND]  GET /api/generation-status [32m200[39m in 11ms
-
-[2025-05-23T01:48:33.067Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
-
-[2025-05-23T01:48:34.110Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
-
-[2025-05-23T01:48:35.153Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
-
-[2025-05-23T01:48:36.197Z] [BACKEND]  GET /api/generation-status [32m200[39m in 12ms
-
-[2025-05-23T01:48:37.242Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
-
-[2025-05-23T01:48:38.241Z] [BACKEND]  GET /api/generation-status [32m200[39m in 10ms
-
-[2025-05-23T01:48:38.431Z] [BACKEND]  POST / [32m200[39m in 77719ms
-
-[2025-05-23T01:48:42.239Z] [BACKEND]  GET / [32m200[39m in 45ms
-
-[2025-05-23T01:48:45.667Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
-
-[2025-05-23T01:48:45.679Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
-
-[2025-05-23T01:48:54.646Z] [BACKEND]  GET /api/health [32m200[39m in 13ms
-
-[2025-05-23T01:48:54.661Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
-
-[2025-05-23T01:49:09.198Z] [BACKEND]  GET / [32m200[39m in 51ms
-
-[2025-05-23T01:49:09.314Z] [BACKEND]  GET /api/health [32m200[39m in 15ms
-
-[2025-05-23T01:49:09.355Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 17ms
-
-[2025-05-23T01:49:12.248Z] [BACKEND]  GET / [32m200[39m in 51ms
-
-[2025-05-23T01:49:24.644Z] [BACKEND]  GET /api/health [32m200[39m in 12ms
-
-[2025-05-23T01:49:24.658Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
-
-[2025-05-23T01:49:39.310Z] [BACKEND]  GET /api/health [32m200[39m in 12ms
-
-[2025-05-23T01:49:39.324Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
-
-[2025-05-23T01:49:42.253Z] [BACKEND]  GET / [32m200[39m in 53ms
-
-[2025-05-23T01:49:54.647Z] [BACKEND]  GET /api/health [32m200[39m in 14ms
-
-[2025-05-23T01:49:54.662Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 12ms
-
-[2025-05-23T01:50:09.309Z] [BACKEND]  GET /api/health [32m200[39m in 11ms
-
-[2025-05-23T01:50:09.322Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 10ms
-
-[2025-05-23T01:50:12.244Z] [BACKEND]  GET / [32m200[39m in 42ms
+[2025-05-23T04:20:18.603Z] [BACKEND]  GET /api/genkit-health [32m200[39m in 11ms
 

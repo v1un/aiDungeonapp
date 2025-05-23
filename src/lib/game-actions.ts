@@ -77,11 +77,30 @@ export async function processPlayerInput(
   
   const currentGameState = gameStates.get(sessionId)!;
   const gameStateUpdate: ClientGameStateUpdate = {};
+  
+  // Debug log to track the state
+  console.log(`[Game State] Processing input: "${playerInput.substring(0, 30)}${playerInput.length > 30 ? '...' : ''}" | Series setup complete: ${currentGameState.seriesSetupComplete}`);
 
   if (!currentGameState.seriesSetupComplete) {
     if (!playerInput.trim()) {
       return { responseText: "Please provide the name of a fictional series to begin." };
     }
+    
+    // Check if input looks like a proper series name vs a question or conversation
+    const inputLowercase = playerInput.toLowerCase();
+    const isLikelyQuestion = 
+      playerInput.includes("?") || 
+      inputLowercase.includes("help") || 
+      inputLowercase.includes("lost") ||
+      inputLowercase.includes("hi ") ||
+      inputLowercase.includes("hello") ||
+      inputLowercase.includes("hey ") ||
+      playerInput.split(" ").length > 7; // Most series names are shorter
+    
+    if (isLikelyQuestion) {
+      return { responseText: "I don't see a series name in your message. Please enter the name of a fictional series like 'Star Wars', 'Harry Potter', or 'Re:Zero' to begin your adventure." };
+    }
+    
     try {
       const seriesDetails = await generateSeriesDetails({ seriesName: playerInput, useCache: true });
       

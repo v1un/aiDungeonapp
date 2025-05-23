@@ -68,41 +68,79 @@ const prompt = ai.definePrompt({
   name: 'generateNpcPrompt',
   input: {schema: GenerateNpcInputSchema},
   output: {schema: GenerateNpcOutputSchema},
-  prompt: `You are a role-playing game master creating an NPC for the fictional series "{{{seriesTitle}}}". 
-  
-  Your task is to create a non-player character (NPC) that feels like they genuinely belong in this fictional universe. The NPC should be interesting, memorable, and provide meaningful interaction opportunities for the player.
+  prompt: `🎭 You are a **Master Character Designer** creating an unforgettable NPC for the world of "**{{{seriesTitle}}}**".
 
-  SERIES INFORMATION:
-  Series Title: {{{seriesTitle}}}
-  World Context: {{{worldContext}}}
-  Player Character: {{{playerCharacterDescription}}}
-  {{#currentLocation}}Current Location: {{{currentLocation}}}{{/currentLocation}}
-  {{#purpose}}NPC Purpose: {{{purpose}}}{{/purpose}}
+🌟 **MISSION**: Create an NPC so authentic and memorable that players will believe they could have appeared in the original "{{{seriesTitle}}}" story.
 
-  {{#existingNpcs}}
-  EXISTING NPCs IN THE SETTING:
-  {{#each existingNpcs}}
-  - {{{name}}}: {{{description}}}
-  {{/each}}
-  {{/existingNpcs}}
+📚 **WORLD CONTEXT**:
+- **Series**: {{{seriesTitle}}}
+- **Universe**: {{{worldContext}}}
+- **Player Character**: {{{playerCharacterDescription}}}
+{{#currentLocation}}
+- **Current Setting**: {{{currentLocation}}}
+{{/currentLocation}}
+{{#purpose}}
+- **Narrative Role**: {{{purpose}}}
+{{/purpose}}
 
-  REQUIREMENTS:
-  1. The NPC should feel like an authentic part of {{{seriesTitle}}}, with naming conventions, speech patterns, and background that match the series' style.
-  2. Create a believable connection to the world's lore and existing characters.
-  3. Ensure the NPC has clear motivations and goals that could drive player interactions.
-  4. Make the NPC distinct from existing characters while still fitting naturally in the world.
-  5. Consider how this character might appear in the lorebook as a reference for players.
+{{#existingNpcs}}
+🏘️ **EXISTING CHARACTERS** (Ensure uniqueness):
+{{#each existingNpcs}}
+- **{{{name}}}**: {{{description}}}
+{{/each}}
+{{/existingNpcs}}
 
-  Create a complete NPC profile with:
-  - Name: Appropriate to the setting and cultural context
-  - Background: Connected to world events and lore
-  - Personality: Distinctive traits and behaviors
-  - Goals: Current motivations driving their actions
-  - Appearance: Physical description matching the series' visual style
-  - Relationships: 0-3 connections to other characters (can be to canonical characters or other NPCs)
-  - Lorebook Information: How this character would be categorized and described in the game's lorebook
+✨ **CHARACTER CREATION STANDARDS**:
 
-  Ensure that your response includes a well-formatted lorebook entry that can be directly added to the game's reference materials.`,
+👤 **NAME**: 
+- Must fit "{{{seriesTitle}}}" naming conventions perfectly
+- Should sound natural within the world's cultural context
+- Memorable but not overly exotic
+
+📜 **BACKGROUND**: 
+- **Rich personal history** that ties into world events
+- **Connections to existing lore** and major story elements
+- **Authentic struggles/motivations** that reflect the series' themes
+- Use **specific details** from "{{{seriesTitle}}}" universe
+
+🎭 **PERSONALITY**: 
+- **Distinctive voice and mannerisms** that make them stand out
+- **Clear character flaws and strengths** (no perfect people)
+- **Emotional depth** - what drives them, what they fear
+- **Memorable quirks** that players will remember
+- Should feel like they have a full life beyond the player's interactions
+
+🎯 **GOALS & MOTIVATIONS**:
+- **Specific, personal objectives** (not generic "help people")
+- **Internal conflicts** that create interesting roleplay opportunities
+- **Stakes that matter** to them personally
+- Should create potential for future story development
+
+👁️ **APPEARANCE**: 
+- **Vivid physical description** that fits the series' visual style
+- **Distinctive features** that help players remember them
+- **Clothing/accessories** that tell their story
+- **Body language** that reflects their personality
+
+🤝 **RELATIONSHIPS** (0-3 connections):
+- **Meaningful connections** to other characters (canonical or NPCs)
+- **Complex dynamics** (not just "friend" or "enemy")
+- **Relationship history** that explains their current dynamic
+- Should create roleplay opportunities
+
+📚 **LOREBOOK INTEGRATION**:
+- **Category**: Where this character fits in the world's documentation
+- **Concise Entry**: 2-3 sentences using **markdown formatting**
+- **Key information** players need to know for future interactions
+- Should read like an official character guide entry
+
+🎨 **AUTHENTICITY CHECKLIST**:
+✅ Could this character appear in the original "{{{seriesTitle}}}" without feeling out of place?
+✅ Do their motivations align with the series' themes and tone?
+✅ Are they interesting enough that players will want to interact with them again?
+✅ Do they have enough depth to support multiple story encounters?
+
+Remember: Great NPCs aren't just quest-givers - they're **potential friends, rivals, or mysteries** that enrich the player's journey through this world.`,
 });
 
 const generateNpcFlow = ai.defineFlow(
