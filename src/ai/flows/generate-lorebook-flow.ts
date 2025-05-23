@@ -12,11 +12,11 @@ export const generateLorebookFlow = ai.defineFlow({
     name: 'generateLorebookSummaryPrompt',
     input: { schema: z.object({ seriesName: z.string() }) },
     output: { schema: z.object({ overallSummary: z.string() }) },
-    prompt: `Generate a comprehensive summary for \"{{seriesName}}\" lorebook. This is critical for immersion and **must be specific and strictly coherent** with the established lore, characters, tone, and unique elements of the \"{{seriesName}}\" universe.
+    prompt: `Generate a comprehensive summary for "{{seriesName}}" lorebook. This is critical for immersion and **must be specific and strictly coherent** with the established lore, characters, tone, and unique elements of the "{{seriesName}}" universe.
 
-The overall summary should be 2-3 paragraphs about the world, its primary conflict, central themes, and significant historical context, all **canon-accurate** to \"{{seriesName}}\".
+The overall summary should be 2-3 paragraphs about the world, its primary conflict, central themes, and significant historical context, all **canon-accurate** to "{{seriesName}}".
 
-Generate only the summary text, ensuring it is deeply rooted in and reflective of \"{{seriesName}}\".`  });
+Generate only the summary text, ensuring it is deeply rooted in and reflective of "{{seriesName}}".`  });
   
   let overallSummary;
   try {
@@ -59,14 +59,14 @@ The setting provides the backdrop for various adventures, challenges, and charac
       name: `generate${category.replace(/\s+/g, '')}EntriesPrompt`,
       input: { schema: z.object({ seriesName: z.string(), category: z.string() }) },
       output: { schema: batchSchema },
-      prompt: `Generate 4-7 detailed lorebook entries for the \"${category}\" category in \"{{seriesName}}\". All entries **must be strictly coherent** with the established canon of \"{{seriesName}}\".
+      prompt: `Generate 4-7 detailed lorebook entries for the "${category}" category in "{{seriesName}}". All entries **must be strictly coherent** with the established canon of "{{seriesName}}".
 
 Each entry should include:
-- name: A specific title (character name, location name, event name, etc.) from \"{{seriesName}}\".
-- description: A detailed 2-3 sentence description, reflecting its portrayal in \"{{seriesName}}\".
-- category: Always use \"{{category}}\" as the category.
+- name: A specific title (character name, location name, event name, etc.) from "{{seriesName}}".
+- description: A detailed 2-3 sentence description, reflecting its portrayal in "{{seriesName}}".
+- category: Always use "{{category}}" as the category.
 
-Focus on **canon accuracy** to the \"{{seriesName}}\" series and provide rich, specific details that would help a storyteller maintain consistency with \"{{seriesName}}\". Do not invent new lore.`    });
+Focus on **canon accuracy** to the "{{seriesName}}" series and provide rich, specific details that would help a storyteller maintain consistency with "{{seriesName}}". Do not invent new lore.`    });
     
     // Decrease complexity for retry attempts but still aim for multiple entries
     const fallbackSchema = z.object({
@@ -77,14 +77,14 @@ Focus on **canon accuracy** to the \"{{seriesName}}\" series and provide rich, s
       name: `generateSimplified${category.replace(/\s+/g, '')}EntriesPrompt`,
       input: { schema: z.object({ seriesName: z.string(), category: z.string() }) },
       output: { schema: fallbackSchema },
-      prompt: `Generate 3-5 simple entries for \"${category}\" in \"{{seriesName}}\". Ensure all entries are **strictly coherent** with the established canon of \"{{seriesName}}\".
+      prompt: `Generate 3-5 simple entries for "${category}" in "{{seriesName}}". Ensure all entries are **strictly coherent** with the established canon of "{{seriesName}}".
 
 Keep each entry concise with:
-- name: Short title from \"{{seriesName}}\".
-- description: 1-2 sentences only, reflecting its portrayal in \"{{seriesName}}\".
-- category: Use \"{{category}}\".
+- name: Short title from "{{seriesName}}".
+- description: 1-2 sentences only, reflecting its portrayal in "{{seriesName}}".
+- category: Use "{{category}}".
 
-**Canon accuracy** to \"{{seriesName}}\" is paramount. Do not invent new lore.`    });
+**Canon accuracy** to "{{seriesName}}" is paramount. Do not invent new lore.`    });
     
     try {
       const batchResult = await batchPrompt({ seriesName: input.seriesName, category });
@@ -123,7 +123,7 @@ Keep each entry concise with:
   }
   
   // Generate entries in batches by category
-  const batchPromises: Promise<z.infer<typeof LoreEntrySchema>[]>[] = [];
+  // Note: batchPromises was declared but never used, removed it
   
   // Process some categories in parallel to speed up generation
   // but not too many to avoid rate limiting

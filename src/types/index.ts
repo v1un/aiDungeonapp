@@ -136,6 +136,15 @@ export interface ClientGameState {
   userDisplayName?: string;
 }
 
+export interface ServerGameState {
+  seriesSetupComplete: boolean;
+  seriesDetails?: SeriesDetails;
+  inventory: string[];
+  currentLocation: string;
+  activeQuests: Quest[];
+  lastAccessed?: number; // Timestamp for tracking session age
+}
+
 export interface ClientGameStateUpdate {
   seriesDetails?: SeriesDetails;
   inventory?: string[];

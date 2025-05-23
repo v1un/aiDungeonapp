@@ -86,7 +86,7 @@ export default function InitialSetupScreen({ onSetupComplete, onGenerateSeries }
       clearInterval(pollInterval);
       setPollInterval(null);
     }
-  }, [isLoading, generatedDetails]); // Removed pollInterval from dependencies
+  }, [isLoading, generatedDetails, pollInterval]); // Added pollInterval to dependency array
 
   const handleGenerate = async () => {
     if (!seriesPrompt.trim()) {

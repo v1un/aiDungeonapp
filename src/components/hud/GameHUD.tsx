@@ -9,7 +9,6 @@ import { MinimapPlaceholder } from './MinimapPlaceholder';
 import { InventoryQuickAccess } from './InventoryQuickAccess';
 import { ActiveQuestTracker } from './ActiveQuestTracker';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface GameHUDProps {
   gameState: ClientGameState;

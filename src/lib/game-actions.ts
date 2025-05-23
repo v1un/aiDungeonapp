@@ -1,19 +1,12 @@
 'use server';
 
-import type { Message, SeriesDetails, ProcessedPlayerInput, ClientGameStateUpdate, Quest } from '@/types';
+import type { Message, SeriesDetails, ProcessedPlayerInput, ClientGameStateUpdate, ServerGameState } from '@/types';
 import { generateSeriesDetails } from '@/ai/flows/generate-series-details';
 import { advanceStory, type AdvanceStoryInput } from '@/ai/flows/advance-story'; // Updated import
+import { gameStatePersistence } from '../ai/utils/lowdb-persistence';
 
-interface ServerGameState {
-  seriesSetupComplete: boolean;
-  seriesDetails?: SeriesDetails;
-  inventory: string[];
-  currentLocation: string;
-  activeQuests: Quest[];
-}
-
-// Store game states by session ID
-const gameStates = new Map<string, ServerGameState>();
+// In-memory cache for frequently accessed game states
+const gameStatesCache = new Map<string, ServerGameState>();
 
 // Default game state for new sessions
 const createDefaultGameState = (): ServerGameState => ({
@@ -21,6 +14,7 @@ const createDefaultGameState = (): ServerGameState => ({
   inventory: [],
   currentLocation: 'Not yet determined',
   activeQuests: [],
+  lastAccessed: Date.now(),
 });
 
 // Function to allow Genkit tools to access current game state for a session
@@ -29,11 +23,29 @@ export async function getCurrentGameState(sessionId?: string): Promise<ServerGam
     return createDefaultGameState();
   }
   
-  if (!gameStates.has(sessionId)) {
-    gameStates.set(sessionId, createDefaultGameState());
+  // First check cache
+  if (gameStatesCache.has(sessionId)) {
+    return gameStatesCache.get(sessionId)!;
   }
   
-  return gameStates.get(sessionId)!;
+  // If not in cache, try to load from persistent storage
+  const persistedState = await gameStatePersistence.get(sessionId);
+  
+  if (persistedState) {
+    // Update the cache with the loaded state
+    gameStatesCache.set(sessionId, {
+      ...persistedState,
+      lastAccessed: Date.now() // Update the access timestamp
+    });
+    return gameStatesCache.get(sessionId)!;
+  }
+  
+  // If not in storage, create a new state
+  const newState = createDefaultGameState();
+  gameStatesCache.set(sessionId, newState);
+  await gameStatePersistence.save(sessionId, newState);
+  
+  return newState;
 }
 
 // This is a workaround for passing session context to tools
@@ -71,11 +83,7 @@ export async function processPlayerInput(
   }
   
   // Get or create the game state for this session
-  if (!gameStates.has(sessionId)) {
-    gameStates.set(sessionId, createDefaultGameState());
-  }
-  
-  const currentGameState = gameStates.get(sessionId)!;
+  const currentGameState = await getCurrentGameState(sessionId);
   const gameStateUpdate: ClientGameStateUpdate = {};
   
   // Debug log to track the state
@@ -187,10 +195,18 @@ export async function processPlayerInput(
       
       responseText += `\n\n*(Character details, inventory, and your current quest are in the Game Info sidebar. Click the book icon to explore the full **Lorebook** with detailed information about this world!)*`;
       
+      // Persist the game state
+      currentGameState.lastAccessed = Date.now();
+      await gameStatePersistence.save(sessionId, currentGameState);
+      
       return { responseText, gameStateUpdate };
     } catch (error) {
       console.error('Error generating series details:', error);
-      gameStates.set(sessionId, createDefaultGameState()); // Reset the state on error
+      
+      // Reset the state on error
+      const resetState = createDefaultGameState();
+      gameStatesCache.set(sessionId, resetState);
+      await gameStatePersistence.save(sessionId, resetState);
       
       gameStateUpdate.seriesDetails = undefined;
       gameStateUpdate.inventory = [];
@@ -271,6 +287,10 @@ export async function processPlayerInput(
         // We also don't have fine-grained objective tracking update from AI yet.
         gameStateUpdate.activeQuests = [...currentGameState.activeQuests]; // Send updated list
       }
+      
+      // Persist the game state
+      currentGameState.lastAccessed = Date.now();
+      await gameStatePersistence.save(sessionId, currentGameState);
       
       return { responseText: aiResponse.narrativeResponse, gameStateUpdate };
     } catch (error) {
