@@ -1,5 +1,3 @@
-'use server';
-
 /**
  * @fileOverview Persistence utilities for AI data
  * 

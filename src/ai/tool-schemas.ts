@@ -1,4 +1,3 @@
-'use server';
 /**
  * @fileOverview Schema definitions for all AI tools to avoid circular dependencies
  */

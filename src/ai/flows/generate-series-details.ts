@@ -5,7 +5,51 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { LorebookSchema } from '@/types';
+import { LorebookSchema, LoreEntrySchema } from '@/types';
+import { generateLorebookFlow as importedGenerateLorebookFlow } from './generate-lorebook-flow';
+
+// Progress tracking for series generation
+interface GenerationProgress {
+  step: string;
+  totalSteps: number;
+  currentStep: number;
+  details?: string;
+  status: 'pending' | 'in-progress' | 'complete' | 'failed';
+  startTime: number;
+  endTime?: number;
+}
+
+let currentGenerationProgress: GenerationProgress | null = null;
+
+// Function to track generation progress
+function updateGenerationProgress(
+  step: string, 
+  totalSteps: number, 
+  currentStep: number, 
+  status: 'pending' | 'in-progress' | 'complete' | 'failed',
+  details?: string
+): void {
+  currentGenerationProgress = {
+    step,
+    totalSteps,
+    currentStep,
+    status,
+    details,
+    startTime: currentGenerationProgress?.startTime || Date.now(),
+    ...(status === 'complete' || status === 'failed' ? { endTime: Date.now() } : {})
+  };
+  
+  // Log progress to console
+  const progressPercent = Math.floor((currentStep / totalSteps) * 100);
+  console.log(
+    `[Generation Progress] ${progressPercent}% - Step ${currentStep}/${totalSteps}: ${step} - ${status}${details ? ` (${details})` : ''}`
+  );
+}
+
+// Function to get current generation progress
+export async function getGenerationProgress(): Promise<GenerationProgress | null> {
+  return currentGenerationProgress;
+}
 
 const seriesCachePath = '@/lib/series-cache';
 
@@ -276,7 +320,7 @@ export async function generateLorebook(input: Pick<GenerateSeriesDetailsInput, '
     }
   }
 
-  const result = await generateLorebookFlow({ seriesName: input.seriesName });
+  const result = await importedGenerateLorebookFlow({ seriesName: input.seriesName });
   
   if (typeof window !== 'undefined') {
     try {
@@ -408,48 +452,61 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
   const partsToGenerate = input.parts || ['basic', 'lorebook', 'characters', 'quest', 'worldMemory'];
   
   try {
-    console.log(`Generating series details for "${input.seriesName}" in ${partsToGenerate.length} parts`);
+    console.log(`Generating series details for "${input.seriesName}" in ${partsToGenerate.length} parts using batched approach`);
     
-    // Generate basic info first (required for other parts)
+    // Step 1: Generate basic info first (required for other parts)
+    console.log(`[1/${partsToGenerate.length}] Generating basic info for "${input.seriesName}"...`);
+    updateGenerationProgress('Generating basic info', partsToGenerate.length, 1, 'in-progress');
     const basicInfo = await retryOperation(
       () => generateBasicSeriesInfo(input),
       MAX_RETRIES,
       'basic series info'
     );
+    console.log(`Basic info for "${input.seriesName}" generated successfully: ${basicInfo.seriesTitle}, ${basicInfo.mainCharacter.name}`);
+    updateGenerationProgress('Generating basic info', partsToGenerate.length, 1, 'complete');
     
-    // Generate other parts in parallel where possible
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const promises: Promise<any>[] = [];
+    // Generate remaining components in batches to avoid overwhelming the API
+    let lorebookResult = null;
+    let characterNetworkResult = null;
+    let questResult = null;
+    let worldMemoryResult = null;
     
+    // Step 2: Generate lorebook (this already has internal batching for entries)
     if (partsToGenerate.includes('lorebook')) {
-      promises.push(
-        retryOperation(
-          () => generateLorebook(input),
-          MAX_RETRIES,
-          'lorebook'
-        )
+      console.log(`[2/${partsToGenerate.length}] Generating lorebook for "${input.seriesName}" using batched approach...`);
+      updateGenerationProgress('Generating lorebook', partsToGenerate.length, 2, 'in-progress');
+      lorebookResult = await retryOperation(
+        () => generateLorebook(input),
+        MAX_RETRIES,
+        'lorebook'
       );
-    } else {
-      promises.push(Promise.resolve(null));
+      console.log(`Lorebook for "${input.seriesName}" generated successfully with ${lorebookResult?.lorebook?.entries?.length || 0} entries`);
+      updateGenerationProgress('Generating lorebook', partsToGenerate.length, 2, 'complete');
+      
+      // Short delay before next major component generation to avoid API rate limits
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
+    // Step 3: Generate character network
     if (partsToGenerate.includes('characters')) {
-      promises.push(
-        retryOperation(
-          () => generateCharacterNetwork(input, basicInfo.mainCharacter.name),
-          MAX_RETRIES,
-          'character network'
-        )
+      console.log(`[3/${partsToGenerate.length}] Generating character network for "${input.seriesName}"...`);
+      updateGenerationProgress('Generating character network', partsToGenerate.length, 3, 'in-progress');
+      characterNetworkResult = await retryOperation(
+        () => generateCharacterNetwork(input, basicInfo.mainCharacter.name),
+        MAX_RETRIES,
+        'character network'
       );
-    } else {
-      promises.push(Promise.resolve(null));
+      console.log(`Character network for "${input.seriesName}" generated successfully with ${characterNetworkResult?.otherCharacters?.length || 0} characters`);
+      updateGenerationProgress('Generating character network', partsToGenerate.length, 3, 'complete');
+      
+      // Short delay before next major component generation
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
-    const [lorebookResult, characterNetworkResult] = await Promise.all(promises);
-    
-    // Generate quest after we have character and location info
-    let questResult;
+    // Step 4: Generate quest interaction after we have character and location info
     if (partsToGenerate.includes('quest')) {
+      console.log(`[4/${partsToGenerate.length}] Generating quest interaction for "${input.seriesName}"...`);
+      updateGenerationProgress('Generating quest interaction', partsToGenerate.length, 4, 'in-progress');
       questResult = await retryOperation(
         () => generateQuestInteraction(input, {
           mainCharacterName: basicInfo.mainCharacter.name,
@@ -458,11 +515,17 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
         MAX_RETRIES,
         'quest and interaction'
       );
+      console.log(`Quest "${questResult?.initialQuest?.title || 'Unknown'}" for "${input.seriesName}" generated successfully`);
+      updateGenerationProgress('Generating quest interaction', partsToGenerate.length, 4, 'complete');
+      
+      // Short delay before next major component generation
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
-    // Generate world memory after we have character IDs
-    let worldMemoryResult;
+    // Step 5: Generate world memory after we have character IDs
     if (partsToGenerate.includes('worldMemory') && characterNetworkResult) {
+      console.log(`[5/${partsToGenerate.length}] Generating world memory for "${input.seriesName}"...`);
+      updateGenerationProgress('Generating world memory', partsToGenerate.length, 5, 'in-progress');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const characterIds = characterNetworkResult.otherCharacters?.map((char: any) => char.id).filter(Boolean) || [];
       worldMemoryResult = await retryOperation(
@@ -470,9 +533,13 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
         MAX_RETRIES,
         'world memory'
       );
+      console.log(`World memory for "${input.seriesName}" generated successfully`);
+      updateGenerationProgress('Generating world memory', partsToGenerate.length, 5, 'complete');
     }
     
     // Combine all results
+    updateGenerationProgress('Finalizing generation', partsToGenerate.length, partsToGenerate.length, 'in-progress', 'Combining all components');
+    
     const fullOutput: GenerateSeriesDetailsOutput = {
       ...basicInfo,
       lorebook: lorebookResult?.lorebook || { overallSummary: '', entries: [] },
@@ -490,11 +557,23 @@ export async function generateSeriesDetails(input: GenerateSeriesDetailsInput): 
       worldMemory: worldMemoryResult?.worldMemory
     };
     
-    console.log(`Successfully generated series details for "${input.seriesName}" in parts`);
+    // Report final stats
+    const stats = {
+      loreEntries: lorebookResult?.lorebook?.entries?.length || 0,
+      characters: characterNetworkResult?.otherCharacters?.length || 0,
+      objectives: questResult?.initialQuest?.objectives?.length || 0
+    };
+    
+    updateGenerationProgress('Generation complete', partsToGenerate.length, partsToGenerate.length, 'complete',
+      `Series: ${basicInfo.seriesTitle}, ${stats.loreEntries} lore entries, ${stats.characters} characters`);
+    
+    console.log(`Successfully generated series details for "${input.seriesName}" in ${partsToGenerate.length} batched parts`);
     return fullOutput;
     
   } catch (error) {
     console.error(`Failed to generate series details for "${input.seriesName}":`, error);
+    updateGenerationProgress('Generation failed', partsToGenerate.length, 0, 'failed', 
+      `Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw new Error(`Failed to generate series details: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -725,30 +804,246 @@ Ensure all content is specific to "{{seriesName}}" and accurate to the series ca
   return output;
 });
 
-const generateLorebookFlow = ai.defineFlow({
+// Using the imported generateLorebookFlow from './generate-lorebook-flow'
+// The following code is the implementation details kept for reference only and not active
+
+/*
+const localGenerateLorebookFlow = ai.defineFlow({
   name: 'generateLorebookFlow',
   inputSchema: z.object({ seriesName: z.string() }),
   outputSchema: z.object({ lorebook: LorebookSchema }),
-}, async (input) => {
-  const lorebookPrompt = ai.definePrompt({
-    name: 'generateLorebookPrompt',
+}, async (input): Promise<{ lorebook: z.infer<typeof LorebookSchema> }> => {
+  // First, generate just the overall summary with minimal schema restrictions
+  const summaryPrompt = ai.definePrompt({
+    name: 'generateLorebookSummaryPrompt',
     input: { schema: z.object({ seriesName: z.string() }) },
-    output: { schema: z.object({ lorebook: LorebookSchema }) },
-    prompt: `Generate a comprehensive lorebook for "{{seriesName}}" with 25-50 detailed entries covering all aspects of the world. This is critical for immersion and must be specific to the series.
+    output: { schema: z.object({ overallSummary: z.string() }) },
+    prompt: `Generate a comprehensive summary for "{{seriesName}}" lorebook. This is critical for immersion and must be specific to the series.
 
-The lorebook must include:
-1. An overall summary (2-3 paragraphs about the world)
-2. 25-50 entries covering: locations, characters, events, magic systems, factions, cultures, items, etc.
+The overall summary should be 2-3 paragraphs about the world, its primary conflict, central themes, and significant historical context.
 
-Each entry needs a name, detailed description, and appropriate category. All content must be canon-accurate to "{{seriesName}}".`
+Generate only the summary text, ensuring it's canon-accurate to "{{seriesName}}".`
   });
   
-  const { output } = await lorebookPrompt(input);
-  if (!output) {
-    throw new Error('Failed to generate lorebook');
+  let overallSummary;
+  try {
+    const summaryResult = await summaryPrompt(input);
+    if (!summaryResult.output) {
+      throw new Error('Failed to generate lorebook summary');
+    }
+    overallSummary = summaryResult.output.overallSummary;
+    console.log("Successfully generated lorebook summary");
+  } catch (error) {
+    console.error("Error generating lorebook summary:", error);
+    // Provide a fallback generic summary if generation fails
+    overallSummary = `The world of "${input.seriesName}" is rich with unique characters, locations, and lore. This fictional universe contains its own history, cultures, and conflicts that shape the narrative.
+
+The setting provides the backdrop for various adventures, challenges, and character developments that occur throughout the series. Major events and conflicts drive the story forward, creating tension and opportunities for growth.`;
   }
-  return output;
+  
+  // Define our target number of entries
+  const ENTRY_TARGET = 85;
+  
+  // Define categories for better organization of entries
+  // Using more categories to reach our target of ~85 entries
+  const categories = [
+    'Major Locations', 'Minor Locations', 'Key Characters & NPCs', 'Supporting Characters',
+    'Historical Events', 'Recent Events', 'Magic Systems & Unique Technologies', 
+    'Factions & Organizations', 'Creatures & Races', 'Cultural Notes',
+    'Important Items & Artifacts', 'Mythology & Legends', 'Political Landscape'
+  ];
+  
+  let allEntries: Array<z.infer<typeof LoreEntrySchema>> = [];
+  
+  // Function to retry batch generation with backoff
+  async function retryBatchGeneration(category: string, retries = 2): Promise<z.infer<typeof LoreEntrySchema>[]> {
+    // Schema for batch entries - increased to generate more entries per category to reach ~85 entries total
+    const batchSchema = z.object({
+      entries: z.array(LoreEntrySchema).min(4).max(7)
+    });
+    
+    const batchPrompt = ai.definePrompt({
+      name: `generate${category.replace(/\s+/g, '')}EntriesPrompt`,
+      input: { schema: z.object({ seriesName: z.string(), category: z.string() }) },
+      output: { schema: batchSchema },
+      prompt: `Generate 4-7 detailed lorebook entries for the "${category}" category in "{{seriesName}}".
+
+Each entry should include:
+- name: A specific title (character name, location name, event name, etc.)
+- description: A detailed 2-3 sentence description
+- category: Always use "{{category}}" as the category
+
+Focus on accuracy to the "{{seriesName}}" series and provide rich, specific details that would help a storyteller maintain consistency.`
+    });
+    
+    // Decrease complexity for retry attempts but still aim for multiple entries
+    const fallbackSchema = z.object({
+      entries: z.array(LoreEntrySchema).min(2).max(5) // Still allow multiple entries on fallback
+    });
+    
+    const fallbackPrompt = ai.definePrompt({
+      name: `generateSimplified${category.replace(/\s+/g, '')}EntriesPrompt`,
+      input: { schema: z.object({ seriesName: z.string(), category: z.string() }) },
+      output: { schema: fallbackSchema },
+      prompt: `Generate 3-5 simple entries for "${category}" in "{{seriesName}}".
+
+Keep each entry concise with:
+- name: Short title 
+- description: 1-2 sentences only
+- category: Use "{{category}}"`
+    });
+    
+    try {
+      const batchResult = await batchPrompt({ seriesName: input.seriesName, category });
+      if (batchResult.output && batchResult.output.entries.length > 0) {
+        return batchResult.output.entries;
+      }
+    } catch (error) {
+      console.warn(`Batch generation for ${category} failed, retrying with simplified prompt...`, error);
+      try {
+        const fallbackResult = await fallbackPrompt({ seriesName: input.seriesName, category });
+        if (fallbackResult.output && fallbackResult.output.entries.length > 0) {
+          return fallbackResult.output.entries;
+        }
+      } catch (fallbackError) {
+        console.error(`Simplified batch generation for ${category} also failed.`, fallbackError);
+      }
+    }
+    return []; // Return empty if all attempts fail
+  }
+  
+  // Generate entries in batches by category
+  const batchPromises: Promise<z.infer<typeof LoreEntrySchema>[]>[] = [];
+  
+  // Process some categories in parallel to speed up generation
+  // but not too many to avoid rate limiting
+  const batchSize = 2; // Process 2 categories at a time
+  
+  for (let i = 0; i < categories.length; i += batchSize) {
+    const currentBatch = categories.slice(i, i + batchSize);
+    for (const category of currentBatch) {
+      batchPromises.push(retryBatchGeneration(category));
+    }
+    // Wait for the current batch to complete before starting the next to manage load
+    const results = await Promise.all(batchPromises.splice(0, batchPromises.length)); 
+    results.forEach(batch => allEntries.push(...batch));
+    if (i + batchSize < categories.length) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s between batches
+    }
+  }
+  
+  // Ensure we have at least the minimum required entries
+  if (allEntries.length < 5) {
+    console.warn(`Warning: Generated only ${allEntries.length} lore entries. Adding generic entries.`);
+    const genericCategories = ['Key Locations', 'Notable Characters', 'Historical Events', 'Cultural Aspects', 'Unique Items'];
+    for (let i = 0; i < (5 - allEntries.length); i++) {
+      const category = genericCategories[i % genericCategories.length];
+      const entryNumber = Math.floor(i / genericCategories.length) + 1;
+      allEntries.push({
+        name: `${category} ${entryNumber}`,
+        description: `An important ${category.toLowerCase()} in the world of ${input.seriesName} that adds depth to the story universe.`,
+        category
+      });
+    }
+  }
+  
+  // Reference our previously defined target entry count
+  // const ENTRY_TARGET = 85; // Already declared above
+  
+  // Try to generate additional generic entries to reach target count if we're far below
+  if (allEntries.length < ENTRY_TARGET * 0.7) { // If we have less than 70% of target
+    console.warn(`Warning: Generated only ${allEntries.length} lore entries, significantly below target of ${ENTRY_TARGET}. Adding additional generic entries.`);
+    
+    // Add more generic entries to help reach our target
+    const additionalNeeded = Math.min(20, Math.floor((ENTRY_TARGET - allEntries.length) / 2)); // Don't add too many at once
+    
+    const expandedGenericCategories = [
+      'Key Locations', 'Minor Locations', 'Supporting Characters', 'Historical Figures',
+      'World Elements', 'Cultural Traditions', 'Notable Events', 'Magical Objects',
+      'Unique Species', 'Political Systems', 'Military Forces', 'Economic Systems'
+    ];
+    
+    for (let i = 0; i < additionalNeeded; i++) {
+      const categoryIndex = i % expandedGenericCategories.length;
+      const category = expandedGenericCategories[categoryIndex];
+      const entryNumber = Math.floor(i / expandedGenericCategories.length) + 1;
+      
+      allEntries.push({
+        name: `${category} ${entryNumber}`,
+        description: `An important ${category.toLowerCase()} in the world of ${input.seriesName} that enriches the narrative universe with additional depth and context.`,
+        category
+      });
+    }
+  }
+  
+  // Ensure we don't exceed the maximum allowed entries (25)
+  // If we generate too many entries (> 100), trim them down to around our target of ~85
+  // ENTRY_TARGET is already defined above
+  if (allEntries.length > 100) {
+    console.warn(`Warning: Generated ${allEntries.length} lore entries, exceeding maximum reasonable limit of 100. Trimming to ~${ENTRY_TARGET} entries.`);
+    
+    // Create a map to count entries per category
+    const categoryCount = new Map<string, number>();
+    allEntries.forEach(entry => {
+      const count = categoryCount.get(entry.category) || 0;
+      categoryCount.set(entry.category, count + 1);
+    });
+    
+    // Sort categories by count (highest first)
+    const sortedCategories = [...categoryCount.entries()].sort((a, b) => b[1] - a[1]);
+    
+    // Calculate how many entries to keep per category to achieve balanced distribution
+    // First, ensure at least 2 entries from each category
+    let trimmedEntries: Array<z.infer<typeof LoreEntrySchema>> = [];
+    const minPerCategory = 2;
+    const targetTotal = ENTRY_TARGET;
+    let currentTotal = 0;
+
+    for (const [category, count] of sortedCategories) {
+      const entriesInCategory = allEntries.filter(entry => entry.category === category);
+      const toKeep = Math.min(count, minPerCategory);
+      trimmedEntries.push(...entriesInCategory.slice(0, toKeep));
+      currentTotal += toKeep;
+    }
+
+    // If we still have space, fill with remaining entries, prioritizing more populated categories
+    if (currentTotal < targetTotal) {
+      const remainingEntries = allEntries.filter(entry => !trimmedEntries.includes(entry));
+      let additionalSlotsNeeded = targetTotal - currentTotal;
+      
+      // Prioritize entries from categories that are more prominent in the original set
+      const priorityCategories = sortedCategories.map(sc => sc[0]);
+      
+      const priorityEntries = remainingEntries.filter(entry => 
+        priorityCategories.includes(entry.category)
+      );
+      
+      const otherEntries = remainingEntries.filter(entry => 
+        !priorityCategories.includes(entry.category)
+      );
+      
+      // Add entries in priority order until we hit target
+      trimmedEntries.push(
+        ...priorityEntries.slice(0, Math.min(additionalSlotsNeeded, priorityEntries.length)),
+        ...otherEntries.slice(0, Math.max(0, additionalSlotsNeeded - priorityEntries.length))
+      );
+    }
+    
+    // Update allEntries to the trimmed version
+    allEntries = trimmedEntries;
+  }
+  
+  // Log success
+  console.log(`Successfully generated lorebook with ${allEntries.length} entries across ${new Set(allEntries.map(e => e.category)).size} categories`);
+  
+  return { 
+    lorebook: {
+      overallSummary,
+      entries: allEntries
+    }
+  };
 });
+*/
 
 const generateCharacterNetworkFlow = ai.defineFlow({
   name: 'generateCharacterNetworkFlow',

@@ -1,4 +1,3 @@
-'use server';
 /**
  * @fileOverview Central registration point for all AI tools
  * This file breaks circular dependencies by importing the AI instance and tool definitions separately
@@ -9,11 +8,8 @@
 
 import { ai, z } from '@/ai/genkit';
 
-// Import tool definitions and implementations
-import { 
-  retrieveLoreInfoToolDefinition, 
-  retrieveLoreInfoImplementation 
-} from './retrieve-lore-info';
+// Import tool definitions and implementations separately to avoid circular dependencies
+import { retrieveLoreInfoToolDefinition, retrieveLoreInfoImplementation } from './retrieve-lore-info';
 
 import {
   retrieveContextSchema,
